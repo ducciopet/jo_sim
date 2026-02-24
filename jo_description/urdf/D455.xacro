@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+    
+    <xacro:property name="PI" value="3.141592" />
+
+    <xacro:property name="b2c_x" value="1.0" />
+    <xacro:property name="b2c_y" value="0.0" />
+    <xacro:property name="b2c_z" value="0.0" />
+    <xacro:property name="b2c_R" value="0.0" />
+    <xacro:property name="b2c_P" value="0.0" />
+    <xacro:property name="b2c_Y" value="0.0" />
+    <xacro:property name="camera_mass" value="0.125" />
+    <xacro:property name="camera_len_rad" value="0.0508" />
+    <xacro:property name="camera_len_h" value="0.055" />
+    <xacro:include filename="$(find jo_description)/urdf/inertial_macros.xacro" />
+    
+    <xacro:macro name="d455" params="namespace">
+        <joint name="base2camera" type="fixed">
+            <parent link="base_link"/>
+            <child link="camera_link"/>
+            <origin xyz="${b2c_x} ${b2c_y} ${b2c_z}" rpy="${b2c_R} ${b2c_P} ${b2c_Y}"/>
+        </joint>
+        <link name="camera_link">
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <cylinder radius="${camera_len_rad}" length="${camera_len_h}"/>
+                </geometry>
+            </collision>
+
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <cylinder radius="${camera_len_rad}" length="${camera_len_h}"/>
+                </geometry>
+                <material name="orange"/>
+            </visual>
+            
+            <xacro:inertial_cylinder mass="${camera_mass}" radius="${camera_len_rad}" length="${camera_len_h}">
+                    <origin xyz="0 0 0" rpy="0 0 0"/>
+            </xacro:inertial_cylinder>
+            
+        </link>
+        <gazebo reference="camera_link">
+            <sensor name="d455" type="rgbd_camera">
+                <gz_frame_id>camera_link</gz_frame_id>
+                <always_on>true</always_on>
+                <update_rate>30</update_rate>
+                <visualize>true</visualize>
+
+                <!-- RGB camera -->
+                <camera name="color">
+                <horizontal_fov>1.50</horizontal_fov>  <!-- ≈86 deg -->
+                <image>
+                    <width>640</width>
+                    <height>480</height>
+                    <format>R8G8B8</format>
+                </image>
+                <clip>
+                    <near>0.1</near>
+                    <far>20</far>
+                </clip>
+                </camera>
+
+                <!-- Depth -->
+                <depth_camera>
+                <clip>
+                    <near>0.35</near>
+                    <far>8.0</far>
+                </clip>
+
+                </depth_camera>
+
+                <topic>camera</topic>
+            </sensor>
+            </gazebo>
+
+        
+    </xacro:macro>
+
+    <xacro:d455 namespace=""/>
+
+</robot>
