@@ -30,6 +30,11 @@ RUN apt update -y \
     wget \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+RUN sudo curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] https://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
+RUN sudo apt update
+RUN sudo apt install -y gz-harmonic
+
 
 # Create a non-root user
 ARG USERNAME=ros
@@ -43,6 +48,19 @@ RUN useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} \
     && echo ${USERNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME}
 
+RUN cd /home/ros/ \
+    && git clone https://github.com/RobotecAI/RGLGazeboPlugin.git 
+RUN cd /home/ros/RGLGazeboPlugin \
+    && mkdir build \ 
+    && cd build \ 
+    && cmake .. \
+    && make -j \
+    && make install \
+    && cd .. 
+    # && export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=/home/ros/RGLGazeboPlugin/install/RGLServerPlugin:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH \ 
+    # && export IGN_GUI_PLUGIN_PATH=/home/ros/RGLGazeboPlugin/install/RGLVisualize:$IGN_GUI_PLUGIN_PATH
+
+
 
 USER ros
 # RUN sudo usermod -aG dialout ros
@@ -55,6 +73,11 @@ RUN sudo chmod +x /entrypoint.sh
 RUN echo "source /opt/ros/${DISTRO}/setup.bash" >> ~/.bashrc
 RUN echo "source /home/ros/install/setup.bash" >> ~/.bashrc
 RUN echo "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" >> ~/.bashrc 
-
+RUN echo "export GZ_SIM_SYSTEM_PLUGIN_PATH=/opt/ros/humble/lib/" >> ~/.bashrc
+RUN cd RGLGazeboPlugin \
+    && echo "export GZ_SIM_SYSTEM_PLUGIN_PATH=/opt/ros/humble/lib/" >> ~/.bashrc \
+    && echo "export RGL_PATTERNS_DIR=`pwd`/lidar_patterns" >> ~/.bashrc \
+    && echo "export GZ_SIM_SYSTEM_PLUGIN_PATH=`pwd`/install/RGLServerPlugin:$GZ_SIM_SYSTEM_PLUGIN_PATH" >> ~/.bashrc \
+    && echo "export GZ_GUI_PLUGIN_PATH=`pwd`/install/RGLVisualize:$GZ_GUI_PLUGIN_PATH" >> ~/.bashrc 
 
 ENTRYPOINT ["/entrypoint.sh"]

@@ -38,21 +38,19 @@ def generate_launch_description():
     #     )
 
 
-    # default_world = os.path.join(
-    #     get_package_share_directory(package_name),
-    #     'worlds',
-    #     'external',
-    #     'worlds',
-    #     'office_cpr.world'
-    #     )    
+    default_world = os.path.join(
+        get_package_share_directory(package_name),
+        'worlds',
+        'obstacles.sdf'
+        )    
     
-    # world = LaunchConfiguration('world')
+    world = LaunchConfiguration('world')
 
-    # world_arg = DeclareLaunchArgument(
-    #     'world',
-    #     default_value=default_world,
-    #     description='World to load'
-    #     )
+    world_arg = DeclareLaunchArgument(
+        'world',
+        default_value=default_world,
+        description='World to load'
+        )
 
     # Include the Gazebo launch file, provided by the ros_gz_sim package
     # gazebo = IncludeLaunchDescription(
@@ -64,24 +62,16 @@ def generate_launch_description():
 
 
     gazebo = IncludeLaunchDescription(
-    PythonLaunchDescriptionSource(
-        os.path.join(
-            get_package_share_directory('ros_gz_sim'),
-            'launch',
-            'gz_sim.launch.py'
-        )
-    ),
-    launch_arguments={
-        'gz_args': '-r empty.sdf',
-        'on_exit_shutdown': 'true'
-    }.items()
-)
+                    PythonLaunchDescriptionSource([os.path.join(
+                        get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py')]),
+                        launch_arguments={'gz_args': ['-r -v4 ', world], 'on_exit_shutdown': 'true'}.items()
+    )
 
     # Run the spawner node from the ros_gz_sim package. The entity name doesn't really matter if you only have a single robot.
     spawn_entity = Node(package='ros_gz_sim', executable='create',
                         arguments=['-topic', 'robot_description',
                                    '-name', 'jo',
-                                   '-z', '0.2'],
+                                   '-z', '0.7'],
                         output='screen')
 
 
@@ -140,7 +130,7 @@ def generate_launch_description():
         rsp,
         # joystick,
         # twist_mux,
-        # world_arg,
+        world_arg,
         gazebo,
         spawn_entity,
         diff_drive_spawner,

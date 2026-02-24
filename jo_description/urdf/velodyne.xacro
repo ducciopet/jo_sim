@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+    
+    <xacro:property name="PI" value="3.141592" />
+
+    <xacro:property name="b2l_x" value="0.0" />
+    <xacro:property name="b2l_y" value="0.0" />
+    <xacro:property name="b2l_z" value="0.2" />
+    <xacro:property name="b2l_R" value="0.0" />
+    <xacro:property name="b2l_P" value="0.0" />
+    <xacro:property name="b2l_Y" value="0.0" />
+    <xacro:property name="lidar_mass" value="0.125" />
+    <xacro:property name="lidar_len_rad" value="0.0508" />
+    <xacro:property name="lidar_len_h" value="0.055" />
+    <xacro:include filename="$(find jo_description)/urdf/inertial_macros.xacro" />
+    
+    <xacro:macro name="lidar_sensor" params="namespace">
+        <joint name="base2lidar" type="fixed">
+            <parent link="base_link"/>
+            <child link="velodyne"/>
+            <origin xyz="${b2l_x} ${b2l_y} ${b2l_z}" rpy="${b2l_R} ${b2l_P} ${b2l_Y}"/>
+        </joint>
+        <link name="velodyne">
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <cylinder radius="${lidar_len_rad}" length="${lidar_len_h}"/>
+                </geometry>
+            </collision>
+
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <cylinder radius="${lidar_len_rad}" length="${lidar_len_h}"/>
+                </geometry>
+                <material name="orange"/>
+            </visual>
+            
+            <xacro:inertial_cylinder mass="${lidar_mass}" radius="${lidar_len_rad}" length="${lidar_len_h}">
+                    <origin xyz="0 0 0" rpy="0 0 0"/>
+            </xacro:inertial_cylinder>
+            
+        </link>
+        <gazebo reference="velodyne">
+            <sensor name="RGLsensor" type="custom">
+                <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
+                    <range>
+                    <min>0.1</min>
+                    <max>100</max>
+                    </range>
+                    <update_rate>10</update_rate>
+                    <update_on_paused_sim>false</update_on_paused_sim>
+                    <topic>${namespace}/velodyne_points</topic>
+                    <frame>${namespace}/velodyne</frame>
+                    <pattern_preset>Puck</pattern_preset>
+                </plugin>
+            </sensor>
+        </gazebo>
+        
+    </xacro:macro>
+
+    <xacro:lidar_sensor namespace=""/>
+
+</robot>
