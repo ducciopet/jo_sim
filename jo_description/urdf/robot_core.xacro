@@ -35,6 +35,11 @@
         <color rgba="0 0 0 1"/>
     </material>
 
+
+    <material name="black_t">
+        <color rgba="0 0 0 0.5"/>
+    </material>
+
     <material name="red">
         <color rgba="1 0 0 1"/>
     </material>
@@ -220,5 +225,38 @@
         <mu1 value="0.001"/>
         <mu2 value="0.001"/>
     </gazebo>
+
+
+
+
+
+
+
+
+    <link name="rack">
+        <visual>
+            <origin xyz=" 0 0 0"/>
+            <geometry>
+                <box size="0.6 0.37 0.47"/>
+            </geometry>
+            <material name="black_t"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <box size="${chassis_length*0.6} ${chassis_width*0.8} 0.5"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="0.1" x="${chassis_length*0.6}" y="${chassis_width*0.8}" z="0.5">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+
+    <joint name="base2rack" type="fixed">
+        <parent link="base_link"/>
+        <child link="rack"/>
+        <origin xyz="0.02 0 0.25"/>
+    </joint>
 
 </robot>
