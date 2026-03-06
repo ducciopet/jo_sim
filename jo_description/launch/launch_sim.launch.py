@@ -7,7 +7,7 @@ from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-
+from launch.conditions import IfCondition
 from launch_ros.actions import Node
 
 
@@ -16,6 +16,25 @@ def generate_launch_description():
 
 
     package_name='jo_description'
+
+    rviz_arg = DeclareLaunchArgument('rviz', default_value='true', description='Whether to launch RViz')
+
+    rviz_config = os.path.join(
+        get_package_share_directory(package_name),
+        'rviz',
+        'sim.rviz'
+        )
+    
+
+    rviz = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        output='screen',
+        arguments=['-d', rviz_config],
+        parameters=[{'use_sim_time': True}],
+        condition=IfCondition(LaunchConfiguration('rviz'))
+    )
 
     rsp = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
@@ -136,5 +155,7 @@ def generate_launch_description():
         diff_drive_spawner,
         joint_broad_spawner,
         ros_gz_bridge,
-        ros_gz_image_bridge
+        ros_gz_image_bridge,
+        rviz,
+        rviz_arg
     ])

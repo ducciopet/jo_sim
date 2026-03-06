@@ -3,6 +3,7 @@ import os
 import launch_ros
 from launch_ros.actions import Node
 import xacro
+from launch.conditions import IfCondition
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
@@ -16,6 +17,25 @@ def generate_launch_description():
     # Check if we're told to use sim time
     use_sim_time = LaunchConfiguration('use_sim_time')
     use_ros2_control = LaunchConfiguration('use_ros2_control')
+
+
+    rviz_arg = DeclareLaunchArgument('rviz', default_value='false', description='Whether to launch RViz')
+
+    rviz_config = os.path.join(
+        get_package_share_directory('jo_description'),
+        'rviz',
+        'display.rviz'
+        )
+    
+
+    rviz = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        output='screen',
+        arguments=['-d', rviz_config],
+        condition=IfCondition(LaunchConfiguration('rviz'))
+    )
 
     # Process the URDF file
     pkg_path = os.path.join(get_package_share_directory('jo_description'))
@@ -44,5 +64,8 @@ def generate_launch_description():
             default_value='true',
             description='Use ros2_control if true'),
 
-        node_robot_state_publisher
+        node_robot_state_publisher,
+        rviz_arg,
+        rviz,
+        
     ])
