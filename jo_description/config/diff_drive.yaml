@@ -1,7 +1,7 @@
 controller_manager:
   ros__parameters:
     update_rate: 200
-    use_sim_time: true
+    use_sim_time: True
 
     diff_cont:
       type: diff_drive_controller/DiffDriveController
@@ -13,10 +13,18 @@ diff_cont:
   ros__parameters:
 
     publish_rate: 100.0
+    use_sim_time: True
 
     base_frame_id: base_link
+    enable_odom_tf: False
 
-    left_wheel_names: ['left_wheel_joint']
-    right_wheel_names: ['right_wheel_joint']
+    left_wheel_names:
+      - left_wheel_center_joint
+      - left_wheel_front_joint
+      - left_wheel_back_joint
+    right_wheel_names:
+      - right_wheel_center_joint
+      - right_wheel_front_joint
+      - right_wheel_back_joint
     wheel_separation: 0.545
     wheel_radius: 0.1

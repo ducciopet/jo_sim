@@ -17,7 +17,7 @@ def generate_launch_description():
 
     package_name='jo_description'
 
-    rviz_arg = DeclareLaunchArgument('rviz', default_value='true', description='Whether to launch RViz')
+    rviz_arg = DeclareLaunchArgument('use_rviz', default_value='true', description='Whether to launch RViz')
 
     rviz_config = os.path.join(
         get_package_share_directory(package_name),
@@ -33,7 +33,7 @@ def generate_launch_description():
         output='screen',
         arguments=['-d', rviz_config],
         parameters=[{'use_sim_time': True}],
-        condition=IfCondition(LaunchConfiguration('rviz'))
+        condition=IfCondition(LaunchConfiguration('use_rviz'))
     )
 
     rsp = IncludeLaunchDescription(
@@ -57,11 +57,19 @@ def generate_launch_description():
     #     )
 
 
+    # default_world = os.path.join(
+    #     get_package_share_directory(package_name),
+    #     'worlds',
+    #     'external',
+    #     'worlds',
+    #     'office_cpr.world'
+    #     )    
+    
     default_world = os.path.join(
         get_package_share_directory(package_name),
         'worlds',
         'obstacles.sdf'
-        )    
+        )  
     
     world = LaunchConfiguration('world')
 
@@ -90,6 +98,8 @@ def generate_launch_description():
     spawn_entity = Node(package='ros_gz_sim', executable='create',
                         arguments=['-topic', 'robot_description',
                                    '-name', 'jo',
+                                   '-x', '0.0',
+                                   '-y', '0.0',
                                    '-z', '0.7'],
                         output='screen')
 
