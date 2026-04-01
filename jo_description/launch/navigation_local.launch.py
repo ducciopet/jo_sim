@@ -103,7 +103,7 @@ def generate_launch_description():
 
     declare_params_file_cmd = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(bringup_dir, 'config', 'nav2_graceful.yaml'),
+        default_value=os.path.join(bringup_dir, 'config', 'nav2_local.yaml'),
         description='Full path to the ROS2 parameters file to use for all launched nodes')
 
     declare_autostart_cmd = DeclareLaunchArgument(
@@ -270,6 +270,18 @@ def generate_launch_description():
 
 
 
+    robot_localization_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_filter_node',
+        output='screen',
+        parameters=[configured_params, {'use_sim_time': LaunchConfiguration('use_sim_time')}]
+    )
+
+
+    
+
+
     return LaunchDescription([
         rviz_arg,
         stdout_linebuf_envvar,
@@ -284,4 +296,5 @@ def generate_launch_description():
         load_nodes,
         load_composable_nodes,
         rviz,
+        robot_localization_node
     ])
