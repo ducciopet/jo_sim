@@ -36,6 +36,7 @@ RUN apt update -y \
     ros-${DISTRO}-nav2-navfn-planner \
     ros-${DISTRO}-nav2-rviz-plugins \
     ros-${DISTRO}-nav2-graceful-controller \
+    ros-${DISTRO}-robot-localization \
     python3-rosdep \
     software-properties-common \
     ca-certificates \
@@ -83,9 +84,6 @@ RUN mkdir src
 
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN sudo chmod +x /entrypoint.sh
-RUN echo "source /opt/ros/${DISTRO}/setup.bash" >> ~/.bashrc
-RUN echo "source /home/ros/install/setup.bash" >> ~/.bashrc
-RUN echo "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" >> ~/.bashrc 
 RUN echo "export GZ_SIM_SYSTEM_PLUGIN_PATH=/opt/ros/humble/lib/" >> ~/.bashrc
 RUN cd RGLGazeboPlugin \
     && echo "export GZ_SIM_SYSTEM_PLUGIN_PATH=/opt/ros/humble/lib/" >> ~/.bashrc \
@@ -94,5 +92,9 @@ RUN cd RGLGazeboPlugin \
     && echo "export GZ_GUI_PLUGIN_PATH=`pwd`/install/RGLVisualize:$GZ_GUI_PLUGIN_PATH" >> ~/.bashrc \
     && echo "export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/home/ros/src/jo_description/worlds/external/worlds/" >> ~/.bashrc \
     && echo "export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/home/ros/src/jo_description/worlds/external/models/" >> ~/.bashrc 
+
+
+COPY docker/utilities.sh /etc/utilities.sh
+RUN echo 'source /etc/utilities.sh' >> ~/.bashrc
 
 ENTRYPOINT ["/entrypoint.sh"]
