@@ -42,6 +42,7 @@ RUN apt update -y \
     ca-certificates \
     gnupg \
     wget \
+    xterm \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN sudo curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \

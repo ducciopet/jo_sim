@@ -5,8 +5,15 @@ find_package(ament_cmake)
 
 
 install(
-  DIRECTORY config launch urdf worlds rviz
+  DIRECTORY config launch urdf worlds rviz missions
   DESTINATION share/${PROJECT_NAME}
+)
+
+ament_python_install_package(scripts)
+
+install(
+  PROGRAMS  scripts/send_gps_waypoints.py 
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_package()

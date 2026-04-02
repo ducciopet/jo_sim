@@ -292,6 +292,14 @@ def generate_launch_description():
     )
 
 
+    static_map = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='map_to_odom_static_tf',
+        arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom']
+    )
+
+
     
 
 
@@ -309,5 +317,7 @@ def generate_launch_description():
         load_nodes,
         load_composable_nodes,
         rviz,
-        robot_localization_node
+        robot_localization_node,
+        gnss,
+        static_map
     ])
