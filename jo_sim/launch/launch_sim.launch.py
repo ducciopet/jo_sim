@@ -9,6 +9,8 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch.conditions import IfCondition
 from launch_ros.actions import Node
+from pathlib import Path
+
 
 
 
@@ -24,6 +26,21 @@ def generate_launch_description():
         'rviz',
         'sim.rviz'
         )
+    
+    glim_config = os.path.join(get_package_share_directory(package_name), 'config', 'glim', 'glim_config_bunker_sim')
+
+    
+    glim_param_folder_arg = DeclareLaunchArgument(
+        'glim_param',
+        default_value=glim_config,
+        description='GLIM param folder passed to its node'
+    )
+
+    launch_glim_arg = DeclareLaunchArgument(
+        'glim',
+        default_value='false',
+        description='Whether to launch the GLIM stack'
+    )
     
 
     rviz = Node(
@@ -42,19 +59,19 @@ def generate_launch_description():
                 )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true'}.items()
     )
     
-    # default_world = os.path.join(
-    #     get_package_share_directory(package_name),
-    #     'worlds',
-    #     'external',
-    #     'worlds',
-    #     'office_cpr.world'
-    #     ) 
-
     default_world = os.path.join(
         get_package_share_directory(package_name),
         'worlds',
-        'obstacles.sdf'
-        )  
+        'external',
+        'worlds',
+        'office_cpr.world'
+        ) 
+
+    # default_world = os.path.join(
+    #     get_package_share_directory(package_name),
+    #     'worlds',
+    #     'obstacles.sdf'
+    #     )  
     
     world = LaunchConfiguration('world')
 
@@ -76,7 +93,7 @@ def generate_launch_description():
                                    '-name', 'jo',
                                    '-x', '0.0',
                                    '-y', '0.0',
-                                   '-z', '3.7'],
+                                   '-z', '1.7'],
                         output='screen')
 
 
@@ -98,8 +115,27 @@ def generate_launch_description():
     )
 
 
+    glim = Node(
+        package='glim_ros',
+        executable='glim_rosnode',
+        output='screen',
+        emulate_tty=True,
+        condition=IfCondition(LaunchConfiguration('glim')),
+        additional_env={
+            '__NV_PRIME_RENDER_OFFLOAD': '0',
+            '__GLX_VENDOR_LIBRARY_NAME': '',
+        },
+        parameters=[
+            {'config_path': LaunchConfiguration('glim_param')},
+            {'use_sim_time' : True}
+            ],
+    )
+
+
     # Launch them all!
     return LaunchDescription([
+        glim_param_folder_arg,
+        launch_glim_arg,
         rsp,
         rviz_arg,
         world_arg,
@@ -108,5 +144,5 @@ def generate_launch_description():
         ros_gz_bridge,
         ros_gz_image_bridge,
         rviz,
-        
+        glim
     ])

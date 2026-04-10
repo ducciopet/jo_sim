@@ -106,6 +106,8 @@ RUN mkdir src
 RUN cd src && git clone https://github.com/mlisi1/glim_ros2.git
 RUN cd src && git clone https://github.com/koide3/glim.git
 
+RUN cd RGLGazeboPlugin && sudo touch COLCON_IGNORE
+
 SHELL ["/bin/bash", "-c"]
 RUN source /opt/ros/jazzy/setup.bash \
  && colcon build
@@ -118,8 +120,8 @@ RUN cd RGLGazeboPlugin \
     && echo "export RGL_PATTERNS_DIR=`pwd`/lidar_patterns" >> ~/.bashrc \
     && echo "export GZ_SIM_SYSTEM_PLUGIN_PATH=`pwd`/install/RGLServerPlugin:$GZ_SIM_SYSTEM_PLUGIN_PATH" >> ~/.bashrc \
     && echo "export GZ_GUI_PLUGIN_PATH=`pwd`/install/RGLVisualize:$GZ_GUI_PLUGIN_PATH" >> ~/.bashrc \
-    && echo "export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/home/ros/src/jo_description/worlds/external/worlds/" >> ~/.bashrc \
-    && echo "export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/home/ros/src/jo_description/worlds/external/models/" >> ~/.bashrc 
+    && echo "export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/home/ros/src/jo_sim/worlds/external/worlds/" >> ~/.bashrc \
+    && echo "export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/home/ros/src/jo_sim/worlds/external/models/" >> ~/.bashrc 
 
 
 COPY docker/utilities.sh /etc/utilities.sh
