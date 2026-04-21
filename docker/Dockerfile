@@ -128,7 +128,6 @@ RUN cd RGLGazeboPlugin \
     && echo "export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/home/ros/src/jo_sim/worlds/external/worlds/" >> ~/.bashrc \
     && echo "export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/home/ros/src/jo_sim/worlds/external/models/" >> ~/.bashrc 
 
-
 COPY docker/utilities.sh /etc/utilities.sh
 RUN echo 'source /etc/utilities.sh' >> ~/.bashrc
 
