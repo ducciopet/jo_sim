@@ -3,8 +3,11 @@ set -e
 
 source /opt/ros/jazzy/setup.bash
 
+# Avoid stale files from previous non-symlink/symlink builds.
+rm -rf build install log
+
 colcon build \
-  --packages-select jo_description jo_sim jo_navigation\
+  --packages-select custom_interfaces mulinex_description mulinex_ignition rbt_pd_cnt wheels_vel_cnt jo_description jo_sim jo_navigation \
   --symlink-install \
 
 # 3) Source overlay

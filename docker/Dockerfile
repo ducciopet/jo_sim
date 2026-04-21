@@ -17,6 +17,7 @@ RUN apt update -y \
     ros-${DISTRO}-joint-state-publisher-gui \
     ros-${DISTRO}-gz-ros2-control \
     ros-${DISTRO}-teleop-twist-joy \
+    ros-${DISTRO}-teleop-twist-keyboard \
     ros-${DISTRO}-joy \
     ros-${DISTRO}-ros2-control \
     ros-${DISTRO}-ros2-controllers \

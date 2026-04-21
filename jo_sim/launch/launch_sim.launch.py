@@ -4,10 +4,12 @@ from ament_index_python.packages import get_package_share_directory
 
 
 from launch import LaunchDescription
+from launch.actions import GroupAction
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch.conditions import IfCondition
+from launch_ros.actions import PushRosNamespace
 from launch_ros.actions import Node
 from pathlib import Path
 
@@ -53,10 +55,15 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('rviz'))
     )
 
-    rsp = IncludeLaunchDescription(
+    rsp = GroupAction(
+        actions=[
+            PushRosNamespace('jo'),
+            IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
                     get_package_share_directory('jo_description'),'launch','description.launch.py'
                 )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true'}.items()
+            )
+        ]
     )
     
     default_world = os.path.join(
@@ -89,7 +96,7 @@ def generate_launch_description():
 
     # Run the spawner node from the ros_gz_sim package. The entity name doesn't really matter if you only have a single robot.
     spawn_entity = Node(package='ros_gz_sim', executable='create',
-                        arguments=['-topic', 'robot_description',
+                        arguments=['-topic', '/jo/robot_description',
                                    '-name', 'jo',
                                    '-x', '0.0',
                                    '-y', '0.0',

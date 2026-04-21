@@ -1,0 +1,176 @@
+<?xml version="1.0"?>
+
+
+<!--  -->
+<robot name="traquad" xmlns:xacro="http://ros.org/wiki/xacro">
+    <!-- Simplified leg: hip + upper leg only TODO add the tracks -->
+    <xacro:macro name="leg" params="prefix gazebo jnt_pref simplify_meshes feet_type">
+        <xacro:hip
+            prefix="${prefix}"
+            gazebo="${gazebo}"
+            jnt_pref="${jnt_pref}"
+            simplify_meshes="${simplify_meshes}"/>
+        <xacro:upper_leg
+            prefix="${prefix}"
+            gazebo="${gazebo}"
+            jnt_pref="${jnt_pref}"
+            simplify_meshes="${simplify_meshes}"/>
+    </xacro:macro>
+
+    <!-- Vi consiglio di creare xacro con i track e lo includete qui -->
+    <xacro:include filename="$(find mulinex_description)/urdf/links.xacro" />    
+    <xacro:include filename="$(find mulinex_description)/urdf/material.xacro" />
+    <xacro:include filename="$(find mulinex_description)/urdf/traquad_hw_ign.xacro" />
+    <xacro:include filename="$(find mulinex_description)/urdf/imu_sensor.xacro" />
+    <xacro:include filename="$(find mulinex_description)/urdf/lidar_sensor.xacro" />
+
+    <xacro:include filename="$(find mulinex_description)/urdf/track.xacro" />
+
+
+    <xacro:property name="mulinex_base" value="file://$(find mulinex_description)/meshes//Body.stl" />
+    <xacro:arg name="use_gazebo" default="true" />
+    <xacro:arg name="mulinex_namespace" default="mulinex"/>
+    <xacro:arg name="lidar_3D" default="true"/>
+    <xacro:arg name="enable_lidar" default="false"/>
+    <xacro:arg name="enable_imu" default="false"/>
+    <xacro:arg name="yaml_file" default=""/>
+
+    <xacro:arg name="simplify_meshes_lower_leg" default="true"/>
+
+    <!-- use "normal" if normal feet are used
+        use "omni" if omniwheels are used
+        use "goat" if goat feet are used 
+        use "track" if track feet are used -->
+    <xacro:arg name="feet_type" default="normal"/> 
+
+
+    <xacro:arg name="jnt_prefix" default="" />
+    <xacro:arg name="front_haa" default="0.0" />
+    <xacro:arg name="hind_haa" default="0.0" />
+
+    <xacro:arg name="RH_HFE" default="0.0" />
+    <xacro:arg name="RH_KFE" default="0.0" />
+    <xacro:arg name="RF_HFE" default="0.0" />
+    <xacro:arg name="RF_KFE" default="0.0" />
+
+    <xacro:arg name="LH_HFE" default="0.0" />
+    <xacro:arg name="LH_KFE" default="0.0" />
+    <xacro:arg name="LF_HFE" default="0.0" />
+    <xacro:arg name="LF_KFE" default="0.0" />
+
+    <link name="$(arg jnt_prefix)base_link">
+        <visual>
+            <material name="white" />
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="${mulinex_base}" />
+                <!-- <box size="0.353 0.090 0.066" /> -->
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <box size="0.353 0.090 0.066" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="1.3008737" />
+            <origin xyz="-1.4565496e-03 -2.5110071e-03 -4.2484136e-03" rpy="0 0 0" />
+            <inertia ixx="4.0762590e-03" ixy="-2.5234809e-05" ixz="-3.2587794e-06"
+                iyy="9.2413606e-03" iyz="-8.0660183e-06"
+                izz="1.2268730e-02" />
+        </inertial>
+    </link>
+
+
+    <gazebo>
+
+        <plugin
+            filename="ignition-gazebo-odometry-publisher-system"
+            name="ignition::gazebo::systems::OdometryPublisher">
+            <dimensions>3</dimensions>
+            <odom_publish_frequency>30</odom_publish_frequency>
+            <odom_frame>$(arg mulinex_namespace)/gt_odom</odom_frame>
+            <robot_base_frame>$(arg mulinex_namespace)/base_link</robot_base_frame>
+            <odom_topic>$(arg mulinex_namespace)/gt_odom</odom_topic>
+            <tf_topic>$(arg mulinex_namespace)/gt_pose_gazebo</tf_topic>
+        </plugin>
+        <!-- <plugin
+            filename="libignition-gazebo6-pose-publisher-system"
+            name="ignition::gazebo::systems::PosePublisher">
+            
+            <update_frequency>10</update_frequency>
+            <use_pose_vector_msg>false</use_pose_vector_msg>
+            <publish_nested_model_pose>false</publish_nested_model_pose>
+            <publish_model_pose>true</publish_model_pose>
+            <publish_sensor_pose>false</publish_sensor_pose>
+            <publish_collision_pose>false</publish_collision_pose>
+            <publish_visual_pose>false</publish_visual_pose>
+            <publish_link_pose>false</publish_link_pose>
+
+        </plugin> -->
+    </gazebo>
+
+    <xacro:leg
+        prefix="LH"
+        gazebo="$(arg use_gazebo)"
+        jnt_pref="$(arg jnt_prefix)"
+        simplify_meshes="$(arg simplify_meshes_lower_leg)" 
+        feet_type="$(arg feet_type)" 
+        />
+    <xacro:leg
+        prefix="LF"
+        gazebo="$(arg use_gazebo)"
+        jnt_pref="$(arg jnt_prefix)"
+        simplify_meshes="$(arg simplify_meshes_lower_leg)"
+        feet_type="$(arg feet_type)" 
+        />
+    <xacro:leg
+        prefix="RF"
+        gazebo="$(arg use_gazebo)"
+        jnt_pref="$(arg jnt_prefix)"
+        simplify_meshes="$(arg simplify_meshes_lower_leg)"
+        feet_type="$(arg feet_type)"
+        />
+    <xacro:leg
+        prefix="RH"
+        gazebo="$(arg use_gazebo)"
+        jnt_pref="$(arg jnt_prefix)"
+        simplify_meshes="$(arg simplify_meshes_lower_leg)"
+        feet_type="$(arg feet_type)" 
+        />
+    <xacro:body_left  name="LH" parent="LH_UPPER_LEG" xyz="-0.19 0.05 0" rpy="1.5708 0 1.5708"/>
+    <xacro:body_left  name="LF" parent="LF_UPPER_LEG" xyz="0.19 0.05 0" rpy="-1.5708 0 1.5708"/>
+    <xacro:body_right name="RF" parent="RF_UPPER_LEG" xyz="0.19 -0.05 0" rpy="3.14159 0 1.5708"/>
+    <xacro:body_right name="RH" parent="RH_UPPER_LEG" xyz="-0.19 -0.05 0" rpy="0 0 1.5708"/>
+
+    <!-- Wheels for each body (4 per leg) -->
+    <xacro:wheel name="wheel_1_LH" parent="LH" xyz="0 0.0484 -0.0584" rpy="-6.12323e-17 -1.5708 0"/>
+    <xacro:wheel name="wheel_2_LH" parent="LH" xyz="0 1.07779e-16 -0.0584" rpy="-6.12323e-17 -1.5708 0"/>
+    <xacro:wheel name="wheel_3_LH" parent="LH" xyz="0 -0.05103 -0.0584" rpy="-6.12323e-17 -1.5708 0"/>
+    <xacro:wheel name="wheel_4_LH" parent="LH" xyz="0 -0.07668 -0.0417" rpy="-6.12323e-17 -1.5708 0"/>
+
+    <xacro:wheel name="wheel_1_LF" parent="LF" xyz="0 0.0484 -0.0584" rpy="-6.12323e-17 -1.5708 0"/>
+    <xacro:wheel name="wheel_2_LF" parent="LF" xyz="0 1.07779e-16 -0.0584" rpy="-6.12323e-17 -1.5708 0"/>
+    <xacro:wheel name="wheel_3_LF" parent="LF" xyz="0 -0.05103 -0.0584" rpy="-6.12323e-17 -1.5708 0"/>
+    <xacro:wheel name="wheel_4_LF" parent="LF" xyz="0 -0.07668 -0.0417" rpy="-6.12323e-17 -1.5708 0"/>
+
+    <xacro:wheel name="wheel_1_RF" parent="RF" xyz="2.08167e-17 0.05838 0.04841" rpy="-1.5708 0.992087 -1.5708"/>
+    <xacro:wheel name="wheel_2_RF" parent="RF" xyz="0 0.05838 1.10544e-16" rpy="-1.5708 0.967866 -1.5708"/>
+    <xacro:wheel name="wheel_3_RF" parent="RF" xyz="-2.08167e-17 0.05838 -0.05103" rpy="-1.5708 0.967866 -1.5708"/>
+    <xacro:wheel name="wheel_4_RF" parent="RF" xyz="-3.46945e-17 0.04174 -0.07668" rpy="-1.5708 0.992087 -1.5708"/>
+
+    <xacro:wheel name="wheel_1_RH" parent="RH" xyz="2.08167e-17 0.05838 0.04841" rpy="-1.5708 0.992087 -1.5708"/>
+    <xacro:wheel name="wheel_2_RH" parent="RH" xyz="0 0.05838 1.10544e-16" rpy="-1.5708 0.967866 -1.5708"/>
+    <xacro:wheel name="wheel_3_RH" parent="RH" xyz="-2.08167e-17 0.05838 -0.05103" rpy="-1.5708 0.967866 -1.5708"/>
+    <xacro:wheel name="wheel_4_RH" parent="RH" xyz="-3.46945e-17 0.04174 -0.07668" rpy="-1.5708 0.992087 -1.5708"/>
+
+    <xacro:if value="$(arg enable_imu)">
+        <xacro:imu_sensor namespace="$(arg mulinex_namespace)"/>
+    </xacro:if>
+    <xacro:if value="$(arg enable_lidar)">
+        <xacro:lidar_sensor tredi="$(arg lidar_3D)" namespace="$(arg mulinex_namespace)"/>
+    </xacro:if>
+
+    <xacro:traquad_ign_hw gazebo="$(arg use_gazebo)" yaml="$(arg yaml_file)"/>
+</robot>
