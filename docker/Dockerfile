@@ -116,7 +116,22 @@ RUN cd RGLGazeboPlugin && sudo touch COLCON_IGNORE
 
 SHELL ["/bin/bash", "-c"]
 RUN source /opt/ros/jazzy/setup.bash \
- && colcon build
+ && colcon build --install-base /home/ros/glim_install
+
+# Copy local ROS packages and build them with symlink-install.
+# At runtime the volume mounts override src/, so symlinks pick up host changes.
+COPY --chown=ros:ros jo_description   src/jo_description
+COPY --chown=ros:ros jo_msgs          src/jo_msgs
+COPY --chown=ros:ros turtlebot_description src/turtlebot_description
+COPY --chown=ros:ros jo_sim           src/jo_sim
+COPY --chown=ros:ros jo_navigation    src/jo_navigation
+
+RUN source /opt/ros/jazzy/setup.bash \
+ && source /home/ros/glim_install/setup.bash \
+ && colcon build \
+    --packages-select jo_description jo_msgs turtlebot_description jo_sim jo_navigation \
+    --install-base /home/ros/local_install \
+    --symlink-install
 
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN sudo chmod +x /entrypoint.sh
