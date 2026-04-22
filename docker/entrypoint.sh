@@ -6,7 +6,7 @@ source /opt/ros/jazzy/setup.bash
 rm -rf build install log
 
 colcon build \
-  --packages-select custom_interfaces mulinex_description mulinex_ignition rbt_pd_cnt wheels_vel_cnt jo_description turtlebot_description jo_sim jo_navigation \
+  --packages-select jo_description turtlebot_description jo_sim jo_navigation \
   --symlink-install
 
 # Source overlay if build succeeded

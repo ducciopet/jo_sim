@@ -8,10 +8,5 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(
-  PROGRAMS scripts/traquad_cmd_bridge.py
-  DESTINATION lib/${PROJECT_NAME}
-)
-
 
 ament_package()
