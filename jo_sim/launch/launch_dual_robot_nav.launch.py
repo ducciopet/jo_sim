@@ -55,10 +55,10 @@ def generate_launch_description():
         default_value="true",
         description="Launch jo local navigation",
     )
-    teleop_traquad_arg = DeclareLaunchArgument(
-        "teleop_traquad",
+    teleop_turtlebot_arg = DeclareLaunchArgument(
+        "teleop_turtlebot",
         default_value="false",
-        description="Launch keyboard teleop for traquad on /traquad/cmd_vel",
+        description="Launch keyboard teleop for turtlebot on /turtlebot/cmd_vel",
     )
 
     jo_sim = IncludeLaunchDescription(
@@ -73,14 +73,14 @@ def generate_launch_description():
         }.items(),
     )
 
-    traquad_sim = IncludeLaunchDescription(
+    turtlebot_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(jo_sim_pkg, "launch", "launch_traquad_sim.launch.py")
+            os.path.join(jo_sim_pkg, "launch", "launch_turtlebot_sim.launch.py")
         ),
         launch_arguments={
             "world": LaunchConfiguration("world"),
             "rviz": "false",
-            "teleop": LaunchConfiguration("teleop_traquad"),
+            "teleop": LaunchConfiguration("teleop_turtlebot"),
             "start_gazebo": "false",
             "start_clock_bridge": "false",
         }.items(),
@@ -134,9 +134,9 @@ def generate_launch_description():
             glim_param_arg,
             localization_arg,
             navigation_arg,
-            teleop_traquad_arg,
+            teleop_turtlebot_arg,
             jo_sim,
-            traquad_sim,
+            turtlebot_sim,
             localization,
             navigation,
             LogInfo(
