@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -e
 
 source /opt/ros/jazzy/setup.bash
 
@@ -8,10 +7,10 @@ rm -rf build install log
 
 colcon build \
   --packages-select custom_interfaces mulinex_description mulinex_ignition rbt_pd_cnt wheels_vel_cnt jo_description turtlebot_description jo_sim jo_navigation \
-  --symlink-install \
+  --symlink-install
 
-# 3) Source overlay
-source install/setup.bash
+# Source overlay if build succeeded
+[ -f install/setup.bash ] && source install/setup.bash
 
-# 4) Run whatever was passed (ros2 launch ...)
+# Run whatever was passed (ros2 launch ...)
 exec "$@"
