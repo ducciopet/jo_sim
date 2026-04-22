@@ -3,40 +3,44 @@
 
   <link name="base_footprint"/>
 
+  <!-- base_joint z = wheel_radius so the robot sits on the ground -->
   <joint name="base_joint" type="fixed">
     <parent link="base_footprint"/>
     <child link="base_link"/>
-    <origin xyz="0.0 0.0 0.010" rpy="0 0 0"/>
+    <origin xyz="0.0 0.0 0.12" rpy="0 0 0"/>
   </joint>
 
+  <!-- Body: 0.6m wide, 0.6m deep, 1.1m tall — top at ~1.22m from ground -->
   <link name="base_link">
     <visual>
-      <origin xyz="-0.032 0 0.070" rpy="0 0 0"/>
+      <origin xyz="0 0 0.55" rpy="0 0 0"/>
       <geometry>
-        <box size="0.140 0.140 0.143"/>
+        <box size="0.6 0.6 1.1"/>
       </geometry>
       <material name="light_black">
         <color rgba="0.4 0.4 0.4 1.0"/>
       </material>
     </visual>
     <collision>
-      <origin xyz="-0.032 0 0.070" rpy="0 0 0"/>
+      <origin xyz="0 0 0.55" rpy="0 0 0"/>
       <geometry>
-        <box size="0.140 0.140 0.143"/>
+        <box size="0.6 0.6 1.1"/>
       </geometry>
     </collision>
     <inertial>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <mass value="8.2573504e-01"/>
-      <inertia ixx="2.2124416e-03" ixy="-1.2294101e-05" ixz="3.4938785e-05"
-               iyy="2.1193702e-03" iyz="-5.0120904e-06" izz="2.0064271e-03"/>
+      <origin xyz="0 0 0.55" rpy="0 0 0"/>
+      <mass value="20.0"/>
+      <!-- box inertia: ixx=m/12*(y²+z²), iyy=m/12*(x²+z²), izz=m/12*(x²+y²) -->
+      <inertia ixx="2.617" ixy="0.0" ixz="0.0"
+               iyy="2.617" iyz="0.0" izz="1.200"/>
     </inertial>
   </link>
 
+  <!-- wheel z = wheel_radius - base_joint_z = 0.12 - 0.12 = 0.0 -->
   <joint name="wheel_left_joint" type="continuous">
     <parent link="base_link"/>
     <child link="wheel_left_link"/>
-    <origin xyz="0.0 0.08 0.023" rpy="-1.57 0 0"/>
+    <origin xyz="0.0 0.38 0.0" rpy="-1.57 0 0"/>
     <axis xyz="0 0 1"/>
   </joint>
 
@@ -44,7 +48,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <cylinder length="0.018" radius="0.033"/>
+        <cylinder length="0.06" radius="0.12"/>
       </geometry>
       <material name="dark">
         <color rgba="0.3 0.3 0.3 1.0"/>
@@ -53,21 +57,21 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <cylinder length="0.018" radius="0.033"/>
+        <cylinder length="0.06" radius="0.12"/>
       </geometry>
     </collision>
     <inertial>
       <origin xyz="0 0 0"/>
-      <mass value="2.8498940e-02"/>
-      <inertia ixx="1.1175580e-05" ixy="-4.2369783e-11" ixz="-5.9381719e-09"
-               iyy="1.1192413e-05" iyz="-1.4400107e-11" izz="2.0712558e-05"/>
+      <mass value="0.5"/>
+      <inertia ixx="1.950e-03" ixy="0.0" ixz="0.0"
+               iyy="1.950e-03" iyz="0.0" izz="3.600e-03"/>
     </inertial>
   </link>
 
   <joint name="wheel_right_joint" type="continuous">
     <parent link="base_link"/>
     <child link="wheel_right_link"/>
-    <origin xyz="0.0 -0.08 0.023" rpy="-1.57 0 0"/>
+    <origin xyz="0.0 -0.38 0.0" rpy="-1.57 0 0"/>
     <axis xyz="0 0 1"/>
   </joint>
 
@@ -75,41 +79,42 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <cylinder length="0.018" radius="0.033"/>
+        <cylinder length="0.06" radius="0.12"/>
       </geometry>
       <material name="dark"/>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <cylinder length="0.018" radius="0.033"/>
+        <cylinder length="0.06" radius="0.12"/>
       </geometry>
     </collision>
     <inertial>
       <origin xyz="0 0 0"/>
-      <mass value="2.8498940e-02"/>
-      <inertia ixx="1.1175580e-05" ixy="-4.2369783e-11" ixz="-5.9381719e-09"
-               iyy="1.1192413e-05" iyz="-1.4400107e-11" izz="2.0712558e-05"/>
+      <mass value="0.5"/>
+      <inertia ixx="1.950e-03" ixy="0.0" ixz="0.0"
+               iyy="1.950e-03" iyz="0.0" izz="3.600e-03"/>
     </inertial>
   </link>
 
+  <!-- caster sphere center at z = sphere_radius - base_joint_z = 0.02 - 0.12 = -0.10 -->
   <joint name="caster_back_joint" type="fixed">
     <parent link="base_link"/>
     <child link="caster_back_link"/>
-    <origin xyz="-0.081 0 -0.004" rpy="-1.57 0 0"/>
+    <origin xyz="-0.28 0 -0.10" rpy="0 0 0"/>
   </joint>
 
   <link name="caster_back_link">
     <collision>
-      <origin xyz="0 0.001 0" rpy="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <sphere radius="0.005"/>
+        <sphere radius="0.02"/>
       </geometry>
     </collision>
     <inertial>
       <origin xyz="0 0 0"/>
-      <mass value="0.005"/>
-      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+      <mass value="0.05"/>
+      <inertia ixx="1.0e-04" ixy="0.0" ixz="0.0" iyy="1.0e-04" iyz="0.0" izz="1.0e-04"/>
     </inertial>
   </link>
 
@@ -118,8 +123,8 @@
     <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
       <left_joint>wheel_left_joint</left_joint>
       <right_joint>wheel_right_joint</right_joint>
-      <wheel_separation>0.160</wheel_separation>
-      <wheel_radius>0.033</wheel_radius>
+      <wheel_separation>0.76</wheel_separation>
+      <wheel_radius>0.12</wheel_radius>
       <odom_publish_frequency>30</odom_publish_frequency>
       <topic>/model/turtlebot/cmd_vel</topic>
       <odom_topic>/model/turtlebot/odometry</odom_topic>
