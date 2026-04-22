@@ -2,12 +2,12 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, GroupAction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import IncludeLaunchDescription
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
+from launch_ros.actions import Node, PushRosNamespace
 
 
 def generate_launch_description():
@@ -48,18 +48,22 @@ def generate_launch_description():
         description="World to load",
     )
 
-    robot_state_publisher = Node(
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        output="screen",
-        parameters=[
-            {
-                "robot_description": robot_description,
-                "use_sim_time": True,
-                "frame_prefix": "turtlebot/",
-            }
-        ],
-        remappings=[("joint_states", "/turtlebot/joint_states")],
+    rsp = GroupAction(
+        actions=[
+            PushRosNamespace("turtlebot"),
+            Node(
+                package="robot_state_publisher",
+                executable="robot_state_publisher",
+                output="screen",
+                parameters=[
+                    {
+                        "robot_description": robot_description,
+                        "use_sim_time": True,
+                        "frame_prefix": "turtlebot/",
+                    }
+                ],
+            ),
+        ]
     )
 
     gazebo = IncludeLaunchDescription(
@@ -87,7 +91,7 @@ def generate_launch_description():
         package="ros_gz_sim",
         executable="create",
         arguments=[
-            "-topic", "robot_description",
+            "-topic", "/turtlebot/robot_description",
             "-name", "turtlebot",
             "-x", "-2.0",
             "-y", "1.0",
@@ -126,7 +130,7 @@ def generate_launch_description():
             world_arg,
             gazebo,
             clock_bridge,
-            robot_state_publisher,
+            rsp,
             spawn_entity,
             bridge,
             teleop,
