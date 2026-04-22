@@ -1,0 +1,9 @@
+std_msgs/Header header
+int32 track_id
+geometry_msgs/Pose pose
+geometry_msgs/Vector3 size
+geometry_msgs/Twist twist
+geometry_msgs/Accel accel
+float32 confidence
+bool is_static
+bool is_yolo

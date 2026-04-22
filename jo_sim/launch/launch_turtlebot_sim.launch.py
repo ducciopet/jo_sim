@@ -93,9 +93,12 @@ def generate_launch_description():
         arguments=[
             "-topic", "/turtlebot/robot_description",
             "-name", "turtlebot",
-            "-x", "-2.0",
-            "-y", "1.0",
+            "-x", "2.5",
+            "-y", "6.0",
             "-z", "0.1",
+            "-R", "0.0",
+            "-P", "0.0",
+            "-Y", "-2.0"
         ],
         output="screen",
         parameters=[{"use_sim_time": True}],
@@ -106,6 +109,13 @@ def generate_launch_description():
         package="ros_gz_bridge",
         executable="parameter_bridge",
         arguments=["--ros-args", "-p", f"config_file:={bridge_params}"],
+        output="screen",
+        parameters=[{"use_sim_time": True}],
+    )
+
+    obstacle_publisher = Node(
+        package="jo_sim",
+        executable="turtlebot_obstacle_publisher.py",
         output="screen",
         parameters=[{"use_sim_time": True}],
     )
@@ -133,6 +143,7 @@ def generate_launch_description():
             rsp,
             spawn_entity,
             bridge,
+            obstacle_publisher,
             teleop,
         ]
     )

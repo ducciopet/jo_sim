@@ -8,5 +8,9 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
+install(
+  PROGRAMS scripts/turtlebot_obstacle_publisher.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 ament_package()
