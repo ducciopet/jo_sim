@@ -117,7 +117,12 @@ def generate_launch_description():
         package="jo_sim",
         executable="turtlebot_obstacle_publisher.py",
         output="screen",
-        parameters=[{"use_sim_time": True}],
+        parameters=[{
+            "use_sim_time": True,
+            "spawn_x": 2.5,
+            "spawn_y": 6.0,
+            "spawn_yaw": -2.0,
+        }],
     )
 
     teleop = Node(
