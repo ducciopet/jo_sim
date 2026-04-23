@@ -38,7 +38,7 @@ class TurtlebotObstaclePublisher(Node):
         self.declare_parameter("spawn_x", 2.5)
         self.declare_parameter("spawn_y", 6.0)
         self.declare_parameter("spawn_yaw", -2.0)
-        self._pub = self.create_publisher(ObstacleArray, "/turtlebot/obstacle", 10)
+        self._pub = self.create_publisher(ObstacleArray, "/onboard_detector/tracked_dynamic_obstacles", 10)
         self.create_subscription(Odometry, "/turtlebot/odom", self._odom_cb, 10)
         self._prev_twist = None
         self._prev_time = None
