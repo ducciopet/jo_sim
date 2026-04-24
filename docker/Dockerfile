@@ -1,7 +1,9 @@
 FROM osrf/ros:jazzy-desktop-full
 
 ENV GZ_VERSION=harmonic
+ENV ROS_DOMAIN_ID=42
 ARG DISTRO=jazzy
+
 
 RUN apt update -y \
     && apt install -y python3-pip \
@@ -9,7 +11,7 @@ RUN apt update -y \
     libxcb-cursor0 \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN pip install --break-system-packages ruamel.yaml PyQt6 
+RUN pip install --break-system-packages ruamel.yaml PyQt6
 
 RUN apt update -y \
     && apt install -y ros-${DISTRO}-plotjuggler \
@@ -48,6 +50,7 @@ RUN apt update -y \
     gnupg \
     wget \
     xterm \
+    ros-${DISTRO}-tf-transformations \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN sudo curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \

@@ -12,9 +12,34 @@
   gz_type_name: "gz.msgs.Model"
   direction: GZ_TO_ROS
 
-# Gz odometry → ROS (for obstacle publisher)
+# Gz odometry → ROS (for obstacle publisher velocity)
 - ros_topic_name: "/turtlebot/odom"
   gz_topic_name: "/model/turtlebot/odometry"
   ros_type_name: "nav_msgs/msg/Odometry"
   gz_type_name: "gz.msgs.Odometry"
+  direction: GZ_TO_ROS
+
+# Ground-truth world-frame pose from OdometryPublisher (physics ECM)
+- ros_topic_name: "/turtlebot/world_odom"
+  gz_topic_name: "/model/turtlebot/world_odometry"
+  ros_type_name: "nav_msgs/msg/Odometry"
+  gz_type_name: "gz.msgs.Odometry"
+  direction: GZ_TO_ROS
+
+# Ground-truth world-frame pose array (OdometryPublisher, physics ECM)
+- ros_topic_name: "/turtlebot/world_pose"
+  gz_topic_name: "/model/turtlebot/pose"
+  ros_type_name: "geometry_msgs/msg/PoseArray"
+  gz_type_name: "gz.msgs.Pose_V"
+  direction: GZ_TO_ROS
+
+# Gz diff-drive TF → ROS /tf
+# Publishes turtlebot/odom → turtlebot/base_footprint.
+# Combined with the static "world → turtlebot/odom" TF (at turtlebot spawn),
+# and the static "world → odom" TF (at Jo spawn), gives the full chain:
+# odom ← world → turtlebot/odom → turtlebot/base_footprint
+- ros_topic_name: "/tf"
+  gz_topic_name: "/model/turtlebot/tf"
+  ros_type_name: "tf2_msgs/msg/TFMessage"
+  gz_type_name: "gz.msgs.Pose_V"
   direction: GZ_TO_ROS

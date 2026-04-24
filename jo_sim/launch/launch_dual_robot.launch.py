@@ -121,9 +121,9 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'use_sim_time': True,
-            'spawn_x': 2.5,
-            'spawn_y': 6.0,
-            'spawn_yaw': -2.0,
+            'jo_spawn_x':   -6.5,
+            'jo_spawn_y':    2.5,
+            'jo_spawn_yaw':  -0.25,
         }],
     )
 
@@ -161,6 +161,30 @@ def generate_launch_description():
     )
     delayed_glim = TimerAction(period=4.0, actions=[glim])
 
+    # ── Static TFs ───────────────────────────────────────────────────────────
+    # world → odom: Jo's spawn pose (GLIM initialises odom at Jo's spawn)
+    static_tf_world_odom = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=[
+            '--frame-id', 'world', '--child-frame-id', 'odom',
+            '--x', '-6.5', '--y', '2.5', '--z', '0.0',
+            '--yaw', '-0.25', '--pitch', '0.0', '--roll', '0.0',
+        ],
+        parameters=[{'use_sim_time': True}],
+    )
+    # world → turtlebot/odom: turtlebot spawn pose (odom aligned with robot heading)
+    static_tf_world_tb_odom = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=[
+            '--frame-id', 'world', '--child-frame-id', 'turtlebot/odom',
+            '--x', '2.5', '--y', '6.0', '--z', '0.0',
+            '--yaw', '-2.0', '--pitch', '0.0', '--roll', '0.0',
+        ],
+        parameters=[{'use_sim_time': True}],
+    )
+
     # ── RViz ─────────────────────────────────────────────────────────────────
     rviz_config = os.path.join(jo_sim_pkg, 'rviz', 'sim.rviz')
     rviz = Node(
@@ -185,6 +209,8 @@ def generate_launch_description():
         ros_gz_bridge_jo,
         ros_gz_image_bridge,
         ros_gz_bridge_tb,
+        static_tf_world_odom,
+        static_tf_world_tb_odom,
         obstacle_publisher,
         teleop,
         delayed_glim,
