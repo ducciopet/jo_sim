@@ -57,6 +57,13 @@ def generate_launch_description():
                 'use_sim_time': True,
                 'frame_prefix': 'turtlebot/',
             }],
+            # Publish to /turtlebot/tf instead of global /tf so that Jo's
+            # ekf_node and glim_rosnode don't receive stale turtlebot wheel
+            # transforms (bridge latency causes TF_OLD_DATA warnings).
+            remappings=[
+                ('/tf',        '/turtlebot/tf'),
+                ('/tf_static', '/turtlebot/tf_static'),
+            ],
         ),
     ])
 
