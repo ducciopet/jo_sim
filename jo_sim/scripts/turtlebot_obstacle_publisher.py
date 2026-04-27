@@ -16,7 +16,7 @@ Transform:  world --[inv(jo_spawn)]--> odom
 import math
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import PoseArray, Quaternion
+from geometry_msgs.msg import PoseArray
 from jo_msgs.msg import Obstacle, ObstacleArray
 
 TURTLEBOT_SIZE_X = 0.6
@@ -29,12 +29,6 @@ def _yaw_from_quat(q):
     return math.atan2(2.0 * (q.w * q.z + q.x * q.y),
                       1.0 - 2.0 * (q.y * q.y + q.z * q.z))
 
-
-def _quat_from_yaw(yaw):
-    q = Quaternion()
-    q.z = math.sin(yaw / 2.0)
-    q.w = math.cos(yaw / 2.0)
-    return q
 
 
 class TurtlebotObstaclePublisher(Node):
@@ -110,6 +104,15 @@ class TurtlebotObstaclePublisher(Node):
             f"vx={vx_odom:.2f} vy={vy_odom:.2f}",
             throttle_duration_sec=1.0)
 
+        # ── AABB: smallest axis-aligned box containing the oriented obstacle ──
+        # For a box (Lx, Ly) rotated by yaw:
+        #   AABB_x = Lx*|cos(yaw)| + Ly*|sin(yaw)|
+        #   AABB_y = Lx*|sin(yaw)| + Ly*|cos(yaw)|
+        abs_cos = abs(math.cos(odom_yaw))
+        abs_sin = abs(math.sin(odom_yaw))
+        aabb_x = TURTLEBOT_SIZE_X * abs_cos + TURTLEBOT_SIZE_Y * abs_sin
+        aabb_y = TURTLEBOT_SIZE_X * abs_sin + TURTLEBOT_SIZE_Y * abs_cos
+
         stamp = now.to_msg()
 
         obs = Obstacle()
@@ -118,10 +121,10 @@ class TurtlebotObstaclePublisher(Node):
         obs.track_id = TRACK_ID
         obs.pose.position.x = odom_x
         obs.pose.position.y = odom_y
-        obs.pose.position.z = 0.0
-        obs.pose.orientation = _quat_from_yaw(odom_yaw)
-        obs.size.x = TURTLEBOT_SIZE_X
-        obs.size.y = TURTLEBOT_SIZE_Y
+        obs.pose.position.z = TURTLEBOT_SIZE_Z * 0.5  # centre height
+        obs.pose.orientation.w = 1.0                   # identity — AABB has no rotation
+        obs.size.x = aabb_x
+        obs.size.y = aabb_y
         obs.size.z = TURTLEBOT_SIZE_Z
         obs.twist.linear.x = vx_odom
         obs.twist.linear.y = vy_odom

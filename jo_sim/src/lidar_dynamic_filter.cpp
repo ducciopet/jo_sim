@@ -16,13 +16,6 @@
 
 using namespace std::chrono_literals;
 
-static double yaw_from_quat(const geometry_msgs::msg::Quaternion & q)
-{
-  return std::atan2(
-    2.0 * (q.w * q.z + q.x * q.y),
-    1.0 - 2.0 * (q.y * q.y + q.z * q.z));
-}
-
 // ── node ─────────────────────────────────────────────────────────────────────
 
 class LidarDynamicFilter : public rclcpp::Node
@@ -49,20 +42,19 @@ public:
   }
 
 private:
-  // Obstacle stored in its source frame (before TF to lidar frame).
+  // Obstacle stored in its source frame (odom). The message uses an AABB
+  // (identity orientation), so no rotation is needed for the box check.
   struct ObsBox
   {
-    double x, y, z;        // centre in obs_frame
-    double hx, hy, hz;     // half-extents + margin
-    double yaw;            // heading in obs_frame
+    double x, y, z;    // centre in obs_frame
+    double hx, hy, hz; // half-extents + margin
   };
 
-  // Obstacle ready for per-point test, expressed in the lidar sensor frame.
+  // Obstacle centre expressed in the lidar sensor frame, ready for AABB test.
   struct ObsBoxLidar
   {
     double x, y, z;
     double hx, hy, hz;
-    double cos_yaw, sin_yaw;
   };
 
   void obs_cb(const jo_msgs::msg::ObstacleArray::SharedPtr msg)
@@ -79,8 +71,7 @@ private:
         o.pose.position.z,
         o.size.x * 0.5 + m,
         o.size.y * 0.5 + m,
-        o.size.z * 0.5 + m,
-        yaw_from_quat(o.pose.orientation)
+        o.size.z * 0.5 + m
       });
     }
   }
@@ -93,8 +84,8 @@ private:
     std::string obs_frame;
     {
       std::lock_guard<std::mutex> lk(mtx_);
-      timeout   = get_parameter("tracking_timeout").as_double();
-      active    = last_recv_.has_value() &&
+      timeout  = get_parameter("tracking_timeout").as_double();
+      active   = last_recv_.has_value() &&
         (now() - *last_recv_).seconds() < timeout;
       if (active) {
         local_obs = obs_;
@@ -110,20 +101,8 @@ private:
     const std::string & lidar_frame = msg->header.frame_id;
     const rclcpp::Time t0(0, 0, get_clock()->get_clock_type());
 
-    // Look up the transform once to adjust obstacle yaw to lidar frame.
-    geometry_msgs::msg::TransformStamped tf_stamped;
-    try {
-      tf_stamped = tf_buf_.lookupTransform(lidar_frame, obs_frame, t0,
-                                            tf2::durationFromSec(0.05));
-    } catch (const tf2::TransformException & ex) {
-      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000,
-        "TF not ready yet, passing LiDAR unfiltered: %s", ex.what());
-      pub_->publish(*msg);
-      return;
-    }
-    const double tf_yaw = yaw_from_quat(tf_stamped.transform.rotation);
-
-    // Transform each obstacle centre to lidar frame and compute lidar-frame yaw.
+    // Transform each obstacle centre from odom to lidar frame (one point per
+    // obstacle, not per LiDAR return).  The box is AABB so no rotation needed.
     std::vector<ObsBoxLidar> obs_lidar;
     obs_lidar.reserve(local_obs.size());
     for (const auto & o : local_obs) {
@@ -137,16 +116,12 @@ private:
         tf_buf_.transform(pin, pout, lidar_frame, tf2::durationFromSec(0.05));
       } catch (const tf2::TransformException & ex) {
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000,
-          "TF centre transform failed, passing LiDAR unfiltered: %s", ex.what());
+          "TF not ready yet, passing LiDAR unfiltered: %s", ex.what());
         pub_->publish(*msg);
         return;
       }
-      const double box_yaw = o.yaw + tf_yaw;
-      obs_lidar.push_back({
-        pout.point.x, pout.point.y, pout.point.z,
-        o.hx, o.hy, o.hz,
-        std::cos(box_yaw), std::sin(box_yaw)
-      });
+      obs_lidar.push_back({pout.point.x, pout.point.y, pout.point.z,
+                            o.hx, o.hy, o.hz});
     }
 
     // Locate x/y/z field offsets in the point layout.
@@ -161,7 +136,7 @@ private:
       return;
     }
 
-    // Copy points that do not fall inside any obstacle oriented box.
+    // Copy points that do not fall inside any obstacle AABB.
     const uint32_t ps   = msg->point_step;
     const uint32_t n    = msg->width * msg->height;
     const uint8_t * raw = msg->data.data();
@@ -180,13 +155,10 @@ private:
 
       bool inside = false;
       for (const auto & o : obs_lidar) {
-        const double dx = px - o.x;
-        const double dy = py - o.y;
-        const double dz = pz - o.z;
-        // Rotate (dx,dy) into the obstacle-aligned frame.
-        const double u =  dx * o.cos_yaw + dy * o.sin_yaw;
-        const double v = -dx * o.sin_yaw + dy * o.cos_yaw;
-        if (std::abs(u) <= o.hx && std::abs(v) <= o.hy && std::abs(dz) <= o.hz) {
+        if (std::abs(px - o.x) <= o.hx &&
+            std::abs(py - o.y) <= o.hy &&
+            std::abs(pz - o.z) <= o.hz)
+        {
           inside = true;
           break;
         }

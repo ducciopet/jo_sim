@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-#include "geometry_msgs/msg/quaternion.hpp"
 #include "jo_msgs/msg/obstacle_array.hpp"
 #include "nav2_costmap_2d/costmap_2d.hpp"
 #include "nav2_costmap_2d/layer.hpp"
@@ -15,13 +14,6 @@
 
 namespace jo_sim
 {
-
-static double yaw_from_quat(const geometry_msgs::msg::Quaternion & q)
-{
-  return std::atan2(
-    2.0 * (q.w * q.z + q.x * q.y),
-    1.0 - 2.0 * (q.y * q.y + q.z * q.z));
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -134,11 +126,10 @@ public:
 
     int marker_id = 0;
     for (const auto & obs : msg->obstacles) {
-      const double ox      = obs.pose.position.x;
-      const double oy      = obs.pose.position.y;
-      const double heading = yaw_from_quat(obs.pose.orientation);
+      const double ox = obs.pose.position.x;
+      const double oy = obs.pose.position.y;
 
-      // Physical half-extents (used for the yellow marker).
+      // Half-extents of the AABB published by the obstacle detector.
       const double hx = obs.size.x * 0.5;
       const double hy = obs.size.y * 0.5;
 
@@ -153,8 +144,7 @@ public:
       const double speed = std::hypot(vx, vy);
       const double infl  = speed * vel_inflation_k_;
 
-      const double mark_heading = (speed > vel_inflation_min_)
-        ? std::atan2(vy, vx) : heading;
+      const double mark_heading = std::atan2(vy, vx);
 
       const double cos_m  = std::cos(mark_heading);
       const double sin_m  = std::sin(mark_heading);
@@ -192,8 +182,7 @@ public:
       mk.pose.position.x = ox;
       mk.pose.position.y = oy;
       mk.pose.position.z = obs.size.z * 0.5;
-      mk.pose.orientation.z = std::sin(heading * 0.5);
-      mk.pose.orientation.w = std::cos(heading * 0.5);
+      mk.pose.orientation.w = 1.0;  // AABB — axis-aligned, no rotation
       mk.scale.x = obs.size.x;
       mk.scale.y = obs.size.y;
       mk.scale.z = obs.size.z;
