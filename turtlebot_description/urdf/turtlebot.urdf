@@ -179,6 +179,16 @@
     </inertial>
   </link>
 
+  <!-- Front passive wheels: no lateral friction so turns are not resisted -->
+  <gazebo reference="wheel_front_left_link">
+    <mu>1.0</mu>
+    <mu2>0.0</mu2>
+  </gazebo>
+  <gazebo reference="wheel_front_right_link">
+    <mu>1.0</mu>
+    <mu2>0.0</mu2>
+  </gazebo>
+
   <!-- Gazebo Harmonic: diff drive plugin -->
   <gazebo>
     <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
