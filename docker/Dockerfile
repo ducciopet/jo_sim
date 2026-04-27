@@ -115,10 +115,6 @@ RUN cd src && git clone https://github.com/koide3/glim.git
 
 RUN cd src && git clone https://github.com/sutharsan-311/nav2_config.git
 
-# navigation2 from source – needed for newer BT nodes (IsGoalNearby, WouldA*RecoveryHelp, …)
-# that are not present in the apt-installed Jazzy packages.
-RUN cd src && git clone --depth=1 https://github.com/ros-navigation/navigation2.git -b jazzy
-
 RUN cd RGLGazeboPlugin && sudo touch COLCON_IGNORE
 
 SHELL ["/bin/bash", "-c"]
@@ -136,7 +132,7 @@ COPY --chown=ros:ros jo_navigation    src/jo_navigation
 RUN source /opt/ros/jazzy/setup.bash \
  && source /home/ros/glim_install/setup.bash \
  && colcon build \
-    --packages-select jo_description jo_msgs turtlebot_description jo_sim jo_navigation nav2_behavior_tree nav2_bt_navigator \
+    --packages-select jo_description jo_msgs turtlebot_description jo_sim jo_navigation \
     --install-base /home/ros/local_install \
     --symlink-install
 
