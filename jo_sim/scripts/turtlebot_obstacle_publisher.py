@@ -21,10 +21,9 @@ from jo_msgs.msg import Obstacle, ObstacleArray
 
 TURTLEBOT_SIZE_X = 0.6
 TURTLEBOT_SIZE_Y = 0.6
-TURTLEBOT_SIZE_Z = 1.1
-# z of the turtlebot body centre above its base_footprint:
-#   wheel/base_joint offset (0.12) + half body height (0.55)
-TURTLEBOT_BODY_CENTER_Z = 0.67
+# Full height from base_footprint to top of body:
+#   base_joint z (0.12) + body height (1.1) = 1.22 m
+TURTLEBOT_SIZE_Z = 1.22
 TRACK_ID = 1
 
 
@@ -134,7 +133,7 @@ class TurtlebotObstaclePublisher(Node):
         odom_z = wz - jo_bl_z
         obs.pose.position.x = odom_x
         obs.pose.position.y = odom_y
-        obs.pose.position.z = odom_z + TURTLEBOT_BODY_CENTER_Z
+        obs.pose.position.z = odom_z + TURTLEBOT_SIZE_Z * 0.5
         obs.pose.orientation.w = 1.0                   # identity — AABB has no rotation
         obs.size.x = aabb_x
         obs.size.y = aabb_y
