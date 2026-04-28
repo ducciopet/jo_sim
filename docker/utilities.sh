@@ -15,3 +15,5 @@ alias navigation_gps='ros2 launch jo_navigation navigation_gps.launch.py rviz:=t
 
 alias sim='ros2 launch jo_sim launch_sim.launch.py glim:=true'
 alias dual_sim='ros2 launch jo_sim launch_dual_robot.launch.py glim:=true teleop_turtlebot:=true'
+
+alias only_glim='ros2 launch jo_sim launch_sim.launch.py glim:=true'

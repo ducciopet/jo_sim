@@ -109,30 +109,27 @@ USER ros
 WORKDIR /home/$USERNAME/
 RUN mkdir src
 
-# GLIM
-RUN cd src && git clone https://github.com/mlisi1/glim_ros2.git
-RUN cd src && git clone https://github.com/koide3/glim.git
-
 RUN cd src && git clone https://github.com/sutharsan-311/nav2_config.git
 
 RUN cd RGLGazeboPlugin && sudo touch COLCON_IGNORE
 
+
+
 SHELL ["/bin/bash", "-c"]
-RUN source /opt/ros/jazzy/setup.bash \
- && colcon build --install-base /home/ros/glim_install
 
 # Copy local ROS packages and build them with symlink-install.
 # At runtime the volume mounts override src/, so symlinks pick up host changes.
-COPY --chown=ros:ros jo_description   src/jo_description
-COPY --chown=ros:ros jo_msgs          src/jo_msgs
+COPY --chown=ros:ros jo_description        src/jo_description
+COPY --chown=ros:ros jo_msgs               src/jo_msgs
 COPY --chown=ros:ros turtlebot_description src/turtlebot_description
-COPY --chown=ros:ros jo_sim           src/jo_sim
-COPY --chown=ros:ros jo_navigation    src/jo_navigation
+COPY --chown=ros:ros jo_sim                src/jo_sim
+COPY --chown=ros:ros jo_navigation         src/jo_navigation
+COPY --chown=ros:ros glim                  src/glim
+COPY --chown=ros:ros glim_ros2             src/glim_ros2
 
 RUN source /opt/ros/jazzy/setup.bash \
- && source /home/ros/glim_install/setup.bash \
  && colcon build \
-    --packages-select jo_description jo_msgs turtlebot_description jo_sim jo_navigation \
+    --packages-select jo_description jo_msgs turtlebot_description jo_sim jo_navigation glim glim_ros\
     --install-base /home/ros/local_install \
     --symlink-install
 
