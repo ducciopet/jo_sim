@@ -8,7 +8,7 @@ find_package(jo_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 
 install(
-  DIRECTORY config launch worlds rviz
+  DIRECTORY config launch worlds rviz scripts
   DESTINATION share/${PROJECT_NAME}
 )
 
