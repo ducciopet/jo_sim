@@ -137,6 +137,8 @@ def generate_launch_description():
             'jo_spawn_x':   -6.5,
             'jo_spawn_y':    2.5,
             'jo_spawn_yaw':  -0.25,
+            # chassis_height (0.273) + 0.1 from base_footprint_joint in robot_core.xacro
+            'jo_base_link_height': 0.373,
         }],
     )
 
