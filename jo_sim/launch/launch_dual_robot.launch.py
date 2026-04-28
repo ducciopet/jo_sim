@@ -1,12 +1,16 @@
 import os
+import sys
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription, TimerAction
+from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription, TimerAction, OpaqueFunction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node, PushRosNamespace
+
+sys.path.insert(0, os.path.join(get_package_share_directory('jo_sim'), 'scripts'))
+from launch_utils import inject_plugins  # noqa: E402
 
 
 def generate_launch_description():
@@ -29,10 +33,12 @@ def generate_launch_description():
     world_arg = DeclareLaunchArgument(
         'world',
         default_value=os.path.join(jo_sim_pkg, 'worlds', 'external', 'worlds', 'office_cpr.world'),
-        description='World to load')
+        description='World to load (plugins are injected automatically)')
     teleop_arg = DeclareLaunchArgument(
         'teleop_turtlebot', default_value='false',
         description='Launch keyboard teleop for turtlebot')
+
+    inject = OpaqueFunction(function=inject_plugins)
 
     # ── Jo RSP ──────────────────────────────────────────────────────────────
     rsp_jo = GroupAction([
@@ -210,6 +216,7 @@ def generate_launch_description():
         launch_glim_arg,
         world_arg,
         teleop_arg,
+        inject,
         rsp_jo,
         rsp_turtlebot,
         gazebo,
