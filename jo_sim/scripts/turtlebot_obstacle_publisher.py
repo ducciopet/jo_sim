@@ -22,6 +22,9 @@ from jo_msgs.msg import Obstacle, ObstacleArray
 TURTLEBOT_SIZE_X = 0.6
 TURTLEBOT_SIZE_Y = 0.6
 TURTLEBOT_SIZE_Z = 1.1
+# z of the turtlebot body centre above its base_footprint:
+#   wheel/base_joint offset (0.12) + half body height (0.55)
+TURTLEBOT_BODY_CENTER_Z = 0.67
 TRACK_ID = 1
 
 
@@ -38,6 +41,9 @@ class TurtlebotObstaclePublisher(Node):
         self.declare_parameter("jo_spawn_x",   -6.5)
         self.declare_parameter("jo_spawn_y",    2.5)
         self.declare_parameter("jo_spawn_yaw",  -0.25)
+        # Height of Jo's base_link above ground when settled = chassis_height + 0.1
+        # from base_footprint_joint in jo_description/urdf/robot_core.xacro (0.273 + 0.1)
+        self.declare_parameter("jo_base_link_height", 0.373)
 
         self._pub = self.create_publisher(
             ObstacleArray, "/onboard_detector/tracked_dynamic_obstacles", 10)
@@ -58,15 +64,17 @@ class TurtlebotObstaclePublisher(Node):
 
         now = self.get_clock().now()
 
-        jo_sx   = self.get_parameter("jo_spawn_x").value
-        jo_sy   = self.get_parameter("jo_spawn_y").value
-        jo_syaw = self.get_parameter("jo_spawn_yaw").value
+        jo_sx     = self.get_parameter("jo_spawn_x").value
+        jo_sy     = self.get_parameter("jo_spawn_y").value
+        jo_syaw   = self.get_parameter("jo_spawn_yaw").value
+        jo_bl_z   = self.get_parameter("jo_base_link_height").value
 
         pose = msg.poses[0]
 
         # ── position: world → odom ──────────────────────────────────────────
         wx   = pose.position.x
         wy   = pose.position.y
+        wz   = pose.position.z   # world z of turtlebot base_footprint
         wyaw = _yaw_from_quat(pose.orientation)
 
         dx = wx - jo_sx
@@ -119,9 +127,14 @@ class TurtlebotObstaclePublisher(Node):
         obs.header.stamp = stamp
         obs.header.frame_id = "odom"
         obs.track_id = TRACK_ID
+        # odom z=0 is at Jo's base_link height above ground (jo_base_link_height).
+        # wz is turtlebot base_footprint in world frame → subtract Jo's base_link
+        # world height to get the base_footprint z in odom, then add the offset
+        # from turtlebot base_footprint to its body centre.
+        odom_z = wz - jo_bl_z
         obs.pose.position.x = odom_x
         obs.pose.position.y = odom_y
-        obs.pose.position.z = TURTLEBOT_SIZE_Z * 0.5  # centre height
+        obs.pose.position.z = odom_z + TURTLEBOT_BODY_CENTER_Z
         obs.pose.orientation.w = 1.0                   # identity — AABB has no rotation
         obs.size.x = aabb_x
         obs.size.y = aabb_y

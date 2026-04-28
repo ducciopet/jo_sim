@@ -181,7 +181,7 @@ public:
       mk.action          = visualization_msgs::msg::Marker::ADD;
       mk.pose.position.x = ox;
       mk.pose.position.y = oy;
-      mk.pose.position.z = obs.size.z * 0.5;
+      mk.pose.position.z = obs.pose.position.z;
       mk.pose.orientation.w = 1.0;  // AABB — axis-aligned, no rotation
       mk.scale.x = obs.size.x;
       mk.scale.y = obs.size.y;
