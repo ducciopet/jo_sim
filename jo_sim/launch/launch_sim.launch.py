@@ -52,6 +52,7 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('rviz'))
     )
 
+
     rsp = GroupAction(
         actions=[
             PushRosNamespace('jo'),

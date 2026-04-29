@@ -174,7 +174,17 @@ def generate_launch_description():
             {'use_sim_time': True},
         ],
     )
-    delayed_glim = TimerAction(period=4.0, actions=[glim])
+
+    lidar_dynamic_filter = Node(
+        package='glim_ros',
+        executable='lidar_dynamic_filter',
+        output='screen',
+        emulate_tty=True,
+        condition=IfCondition(LaunchConfiguration('glim')),
+        parameters=[{'use_sim_time': True}],
+    )
+
+    delayed_glim = TimerAction(period=4.0, actions=[glim, lidar_dynamic_filter])
 
     # ── Static TFs ───────────────────────────────────────────────────────────
     # world → odom: Jo's spawn pose (GLIM initialises odom at Jo's spawn)
@@ -201,7 +211,7 @@ def generate_launch_description():
     )
 
     # ── RViz ─────────────────────────────────────────────────────────────────
-    rviz_config = os.path.join(jo_sim_pkg, 'rviz', 'sim.rviz')
+    rviz_config = os.path.join(jo_sim_pkg, 'rviz', 'debug.rviz')
     rviz = Node(
         package='rviz2', executable='rviz2', name='rviz2',
         output='screen',
