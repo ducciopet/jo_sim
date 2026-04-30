@@ -105,11 +105,11 @@ class TurtlebotObstaclePublisher(Node):
         self._prev_vy_odom = vy_odom
         self._prev_time = now
  
-        self.get_logger().info(
-            f"turtlebot in odom: x={odom_x:.2f} y={odom_y:.2f} "
-            f"yaw={math.degrees(odom_yaw):.1f}° "
-            f"vx={vx_odom:.2f} vy={vy_odom:.2f}",
-            throttle_duration_sec=1.0)
+        # self.get_logger().info(
+        #     f"turtlebot in odom: x={odom_x:.2f} y={odom_y:.2f} "
+        #     f"yaw={math.degrees(odom_yaw):.1f}° "
+        #     f"vx={vx_odom:.2f} vy={vy_odom:.2f}",
+        #     throttle_duration_sec=1.0)
  
         # ── AABB: smallest axis-aligned box containing the oriented obstacle ──
         # For a box (Lx, Ly) rotated by yaw:

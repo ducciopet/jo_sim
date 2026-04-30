@@ -130,10 +130,16 @@ def generate_launch_description():
         ],
     )
 
-    delayed_glim = TimerAction(
-        period=4.0,
-        actions=[glim]
+    lidar_dynamic_filter = Node(
+        package='glim_ros',
+        executable='lidar_dynamic_filter',
+        output='screen',
+        emulate_tty=True,
+        condition=IfCondition(LaunchConfiguration('glim')),
+        parameters=[{'use_sim_time': True}],
     )
+
+    delayed_glim = TimerAction(period=4.0, actions=[glim, lidar_dynamic_filter])
 
     return LaunchDescription([
         glim_param_folder_arg,
