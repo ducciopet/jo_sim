@@ -51,6 +51,7 @@ RUN apt update -y \
     wget \
     xterm \
     ros-${DISTRO}-tf-transformations \
+    ros-${DISTRO}-topic-tools \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN sudo curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
@@ -69,7 +70,7 @@ RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/
 ENV CUDAToolkit_ROOT=/usr/local/cuda
 
 RUN curl -s https://koide3.github.io/ppa/setup_ppa.sh | sudo bash
-RUN sudo add-apt-repository -y ppa:koide3/iridescence
+
 RUN apt update -y \
     && apt install -y libiridescence-dev \
     libgtsam-points-cuda13.1-dev \
@@ -111,10 +112,10 @@ RUN mkdir src
 
 RUN cd src && git clone https://github.com/sutharsan-311/nav2_config.git
 
-RUN cd RGLGazeboPlugin && sudo touch COLCON_IGNORE
-
 RUN cd src && git clone https://github.com/introlab/rtabmap.git
-RUN cd src &&git clone --branch ros2 https://github.com/introlab/rtabmap_ros.git
+RUN cd src && git clone --branch ros2 https://github.com/introlab/rtabmap_ros.git
+
+RUN cd RGLGazeboPlugin && sudo touch COLCON_IGNORE
 
 SHELL ["/bin/bash", "-c"]
 
@@ -130,7 +131,6 @@ COPY --chown=ros:ros glim_ros2             src/glim_ros2
 
 RUN source /opt/ros/jazzy/setup.bash \
  && colcon build \
-    --packages-select jo_description jo_msgs turtlebot_description jo_sim jo_navigation glim glim_ros\
     --install-base /home/ros/local_install \
     --symlink-install \
     --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DRTABMAP_SYNC_USER_DATA=ON -DCMAKE_BUILD_TYPE=Release
