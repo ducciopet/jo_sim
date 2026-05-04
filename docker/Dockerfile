@@ -130,7 +130,7 @@ COPY --chown=ros:ros glim                  src/glim
 COPY --chown=ros:ros glim_ros2             src/glim_ros2
 
 RUN source /opt/ros/jazzy/setup.bash \
- && colcon build \
+ && colcon build  \
     --install-base /home/ros/local_install \
     --symlink-install \
     --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DRTABMAP_SYNC_USER_DATA=ON -DCMAKE_BUILD_TYPE=Release
