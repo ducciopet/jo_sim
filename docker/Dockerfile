@@ -213,7 +213,7 @@ RUN cd /home/ros/RGLGazeboPlugin \
 
 
 USER ros
-# RUN sudo usermod -aG dialout ros
+RUN sudo usermod -aG dialout ros
 WORKDIR /home/$USERNAME/
 RUN mkdir src
 
@@ -240,7 +240,6 @@ COPY --chown=ros:ros onboard_detector      src/onboard_detector
 RUN source /opt/ros/jazzy/setup.bash \
  && colcon build \
     --install-base /home/ros/local_install \
-    --symlink-install \
     --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DRTABMAP_SYNC_USER_DATA=ON -DCMAKE_BUILD_TYPE=Release
 
 COPY docker/entrypoint.sh /entrypoint.sh
