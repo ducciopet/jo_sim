@@ -17,3 +17,27 @@ alias navigation_gps='ros2 launch jo_navigation navigation_gps.launch.py rviz:=t
 
 alias sim='ros2 launch jo_sim launch_sim.launch.py glim:=true'
 alias dual_sim='ros2 launch jo_sim launch_dual_robot.launch.py glim:=true teleop_turtlebot:=true '
+
+alias detection='ros2 launch onboard_detector run_detector.launch.py'
+alias localization_detector='ros2 launch jo_navigation localization_detector.launch.py'
+alias description='ros2 launch jo_description description.launch.py'
+
+ros2 () {
+  if [ "$1" = "bag" ] && [ "$2" = "play" ]; then
+    shift 2
+    command ros2 bag play "$1" \
+      --topics \
+      /clock \
+      /front_camera/camera/color/camera_info \
+      /front_camera/camera/color/image_raw \
+      /front_camera/camera/depth/camera_info \
+      /front_camera/camera/depth/image_rect_raw \
+      /velodyne_points \
+      /imu/data \
+      --loop --clock
+  else
+    command ros2 "$@"
+  fi
+}
+
+# ros2 bag play indor_20260421_1512_0/ --topics /clock /front_camera/camera/color/camera_info /front_camera/camera/color/image_raw /front_camera/camera/depth/camera_info /front_camera/camera/depth/image_rect_raw /velodyne_points /imu/data --loop --clock

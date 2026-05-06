@@ -224,23 +224,40 @@ RUN cd src && git clone --branch ros2 https://github.com/introlab/rtabmap_ros.gi
 
 RUN cd RGLGazeboPlugin && sudo touch COLCON_IGNORE
 
+# Disable packages with broken setup.py that must never be built
+RUN touch src/nav2_config/COLCON_IGNORE \
+ && touch src/rtabmap_ros/rtabmap_python/COLCON_IGNORE
+
 SHELL ["/bin/bash", "-c"]
 
-# Copy local ROS packages and build them with symlink-install.
-# At runtime the volume mounts override src/, so symlinks pick up host changes.
+# glim and glim_ros2 are built into the image layer (no --symlink-install).
+# jo_* packages are excluded here — they are built with --symlink-install at
+# container startup via the entrypoint so host edits are always picked up.
+COPY --chown=ros:ros glim                  src/glim
+COPY --chown=ros:ros glim_ros2             src/glim_ros2
+
+# jo_* go into src/ as a fallback when no volume mount is present (CI / one-shot).
+# At runtime the compose volume mounts override them.
 COPY --chown=ros:ros jo_description        src/jo_description
 COPY --chown=ros:ros jo_msgs               src/jo_msgs
 COPY --chown=ros:ros turtlebot_description src/turtlebot_description
 COPY --chown=ros:ros jo_sim                src/jo_sim
 COPY --chown=ros:ros jo_navigation         src/jo_navigation
-COPY --chown=ros:ros glim                  src/glim
-COPY --chown=ros:ros glim_ros2             src/glim_ros2
 COPY --chown=ros:ros onboard_detector      src/onboard_detector
 
+# Build rtabmap, glim, and all rtabmap_ros sub-packages (proper install, no symlinks).
+# jo_* are excluded; they get --symlink-install in the entrypoint.
+# After the build, mark rtabmap and rtabmap_ros with COLCON_IGNORE so that any
+# subsequent `colcon build` inside the container never triggers a rebuild of those
+# heavy packages (they are not volume-mounted, so the marker persists across restarts).
 RUN source /opt/ros/jazzy/setup.bash \
  && colcon build \
+    --packages-ignore \
+        jo_description turtlebot_description jo_sim jo_navigation onboard_detector \
     --install-base /home/ros/local_install \
-    --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DRTABMAP_SYNC_USER_DATA=ON -DCMAKE_BUILD_TYPE=Release
+    --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DRTABMAP_SYNC_USER_DATA=ON -DCMAKE_BUILD_TYPE=Release \
+ && touch src/rtabmap/COLCON_IGNORE \
+ && touch src/rtabmap_ros/COLCON_IGNORE
 
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN sudo chmod +x /entrypoint.sh

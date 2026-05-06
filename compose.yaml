@@ -1,11 +1,11 @@
 services:
-  jo-sim:
+  jo-sim_lv-dot:
     build:
       network: host
       context: .
       dockerfile: docker/Dockerfile
     privileged: true
-    image: jo-sim
+    image: jo-sim_lv_dot:latest
     stdin_open: true
     tty: true
     network_mode: host
@@ -30,6 +30,7 @@ services:
       - ./glim:/home/ros/src/glim
       - ./glim_ros2:/home/ros/src/glim_ros2
       - ./onboard_detector:/home/ros/src/onboard_detector
+      - ./bags:/home/ros/bags
     environment:
       - DISPLAY=${DISPLAY}
       - NVIDIA_VISIBLE_DEVICES=all
