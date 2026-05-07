@@ -31,6 +31,8 @@ services:
       - ./glim_ros2:/home/ros/src/glim_ros2
       - ./onboard_detector:/home/ros/src/onboard_detector
       - ./bags:/home/ros/bags
+      - ros_build:/home/ros/build
+      - ros_install:/home/ros/local_install
     environment:
       - DISPLAY=${DISPLAY}
       - NVIDIA_VISIBLE_DEVICES=all
@@ -43,3 +45,7 @@ services:
       - dialout
 
     command: bash
+
+volumes:
+  ros_build:
+  ros_install:

@@ -22,10 +22,22 @@ alias detection='ros2 launch onboard_detector run_detector.launch.py'
 alias localization_detector='ros2 launch jo_navigation localization_detector.launch.py'
 alias description='ros2 launch jo_description description.launch.py'
 
+alias bag_record_lv_dot=''
 ros2 () {
   if [ "$1" = "bag" ] && [ "$2" = "play" ]; then
     shift 2
-    command ros2 bag play "$1" \
+    local bag_path="$1"
+    shift
+    local extra_topics=()
+    local extra_flags=()
+    for arg in "$@"; do
+      if [[ "$arg" == /* ]]; then
+        extra_topics+=("$arg")
+      else
+        extra_flags+=("$arg")
+      fi
+    done
+    command ros2 bag play "$bag_path" \
       --topics \
       /clock \
       /front_camera/camera/color/camera_info \
@@ -34,10 +46,33 @@ ros2 () {
       /front_camera/camera/depth/image_rect_raw \
       /velodyne_points \
       /imu/data \
-      --loop --clock
+      "${extra_topics[@]}" \
+      --clock \
+      --read-ahead-queue-size 2000 \
+      "${extra_flags[@]}"
   else
     command ros2 "$@"
   fi
+}
+
+ros2bagrec () {
+  if [ -z "$1" ]; then
+    echo "Uso: ros2bagrec NOME_BAG"
+    return 1
+  fi
+
+  command ros2 bag record \
+    --topics \
+    /front_camera/camera/color/image_raw \
+    /front_camera/camera/depth/image_rect_raw \
+    /front_camera/camera/color/camera_info \
+    /front_camera/camera/depth/camera_info \
+    /velodyne_points \
+    /imu/data \
+    /clock \
+    /odometry/filtered \
+    --storage mcap \
+    -o "$1"
 }
 
 # ros2 bag play indor_20260421_1512_0/ --topics /clock /front_camera/camera/color/camera_info /front_camera/camera/color/image_raw /front_camera/camera/depth/camera_info /front_camera/camera/depth/image_rect_raw /velodyne_points /imu/data --loop --clock

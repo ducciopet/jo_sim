@@ -245,8 +245,12 @@ COPY --chown=ros:ros jo_sim                src/jo_sim
 COPY --chown=ros:ros jo_navigation         src/jo_navigation
 COPY --chown=ros:ros onboard_detector      src/onboard_detector
 
-# Build rtabmap, glim, and all rtabmap_ros sub-packages (proper install, no symlinks).
-# jo_* are excluded; they get --symlink-install in the entrypoint.
+# Build rtabmap, glim, glim_ros, and jo_msgs (proper install, no symlinks).
+# jo_description/turtlebot_description/jo_sim/jo_navigation are light and built
+# with --symlink-install in the entrypoint so host edits are always picked up.
+# onboard_detector is heavy (~65s) so it is built here with --symlink-install;
+# at runtime the volume mount replaces src/onboard_detector so Python/launch/config
+# changes are reflected immediately — only C++ changes need a manual colcon build.
 # After the build, mark rtabmap and rtabmap_ros with COLCON_IGNORE so that any
 # subsequent `colcon build` inside the container never triggers a rebuild of those
 # heavy packages (they are not volume-mounted, so the marker persists across restarts).
@@ -258,6 +262,14 @@ RUN source /opt/ros/jazzy/setup.bash \
     --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DRTABMAP_SYNC_USER_DATA=ON -DCMAKE_BUILD_TYPE=Release \
  && touch src/rtabmap/COLCON_IGNORE \
  && touch src/rtabmap_ros/COLCON_IGNORE
+
+RUN source /opt/ros/jazzy/setup.bash \
+ && source /home/ros/local_install/setup.bash \
+ && colcon build \
+    --packages-select onboard_detector jo_navigation jo_sim jo_description turtlebot_description \
+    --symlink-install \
+    --install-base /home/ros/local_install \
+    --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN sudo chmod +x /entrypoint.sh
