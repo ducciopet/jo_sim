@@ -28,8 +28,6 @@ alias detector='ros2 launch onboard_detector run_detector.launch.py'
 alias detector_bag='ros2 launch onboard_detector run_detector.launch.py odom_pub:=true'
 alias localization_detector='ros2 launch jo_navigation localization_detector.launch.py'
 
-
-alias bag_record_lv_dot=''
 ros2 () {
   if [ "$1" = "bag" ] && [ "$2" = "play" ]; then
     shift 2
