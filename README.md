@@ -23,15 +23,17 @@ A comprehensive ROS 2 robot description package for the Jo tracked robot platfor
   - Front and back depth cameras (RGB-D)
   - IMU sensor for orientation/acceleration
   - Track simulation
-- **Navigation Ready**: Pre-configured Nav2 stack for autonomous (mapless) navigation 
+- **Navigation Ready**: Pre-configured Nav2 stack for autonomous (mapless) navigation
+- **Dynamic Obstacle Detection**: Real-time 3D tracking of pedestrians, vehicles, and other dynamic objects via sensor fusion (depth + LiDAR + YOLOv11)
 - **Docker Support**: Full containerized environment with GPU acceleration
 - **RViz Visualization**: Pre-configured visualization configs for display, simulation, and navigation
 
 
 ## Packages
-+  ```jo_description``` - URDF model of the robot, complete with sensors
-+ ```jo_sim``` - Simulation package; used to launch Gazebo sim and GLIM SLAM
-+ ```jo_navigation``` - Package containing configs and launch files for localization and navigation
+- `jo_description` — URDF model of the robot, complete with sensors
+- `jo_sim` — Simulation package; used to launch Gazebo sim and GLIM SLAM
+- `jo_navigation` — Configs and launch files for localization (EKF) and navigation (Nav2)
+- `onboard_detector` — Real-time 3D dynamic obstacle detection and tracking (depth + LiDAR + YOLO fusion)
 
 
 
