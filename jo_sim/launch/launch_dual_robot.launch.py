@@ -6,7 +6,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription, TimerAction, OpaqueFunction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node, PushRosNamespace
 
 sys.path.insert(0, os.path.join(get_package_share_directory('jo_sim'), 'scripts'))
@@ -175,16 +175,7 @@ def generate_launch_description():
         ],
     )
 
-    lidar_dynamic_filter = Node(
-        package='glim_ros',
-        executable='lidar_dynamic_filter',
-        output='screen',
-        emulate_tty=True,
-        condition=IfCondition(LaunchConfiguration('glim')),
-        parameters=[{'use_sim_time': True}],
-    )
-
-    delayed_glim = TimerAction(period=4.0, actions=[glim, lidar_dynamic_filter])
+    delayed_glim = TimerAction(period=4.0, actions=[glim])
 
     # ── Static TFs ───────────────────────────────────────────────────────────
     # world → odom: Jo's spawn pose (GLIM initialises odom at Jo's spawn)
@@ -211,13 +202,24 @@ def generate_launch_description():
     )
 
     # ── RViz ─────────────────────────────────────────────────────────────────
-    rviz_config = os.path.join(jo_sim_pkg, 'rviz', 'debug.rviz')
+    debug_rviz_config = os.path.join(jo_sim_pkg, 'rviz', 'debug.rviz')
+    glim_rviz_config = os.path.join(jo_sim_pkg, 'rviz', 'glim_bbox.rviz')
+    rviz_config = PythonExpression([
+        "'", LaunchConfiguration('glim'), "'.lower() == 'true' and '",
+        glim_rviz_config,
+        "' or '",
+        debug_rviz_config,
+        "'"
+    ])
     rviz = Node(
         package='rviz2', executable='rviz2', name='rviz2',
         output='screen',
         arguments=['-d', rviz_config],
         parameters=[{'use_sim_time': True}],
-        condition=IfCondition(LaunchConfiguration('rviz')),
+        condition=IfCondition(PythonExpression([
+            "'", LaunchConfiguration('rviz'), "'.lower() == 'true' or '",
+            LaunchConfiguration('glim'), "'.lower() == 'true'"
+        ])),
     )
 
     return LaunchDescription([

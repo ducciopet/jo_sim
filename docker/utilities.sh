@@ -22,6 +22,7 @@ alias dual_sim='ros2 launch jo_sim launch_dual_robot.launch.py glim:=true teleop
 
 
 # LV-DOT aliases
+alias glim_bbox='rviz2 -d $(ros2 pkg prefix jo_sim)/share/jo_sim/rviz/glim_bbox.rviz'
 alias detector='ros2 launch onboard_detector run_detector.launch.py'
 
 # when working with bags, we want the odom_pub to be true to have the odometry data in the bag, and we want to use sim time
@@ -52,7 +53,6 @@ ros2 () {
       /velodyne_points \
       /imu/data \
       "${extra_topics[@]}" \
-      --clock \
       --read-ahead-queue-size 2000 \
       "${extra_flags[@]}"
   else
@@ -80,4 +80,4 @@ ros2bagrec () {
     -o "$1"
 }
 
-# ros2 bag play indor_20260421_1512_0/ --topics /clock /front_camera/camera/color/camera_info /front_camera/camera/color/image_raw /front_camera/camera/depth/camera_info /front_camera/camera/depth/image_rect_raw /velodyne_points /imu/data --loop --clock
+# ros2 bag play indor_20260421_1512_0/ --topics /clock /front_camera/camera/color/camera_info /front_camera/camera/color/image_raw /front_camera/camera/depth/camera_info /front_camera/camera/depth/image_rect_raw /velodyne_points /imu/data --loop
