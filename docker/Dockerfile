@@ -38,6 +38,9 @@ RUN cd Open3D/build && make install DESTDIR=/open3d-install
 # ============================================================
 FROM osrf/ros:jazzy-desktop-full
 
+# Retry failed apt fetches up to 5 times — handles transient mirror sync issues
+RUN echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80retries
+
 # Copy Open3D from builder stage
 COPY --from=builder /open3d-install/ /
 
@@ -108,6 +111,8 @@ RUN sudo apt install -y gz-harmonic
 
 
 
+RUN curl -s https://koide3.github.io/ppa/setup_ppa.sh | sudo bash
+
 # --- CUDA repo (Ubuntu 24.04) ---
 RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb \
  && dpkg -i cuda-keyring_1.1-1_all.deb \
@@ -115,8 +120,6 @@ RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/
  && mv cuda-ubuntu2404.pin /etc/apt/preferences.d/cuda-repository-pin-600
 
 ENV CUDAToolkit_ROOT=/usr/local/cuda
-
-RUN curl -s https://koide3.github.io/ppa/setup_ppa.sh | sudo bash
 
 RUN apt update -y \
     && apt install -y libiridescence-dev \
