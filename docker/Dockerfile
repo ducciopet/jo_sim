@@ -91,6 +91,11 @@ RUN apt update -y \
     ros-${DISTRO}-topic-tools \
     ros-${DISTRO}-cv-bridge \
     ros-${DISTRO}-image-transport \
+    ros-${DISTRO}-image-transport-plugins \
+    ros-${DISTRO}-compressed-image-transport \
+    ros-${DISTRO}-nmea-msgs \
+    ros-${DISTRO}-velodyne-msgs \
+    ros-${DISTRO}-mavros-msgs \
     ros-${DISTRO}-vision-msgs \
     ros-${DISTRO}-pcl-ros \
     ros-${DISTRO}-pcl-conversions \
