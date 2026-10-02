@@ -39,6 +39,16 @@ A comprehensive ROS 2 robot description package for the Jo tracked robot platfor
 
 # Quick Start
 
+## Clone the Repository
+This repo pulls in `glim`, `glim_ros2`, `jo_navigation`, `jo_description`, `onboard_detector` and `jo_sim/worlds/external` as git submodules (see [`.gitmodules`](.gitmodules)). Clone with `--recurse-submodules`, otherwise those folders will be empty and the Docker build will fail once `colcon build` tries to compile them:
+```bash
+git clone --recurse-submodules <repo-url>
+```
+If you already cloned without it:
+```bash
+git submodule update --init --recursive
+```
+
 ## Prerequisites
 To correctly install the docker with GPU access, these steps need to be followed:
 1. Install Docker Engine with their [guide](https://docs.docker.com/engine/install/ubuntu/)

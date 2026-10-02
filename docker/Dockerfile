@@ -1,48 +1,7 @@
-# ============================================================
-# STAGE 1: Build Open3D from source (required by onboard_detector)
-# ============================================================
-FROM ubuntu:24.04 AS builder
-
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    cmake \
-    git \
-    python3-dev \
-    python3-pip \
-    libgl1-mesa-dev \
-    libx11-dev \
-    libjpeg-dev \
-    libpng-dev \
-    libtiff-dev \
-    libeigen3-dev \
-    libomp-dev \
-    xorg-dev \
-    libxcb-shm0 \
-    libglu1-mesa-dev \
-    libc++-dev \
-    libc++abi-dev \
-    libsdl2-dev \
-    libxi-dev \
-    libtbb-dev \
-    libosmesa6-dev \
-    libudev-dev \
-    autoconf \
-    libtool \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN git clone https://github.com/isl-org/Open3D && cd Open3D && mkdir build && cd build && cmake .. && make -j$(nproc)
-RUN cd Open3D/build && make install DESTDIR=/open3d-install
-
-# ============================================================
-# STAGE 2: Main image
-# ============================================================
 FROM osrf/ros:jazzy-desktop-full
 
 # Retry failed apt fetches up to 5 times — handles transient mirror sync issues
 RUN echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80retries
-
-# Copy Open3D from builder stage
-COPY --from=builder /open3d-install/ /
 
 ENV GZ_VERSION=harmonic
 ENV ROS_DOMAIN_ID=42
@@ -93,6 +52,7 @@ RUN apt update -y \
     ros-${DISTRO}-image-transport \
     ros-${DISTRO}-image-transport-plugins \
     ros-${DISTRO}-compressed-image-transport \
+    ros-${DISTRO}-zstd-image-transport \
     ros-${DISTRO}-nmea-msgs \
     ros-${DISTRO}-velodyne-msgs \
     ros-${DISTRO}-mavros-msgs \
@@ -104,6 +64,7 @@ RUN apt update -y \
     software-properties-common \
     ca-certificates \
     libmetis-dev \
+    libtbb12 \
     gnupg \
     wget \
     xterm \
@@ -111,7 +72,12 @@ RUN apt update -y \
 
 RUN sudo curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] https://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
-RUN sudo apt update
+# archive.ubuntu.com is a geo-load-balanced mirror redirector; a single
+# `apt update` can land on a mirror mid-sync and get an index whose size/hash
+# doesn't match its own Release file ("Mirror sync in progress?"), which is a
+# hard failure for that RUN. A bare retry of the whole `apt update` almost
+# always lands on a consistent mirror the second time.
+RUN for i in 1 2 3 4 5; do sudo apt update && break || sleep 10; done
 RUN sudo apt install -y gz-harmonic
 
 
@@ -126,56 +92,51 @@ RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/
 
 ENV CUDAToolkit_ROOT=/usr/local/cuda
 
-RUN apt update -y \
+# NOTE: libgtsam-points-cuda13.1-dev (koide3 PPA) is built against CUDA 13.1 —
+# the cudart/nvcc packages installed below MUST match that minor version
+# (cuda-cudart-13-0 would install CUDA 13.0, a different ABI/package line).
+RUN (for i in 1 2 3 4 5; do apt update -y && break || sleep 10; done) \
     && apt install -y libiridescence-dev \
     libgtsam-points-cuda13.1-dev \
-    cuda-cudart-13-0 \
-    cuda-nvcc-13-0 \
+    cuda-cudart-13-1 \
+    cuda-nvcc-13-1 \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# ============================================================
-# OPEN3D RUNTIME COMPATIBILITY
-# ============================================================
-# Install libc++/libc++abi runtime needed by Open3D
-RUN apt-get update && apt-get install -y \
-    libc++1 \
-    libc++abi1 \
-    libtbb12 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Open3D in /usr/local may reference LLVM-18 libc++ absolute paths.
-# Create compatibility symlinks so CMake/Make can resolve them.
-RUN mkdir -p /usr/lib/llvm-18/lib && \
-    ln -sf /usr/lib/x86_64-linux-gnu/libc++.so.1 /usr/lib/llvm-18/lib/libc++.so.1 && \
-    ln -sf /usr/lib/x86_64-linux-gnu/libc++abi.so.1 /usr/lib/llvm-18/lib/libc++abi.so
-
-# Open3D installs a private TBB in /usr/local/lib that conflicts with the
-# distro-provided libtbb.so.12 — replace with symlinks to the system library.
-RUN rm -f /usr/local/lib/libtbb.so* && \
-    ln -sf /usr/lib/x86_64-linux-gnu/libtbb.so.12.11 /usr/local/lib/libtbb.so.12.12 && \
-    ln -sf /usr/lib/x86_64-linux-gnu/libtbb.so.12 /usr/local/lib/libtbb.so.12 && \
-    ln -sf /usr/lib/x86_64-linux-gnu/libtbb.so /usr/local/lib/libtbb.so
+# cuda-cudart-13-1/cuda-nvcc-13-1 install nvcc under the versioned path
+# /usr/local/cuda-13.1 — only the (much heavier) cuda-toolkit-13-1 meta-package
+# sets up the conventional /usr/local/cuda symlink via update-alternatives.
+# CUDAToolkit_ROOT=/usr/local/cuda (and gtsam_points'/onboard_detector's own
+# find_package(CUDAToolkit), pulled in transitively via gtsam_points-config.cmake
+# since it was built with CUDA support) needs that symlink to resolve nvcc.
+RUN ln -s /usr/local/cuda-13.1 /usr/local/cuda
 
 # ============================================================
 # PYTHON ML DEPENDENCIES (required by onboard_detector)
 # ============================================================
-RUN apt-get update && apt-get remove -y \
+RUN (for i in 1 2 3 4 5; do apt-get update && break || sleep 10; done) \
+    && apt-get remove -y \
     python3-sympy \
     python3-mpmath \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python3 -m pip install --break-system-packages --ignore-installed pip setuptools wheel
 
-# PyTorch with CUDA support (cu118) — needed for YOLO detector
+# PyTorch with CUDA support — needed for YOLO detector. cu128 matches the
+# CUDA 13.1 toolkit installed above for gtsam_points (PyTorch wheels bundle
+# their own CUDA runtime, so only the driver needs to be new enough for it —
+# a driver capable of CUDA 13.1 comfortably satisfies cu128). cu118 is no
+# longer used upstream past torch 2.7.1, so pinning to it here would silently
+# install a stale/unmaintained build.
 RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed \
     --retries 10 \
     --timeout 300 \
     torch torchvision torchaudio \
-    --index-url https://download.pytorch.org/whl/cu118 || \
+    --index-url https://download.pytorch.org/whl/cu128 || \
     echo "WARNING: PyTorch installation failed. YOLO detector will not work, but ICP calibration will."
 
 # Computer vision and scientific stack from apt
-RUN apt-get update && apt-get install -y \
+RUN (for i in 1 2 3 4 5; do apt-get update && break || sleep 10; done) \
+    && apt-get install -y \
     python3-opencv \
     python3-scipy \
     python3-sklearn \
@@ -186,12 +147,20 @@ RUN apt-get update && apt-get install -y \
     python3-requests \
     && rm -rf /var/lib/apt/lists/*
 
+# lap ("lap>=0.5.12"): linear-assignment solver ultralytics' built-in
+# trackers (ByteTrack/BoT-SORT, used by onboard_detector_v2's
+# yolo_seg_track_detector.py) need for frame-to-frame box matching.
+# Ultralytics normally auto-installs it on first model.track() call, but
+# that AutoUpdate path pip-installs at RUNTIME into this
+# externally-managed environment, which fails (PEP 668) — install it here
+# instead, once, at image build time.
 RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed \
     --trusted-host pypi.org \
     --trusted-host files.pythonhosted.org \
     --trusted-host pypi.python.org \
     "numpy>=2.0" \
-    ultralytics
+    ultralytics \
+    "lap>=0.5.12"
 
 
 # Create a non-root user
@@ -201,7 +170,7 @@ ARG USER_GID=${USER_UID}
 RUN if id -u ${USER_UID} ; then userdel `id -un ${USER_UID}` ; fi
 RUN groupadd --gid ${USER_GID} ${USERNAME}
 RUN useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} \
-    && apt update \
+    && (for i in 1 2 3 4 5; do apt update && break || sleep 10; done) \
     && apt install -y sudo \
     && echo ${USERNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME}
@@ -229,6 +198,15 @@ RUN cd src && git clone https://github.com/sutharsan-311/nav2_config.git
 
 RUN cd src && git clone https://github.com/introlab/rtabmap.git
 RUN cd src && git clone --branch ros2 https://github.com/introlab/rtabmap_ros.git
+
+# xsens_mti_ros2_driver — needed to read bags recorded with an Xsens MTi IMU
+# (e.g. bags/*_validation_lab), which contain the custom message type
+# xsens_mti_ros2_driver/msg/XsStatusWord on /status. This isn't on the ROS
+# apt index, so it has to be built from source like RGLGazeboPlugin/rtabmap
+# above. The upstream repo also bundles the Xsens SDK it needs (lib/xspublic)
+# and an `ntrip` package (RTCM/diagnostics client) — both come along for free
+# since colcon discovers packages recursively.
+RUN cd src && git clone --branch ros2 https://github.com/xsenssupport/Xsens_MTi_ROS_Driver_and_Ntrip_Client.git xsens_mti_ros2_driver
 
 RUN cd RGLGazeboPlugin && sudo touch COLCON_IGNORE
 
@@ -266,18 +244,39 @@ RUN source /opt/ros/jazzy/setup.bash \
  && colcon build \
     --packages-ignore \
         jo_description turtlebot_description jo_sim jo_navigation onboard_detector \
+        xsens_mti_ros2_driver ntrip \
     --install-base /home/ros/local_install \
     --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DRTABMAP_SYNC_USER_DATA=ON -DCMAKE_BUILD_TYPE=Release \
  && touch src/rtabmap/COLCON_IGNORE \
  && touch src/rtabmap_ros/COLCON_IGNORE
 
+# xsens_mti_ros2_driver/ntrip are built in their own colcon invocation, apart
+# from the ~19-package combined build above: mixed into that large parallel
+# build they compile fine but silently don't get installed under
+# /home/ros/local_install (no error, no COLCON_IGNORE — the install step
+# just doesn't happen for these two, probably some interaction with being
+# nested two directories deep under src/xsens_mti_ros2_driver/src/*, unlike
+# every other package here). Building them alone installs correctly.
+RUN source /opt/ros/jazzy/setup.bash \
+ && colcon build \
+    --packages-select xsens_mti_ros2_driver ntrip \
+    --install-base /home/ros/local_install
+
+# onboard_detector/CMakeLists.txt declares `cmake_minimum_required(VERSION 3.8)`,
+# older than CMake 3.12 which introduced policy CMP0074 ("find_package uses
+# <PackageName>_ROOT variables"). With that policy defaulting to OLD, CMake
+# never promotes the ENV{CUDAToolkit_ROOT} we set above into the plain
+# CUDAToolkit_ROOT variable that FindCUDAToolkit.cmake's own nvcc-search logic
+# actually reads — so it searches as if CUDAToolkit_ROOT were never set, even
+# though `echo $CUDAToolkit_ROOT` shows it correctly in the same shell.
+# Passing it explicitly as a CMake cache variable bypasses that policy gap.
 RUN source /opt/ros/jazzy/setup.bash \
  && source /home/ros/local_install/setup.bash \
  && colcon build \
     --packages-select onboard_detector jo_navigation jo_sim jo_description turtlebot_description \
     --symlink-install \
     --install-base /home/ros/local_install \
-    --cmake-args -DCMAKE_BUILD_TYPE=Release
+    --cmake-args -DCMAKE_BUILD_TYPE=Release -DCUDAToolkit_ROOT=/usr/local/cuda
 
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN sudo chmod +x /entrypoint.sh

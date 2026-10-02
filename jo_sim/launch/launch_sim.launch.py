@@ -114,6 +114,37 @@ def generate_launch_description():
         arguments=["/front_camera/image", "/back_camera/image"],
     )
 
+    # ros_gz_image's image_bridge already publishes the color images above
+    # via image_transport (so .../image/compressed exists for free, same
+    # plugin real cameras use — no relay needed). Depth, in contrast, comes
+    # from the plain ros_gz_bridge parameter_bridge (see gz_bridge.yaml),
+    # which does a raw sensor_msgs/Image 1:1 relay with no image_transport
+    # involved at all, so it has no compressed companion topic on its own.
+    # These two nodes are the standard image_transport tool for exactly
+    # that gap: subscribe raw, republish compressedDepth — same topic-shape
+    # (<base_topic>/compressedDepth) a real depth camera driver would give,
+    # so sim and real need the same consumer-side config either way.
+    republish_front_depth = Node(
+        package="image_transport",
+        executable="republish",
+        name="republish_front_depth_compressed",
+        arguments=["raw", "compressedDepth"],
+        remappings=[
+            ("in", "/front_camera/depth_image"),
+            ("out", "/front_camera/depth_image"),
+        ],
+    )
+    republish_back_depth = Node(
+        package="image_transport",
+        executable="republish",
+        name="republish_back_depth_compressed",
+        arguments=["raw", "compressedDepth"],
+        remappings=[
+            ("in", "/back_camera/depth_image"),
+            ("out", "/back_camera/depth_image"),
+        ],
+    )
+
     glim = Node(
         package='glim_ros',
         executable='glim_rosnode',
@@ -143,6 +174,8 @@ def generate_launch_description():
         spawn_entity,
         ros_gz_bridge,
         ros_gz_image_bridge,
+        republish_front_depth,
+        republish_back_depth,
         rviz,
         delayed_glim
     ])

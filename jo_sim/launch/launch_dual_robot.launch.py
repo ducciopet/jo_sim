@@ -119,6 +119,22 @@ def generate_launch_description():
         arguments=['/front_camera/image', '/back_camera/image'],
     )
 
+    # See launch_sim.launch.py's identical pair for why these exist: color
+    # gets image_transport (so .../compressed) for free from image_bridge
+    # above, depth doesn't (plain parameter_bridge relay) without these.
+    republish_front_depth = Node(
+        package='image_transport', executable='republish',
+        name='republish_front_depth_compressed',
+        arguments=['raw', 'compressedDepth'],
+        remappings=[('in', '/front_camera/depth_image'), ('out', '/front_camera/depth_image')],
+    )
+    republish_back_depth = Node(
+        package='image_transport', executable='republish',
+        name='republish_back_depth_compressed',
+        arguments=['raw', 'compressedDepth'],
+        remappings=[('in', '/back_camera/depth_image'), ('out', '/back_camera/depth_image')],
+    )
+
     # ── Turtlebot bridge ─────────────────────────────────────────────────────
     ros_gz_bridge_tb = Node(
         package='ros_gz_bridge', executable='parameter_bridge',
@@ -236,6 +252,8 @@ def generate_launch_description():
         spawn_turtlebot,
         ros_gz_bridge_jo,
         ros_gz_image_bridge,
+        republish_front_depth,
+        republish_back_depth,
         ros_gz_bridge_tb,
         static_tf_world_odom,
         static_tf_world_tb_odom,

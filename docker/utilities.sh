@@ -16,8 +16,25 @@ alias visodom='ros2 launch jo_navigation visodom.launch.py use_sim_time:=true'
 alias navigation='ros2 launch jo_navigation navigation_local.launch.py rviz:=true use_sim_time:=true'
 alias navigation_gps='ros2 launch jo_navigation navigation_gps.launch.py rviz:=true use_sim_time:=true'
 
-alias sim='ros2 launch jo_sim launch_sim.launch.py glim:=true'
-alias dual_sim='ros2 launch jo_sim launch_dual_robot.launch.py glim:=true teleop_turtlebot:=true '
+# `sim`/`dual_sim` run glim (GPU/CUDA point-cloud registration) via
+# glim:=true. glim has crashed with a segfault before (see bags/logs/), and
+# because it dies mid-GPU-operation the crash can leave the NVIDIA display
+# engine wedged, hanging the next reboot with "nvidia-modeset: Error while
+# waiting for GPU progress". These are functions (not plain aliases) so the
+# whole launch's stdout/stderr — including any CUDA/ROS error printed right
+# before a crash — is tee'd to a timestamped file under bags/logs, which is
+# host-mounted (./bags) and so survives the container being recreated.
+_log_run() {
+  local name="$1"; shift
+  local log_dir=/home/ros/bags/logs
+  mkdir -p "$log_dir"
+  local logfile="$log_dir/${name}_$(date +%Y%m%d_%H%M%S).log"
+  echo "[log] $name output -> $logfile"
+  "$@" 2>&1 | tee "$logfile"
+}
+
+sim() { _log_run sim ros2 launch jo_sim launch_sim.launch.py glim:=true "$@"; }
+dual_sim() { _log_run dual_sim ros2 launch jo_sim launch_dual_robot.launch.py glim:=true teleop_turtlebot:=true "$@"; }
 
 
 # LV-DOT aliases
@@ -33,6 +50,16 @@ ros2 () {
     shift 2
     local bag_path="$1"
     shift
+    # `ros2 bag play --all <path> ...` bypasses the onboard_detector topic
+    # whitelist below and plays every topic in the bag, like a plain
+    # `ros2 bag play` does outside the container (e.g. for bags such as
+    # bags/*_validation_lab that carry GNSS/IMU/etc. topics the detector
+    # never needs).
+    if [ "$1" = "--all" ]; then
+      shift
+      command ros2 bag play "$bag_path" --read-ahead-queue-size 2000 "$@"
+      return
+    fi
     local extra_topics=()
     local extra_flags=()
     for arg in "$@"; do
