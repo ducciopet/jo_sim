@@ -67,45 +67,48 @@ Dati: 6 sequenze del 19/05/2026 (49–71 s, in totale 2890 frame valutati a 10 H
 
 Allineamento: residuo 0–11 mm, offset di clock −0,18 s (correlazione delle velocità 0,99).
 
-**Aggregato** (soglia GT 0,3 m/s, gate 1 m; dettaglio in `tables/own_mocap.csv`). v2 è la versione con la
-correzione dei track duplicati (jo_detector_v2 `c2ca9fd`, vedi sotto); la riga "v2 prima" è il run precedente.
+**Aggregato** (soglia GT 0,3 m/s, gate 1 m; dettaglio in `tables/own_mocap.csv`). Protocollo attuale: detector
+avviato 12 s prima della bag (niente secondi persi al caricamento di YOLO), odometria condivisa. v1 è stato rifatto
+con lo stesso protocollo.
 
 | | MOTA | IDF1 | MOTP | FP | FN | IDSW | Recall D | Recall PD | latenza →D |
 |---|---|---|---|---|---|---|---|---|---|
-| v1 | 44,3% | 45,8% | 0,16 m | 214 | 1342 | 55 | 84,8% | 21,5% | 1,12 s |
-| v2 prima | 71,7% | 46,8% | 0,11 m | 36 | 718 | 63 | 86,4% | 61,6% | 0,41 s |
-| **v2** | **79,6%** | **70,2%** | **0,11 m** | 128 | **454** | **7** | **93,9%** | **72,0%** | **0,36 s** |
+| v1 | 54,7% | 48,8% | 0,16 m | 168 | 1107 | 35 | 88,4% | 31,0% | 0,73 s |
+| v2 (`c2ca9fd`, duplicati corretti) | 79,6% | 70,2% | 0,11 m | 128 | 454 | 7 | 93,9% | 72,0% | 0,36 s |
+| **v2 (`7a91090`, messa a punto)** | **87,0%** | **79,3%** | **0,10 m** | **36** | **335** | **5** | 91,8% | **82,1%** | 0,45 s |
 
-Escludendo i primi 25 s (`tables/own_mocap_after25s.csv`): v1 MOTA 39,3%, IDF1 50,6%; v2 MOTA 78,9%, IDF1 74,5%.
+Escludendo i primi 25 s (`tables/own_mocap_after25s.csv`): v1 MOTA 49,5%, IDF1 54,8%; v2 MOTA 85,7%, IDF1 89,1%.
+Sensibilità alla soglia GT (0,2–0,5 m/s): recall PD di v2 tra 67% e 84%, di v1 tra 26% e 32%.
+Variabilità tra run della pipeline completa: pochi punti di MOTA/IDF1 per sequenza (es. 1950 IDF1 68,8% nel run completo
+contro 92,5% nel replay solo-tracker sugli input di un altro run). Il replay solo-tracker
+(`scripts/run_tracker_only.sh`) è invece deterministico: stessi input, stesso output.
 
-Sensibilità alla soglia GT (0,2–0,5 m/s): l'ordine tra i metodi non cambia; recall PD di v2 tra 59% e 74%, di v1 tra 18% e 22%.
+**Messa a punto di v2 (2026-10-13, `7a91090`)**
+Metodo: per ogni FN/FP la causa (`analyze_errors.py`), più la diagnostica `tracker_debug_lifecycle:=true` per seguire i
+singoli track; parametri confrontati con il replay solo-tracker sugli stessi input registrati.
 
-Variabilità tra run (stesso binario, stessa sequenza 1947, ripetuta due volte): MOTA 59,1% contro 63,5%. Differenze di
-pochi punti su una singola sequenza non sono significative; servono run ripetuti per gli intervalli di confidenza.
+| Problema osservato | Correzione |
+|---|---|
+| 117 FP su 118 erano lampi "dynamic" su track senza classe | track senza classe: 8 tick di movimento prima di "dynamic" (classificati: 3). Sweep 5/6/8: FP 73/53/32, FN 322/323/337 |
+| persona ferma che non diventava mai PD: il track si "stabiliva" prima che YOLO la vedesse e poi serviva movimento per classificarlo | prima classifica anche da fermo se l'evidenza depth-leaf (maschera YOLO + depth) si ripete per 10 tick; la via debole (LiDAR-only) richiede ancora movimento |
+| classe persa uscendo dal FOV (al bordo YOLO vede solo parte della persona) | decadimento in FOV a 3 tick (prima 9) ma solo con il centro ad almeno il 10% dal bordo; nella fascia di bordo dopo 15 tick |
+| classe cancellata a persone ferme dietro il robot (box LiDAR che si restringe da vicino) | trigger di restringimento solo dentro il FOV |
+| oggetto statico al bordo che prendeva "person" da una box YOLO della persona vicina | la via LiDAR-only prende una box 2D solo se nessun detection coperto dalla camera la spiega meglio, e solo nella zona affidabile dell'immagine |
+| primi 4–6 s persi in ogni run (caricamento YOLO durante la bag) | protocollo: detector avviato prima della bag |
+| 2 modelli YOLO per camera | segmentazione del pavimento spenta (serviva solo a RViz); GSeg3D era già spento |
 
-**Cosa dicono i numeri**
-- Il guadagno principale di v2 è sulla **persona ferma** (PD): v1 la etichetta quasi sempre static/tracked, cioè la
-  perde come ostacolo d'interesse (1942: 0% contro 89%; 1949: 10% contro 95%).
-- v2 rileva prima l'inizio del movimento (0,36 s contro 1,12 s).
-- Dopo la correzione v2 ha più FP (128 contro 36, soprattutto 1949 e 1950): i track sopravvivono più a lungo, anche
-  quelli spuri. Restano comunque meno di v1 (214).
-- 1947 (persona che cammina vicino al robot, a 1,0–1,8 m, nel FOV solo per il 55% del tempo) resta la sequenza
-  peggiore per v2 (MOTA 59–64%, molti FN), e non migliora con la correzione.
+Il decadimento a 5 tick invece di 3 dà risultati identici su questi dati.
 
-**Track duplicati di v2 (corretto, `c2ca9fd`)**
-Trovato con la nuova diagnostica `tracker_debug_lifecycle:=true`. Una persona ferma alterna una box parziale (solo
-LiDAR) e la box intera fusa, i cui centroidi distano 0,2–0,3 m. Il gate sulla direzione della velocità leggeva quel
-salto come 2–3 m/s di moto e rifiutava la detection anche a 13 cm dalla predizione. Ne nasceva un secondo track, i due
-si alternavano e l'originale, senza più associazioni, moriva (`missed > max_missed_classified`).
-Correzioni:
-1. la velocità implicita usa il tempo trascorso dall'ultima osservazione, non il dt di un tick (bug: dopo k tick
-   mancati la velocità era gonfiata k+1 volte);
-2. nessun rifiuto rigido sulla direzione entro `track_veldir_gate_min_innovation` = 0,30 m dalla predizione
-   (mezza larghezza di una persona); la penalità morbida nello score resta.
-
-La soglia è stata fissata dal meccanismo e non ottimizzata sulle metriche. Però la diagnosi è stata fatta su queste
-sequenze, quindi **questi numeri di v2 non sono più "held-out"**: per il paper vanno confermati sulla nuova
-campagna mocap (PAPER_PLAN §4), con lo split `tune/eval` fissato prima.
+**Cosa resta (FN 335, FP 36)**
+- **Persona dietro il robot senza camera posteriore** (≈ 230 frame di FN, soprattutto 1947): se arriva lì perdendo
+  l'identità del track, il nuovo track non ha mai classe, quindi se è ferma non viene pubblicata e se cammina diventa
+  dynamic solo dopo 0,8 s. È in buona parte un limite del sensore (queste bag hanno solo la camera frontale).
+- **Scambio d'identità all'uscita laterale dal FOV** (1947, 29 s): il track `person` viene associato a un oggetto statico
+  vicino e la persona vera nasce come track nuovo senza classe. Probabile causa: la penalità di continuità di classe
+  usa la distanza dall'*ultima osservazione* del track, che per una persona in moto favorisce l'oggetto rimasto vicino a
+  dove lei era. Non corretto: tocca la logica anti-scambio-ID e va affrontato a parte.
+- **Rischio di overfitting**: tutte le scelte sono state fatte guardando queste 6 sequenze. Ora sono di fatto lo split
+  `tune/`: i numeri del paper vanno presi sulla nuova campagna mocap (PAPER_PLAN §4).
 
 **Limiti da dichiarare**
 - Una sola persona, 6 sequenze, circa 5 minuti: è un pilota, non l'E1 del paper (vedi PAPER_PLAN §4).
