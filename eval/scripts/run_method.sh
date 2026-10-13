@@ -1,0 +1,29 @@
+#!/bin/bash
+# Phase-2 protocol, step B: replay sensor bag + the shared odometry bag (make_odom.sh)
+# and run ONE method on it, without any localization of its own. Records the
+# method's ObstacleArray output and the (shared) odometry used for alignment.
+# usage: run_method.sh <v1|v2> <sensor_bag> <odom_bag> <out_bag>
+# env:   ADAPTER=1 (derive missing RealSense streams, eval/adapters/realsense_bag_adapter.py), V1_ARGS, V2_ARGS
+METHOD=$1; BAG=$2; ODOM=$3; OUT=$4
+export ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-77}
+source /opt/ros/jazzy/setup.bash; source /home/ros/local_install/setup.bash
+DIR=$(dirname $0); rm -rf $OUT; LOG=${OUT}_logs; rm -rf $LOG; mkdir -p $LOG
+DUR=$(python3 -c "import yaml;print(int(yaml.safe_load(open('$BAG/metadata.yaml'))['rosbag2_bagfile_information']['duration']['nanoseconds']/1e9)+3)")
+if [ -n "$ADAPTER" ]; then
+  python3 $DIR/realsense_bag_adapter.py --ros-args -p use_sim_time:=true > $LOG/adapter.log 2>&1 &
+      -r depth/image_rect:=/front_camera/camera/depth/image_rect_raw -r depth/camera_info:=/front_camera/camera/depth/camera_info \
+    -r points:=/front_camera/camera/depth/color/points > $LOG/pcl.log 2>&1 &
+fi
+ros2 bag record --use-sim-time -o $OUT -s mcap /perception/tracked_dynamic_obstacles /jo_detector/tracked_dynamic_obstacles /odometry/filtered > $LOG/rec.log 2>&1 &
+sleep 3
+timeout -k 5 $DUR ros2 bag play -i $BAG -i $ODOM --clock > $LOG/play.log 2>&1 &
+PLAY=$!
+sleep 2   # start the detector on a running /clock (v1's one-shot calibration TF needs it)
+if [ "$METHOD" = v2 ]; then
+  ros2 launch jo_detector_v2 run_detector.launch.py rviz:=false $V2_ARGS > $LOG/det.log 2>&1 &
+else
+  ros2 launch jo_detector run_detector.launch.py use_sim_time:=true rviz:=false $V1_ARGS > $LOG/det.log 2>&1 &
+fi
+wait $PLAY
+sleep 3
+bash $DIR/cleanup.sh > /dev/null
