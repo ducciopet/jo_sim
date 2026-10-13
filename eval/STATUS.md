@@ -67,31 +67,45 @@ Dati: 6 sequenze del 19/05/2026 (49–71 s, in totale 2890 frame valutati a 10 H
 
 Allineamento: residuo 0–11 mm, offset di clock −0,18 s (correlazione delle velocità 0,99).
 
-**Aggregato** (soglia GT 0,3 m/s, gate 1 m; dettaglio in `tables/own_mocap.csv`):
+**Aggregato** (soglia GT 0,3 m/s, gate 1 m; dettaglio in `tables/own_mocap.csv`). v2 è la versione con la
+correzione dei track duplicati (jo_detector_v2 `c2ca9fd`, vedi sotto); la riga "v2 prima" è il run precedente.
 
 | | MOTA | IDF1 | MOTP | FP | FN | IDSW | Recall D | Recall PD | latenza →D |
 |---|---|---|---|---|---|---|---|---|---|
 | v1 | 44,3% | 45,8% | 0,16 m | 214 | 1342 | 55 | 84,8% | 21,5% | 1,12 s |
-| v2 | **71,7%** | 46,8% | **0,11 m** | **36** | **718** | 63 | 86,4% | **61,6%** | **0,41 s** |
+| v2 prima | 71,7% | 46,8% | 0,11 m | 36 | 718 | 63 | 86,4% | 61,6% | 0,41 s |
+| **v2** | **79,6%** | **70,2%** | **0,11 m** | 128 | **454** | **7** | **93,9%** | **72,0%** | **0,36 s** |
 
-Escludendo i primi 25 s (`tables/own_mocap_after25s.csv`): v1 MOTA 39,3%, IDF1 50,6%; v2 MOTA 72,7%, IDF1 54,7%.
+Escludendo i primi 25 s (`tables/own_mocap_after25s.csv`): v1 MOTA 39,3%, IDF1 50,6%; v2 MOTA 78,9%, IDF1 74,5%.
 
-Sensibilità alla soglia GT (0,2–0,5 m/s): l'ordine tra i metodi non cambia; recall PD di v2 tra 51% e 63%, di v1 tra 18% e 22%.
+Sensibilità alla soglia GT (0,2–0,5 m/s): l'ordine tra i metodi non cambia; recall PD di v2 tra 59% e 74%, di v1 tra 18% e 22%.
+
+Variabilità tra run (stesso binario, stessa sequenza 1947, ripetuta due volte): MOTA 59,1% contro 63,5%. Differenze di
+pochi punti su una singola sequenza non sono significative; servono run ripetuti per gli intervalli di confidenza.
 
 **Cosa dicono i numeri**
 - Il guadagno principale di v2 è sulla **persona ferma** (PD): v1 la etichetta quasi sempre static/tracked, cioè la
-  perde come ostacolo d'interesse (1942: 0% contro 90%; 1949: 10% contro 85%).
-- v2 rileva prima l'inizio del movimento (0,41 s contro 1,12 s) e genera molti meno falsi positivi (36 contro 214).
-- **Debolezza di v2: frammentazione degli ID sulla persona ferma** (1942: 28 IDSW, 1949: 23), per cui l'IDF1 resta al
-  livello di v1 anche con MOTA molto più alta. Causa (analizzata sulla 1942): non sono track che muoiono, ma **track
-  duplicati sullo stesso oggetto**. Ogni 15–18 s nasce un secondo track mentre il primo è ancora vivo (es. 255 e 640
-  sovrapposti tra 25,3 e 28,4 s); i due non vengono mai pubblicati insieme, l'associazione si alterna tra loro e poi il
-  vecchio muore. Le box dei due hanno taglie diverse (0,56×0,28×1,23 m contro 0,82×0,54×1,73 m: frammento contro
-  persona intera fusa). Ipotesi: quando la detection cambia "modo", il gate sulla taglia la rifiuta per il track
-  esistente, `isCloseToExistingTrack` non blocca la nascita e da lì convivono due track.
-  Possibile intervento: fusione track-track dei duplicati, o un gate sulla taglia più tollerante per i track classificati.
-  **Non corretto**: è logica del metodo, e va fatto guardando solo lo split `tune/`, non queste sequenze (regola 1).
-- 1950 è la sequenza peggiore per entrambi (FN alti): da guardare.
+  perde come ostacolo d'interesse (1942: 0% contro 89%; 1949: 10% contro 95%).
+- v2 rileva prima l'inizio del movimento (0,36 s contro 1,12 s).
+- Dopo la correzione v2 ha più FP (128 contro 36, soprattutto 1949 e 1950): i track sopravvivono più a lungo, anche
+  quelli spuri. Restano comunque meno di v1 (214).
+- 1947 (persona che cammina vicino al robot, a 1,0–1,8 m, nel FOV solo per il 55% del tempo) resta la sequenza
+  peggiore per v2 (MOTA 59–64%, molti FN), e non migliora con la correzione.
+
+**Track duplicati di v2 (corretto, `c2ca9fd`)**
+Trovato con la nuova diagnostica `tracker_debug_lifecycle:=true`. Una persona ferma alterna una box parziale (solo
+LiDAR) e la box intera fusa, i cui centroidi distano 0,2–0,3 m. Il gate sulla direzione della velocità leggeva quel
+salto come 2–3 m/s di moto e rifiutava la detection anche a 13 cm dalla predizione. Ne nasceva un secondo track, i due
+si alternavano e l'originale, senza più associazioni, moriva (`missed > max_missed_classified`).
+Correzioni:
+1. la velocità implicita usa il tempo trascorso dall'ultima osservazione, non il dt di un tick (bug: dopo k tick
+   mancati la velocità era gonfiata k+1 volte);
+2. nessun rifiuto rigido sulla direzione entro `track_veldir_gate_min_innovation` = 0,30 m dalla predizione
+   (mezza larghezza di una persona); la penalità morbida nello score resta.
+
+La soglia è stata fissata dal meccanismo e non ottimizzata sulle metriche. Però la diagnosi è stata fatta su queste
+sequenze, quindi **questi numeri di v2 non sono più "held-out"**: per il paper vanno confermati sulla nuova
+campagna mocap (PAPER_PLAN §4), con lo split `tune/eval` fissato prima.
 
 **Limiti da dichiarare**
 - Una sola persona, 6 sequenze, circa 5 minuti: è un pilota, non l'E1 del paper (vedi PAPER_PLAN §4).
