@@ -12,7 +12,8 @@ sequences; a large gap to the in-sample best flags overfitting.
 
 Usage (host; the container must be running):
   python3 eval/sweep_tracker.py --param track_min_hits --values 2 4 6 --inputs r5
-Results are cached in eval/results/sweeps/<param>=<value>/ so re-runs are cheap.
+Results are cached in eval/results/sweeps/[<tag>_]<param>=<value>.json so re-runs are cheap; pass --tag
+to compare tracker code versions (the default-param run of a new version: --param <any> --values <default>).
 """
 
 import argparse
@@ -37,9 +38,10 @@ CONTAINER = 'jo_sim_lv-dot-jo-sim_lv-dot-1'
 SEQS = ['20260519_1942', '20260519_1945', '20260519_1947', '20260519_1949', '20260519_1950', '20260519_1952']
 
 
-def run_value(param, value, inputs, gt_dir, force=False):
-    tag = f'sw_{param}={value}'
-    out = REPO / 'eval' / 'results' / 'sweeps' / f'{param}={value}.json'
+def run_value(param, value, inputs, gt_dir, force=False, code_tag=''):
+    pre = f'{code_tag}_' if code_tag else ''
+    tag = f'sw_{pre}{param}={value}'
+    out = REPO / 'eval' / 'results' / 'sweeps' / f'{pre}{param}={value}.json'
     if out.exists() and not force:
         return json.loads(out.read_text())
     for s in SEQS:
@@ -65,9 +67,9 @@ def run_value(param, value, inputs, gt_dir, force=False):
 _MOCAP = {}
 
 
-def state_acc_by_gt_threshold(param, value, gt_dir, thresholds=(0.2, 0.3, 0.4)):
+def state_acc_by_gt_threshold(param, value, gt_dir, thresholds=(0.2, 0.3, 0.4), code_tag=''):
     """State accuracy of one sweep value under different GT dynamic thresholds (robustness check)."""
-    tag = f'sw_{param}={value}'
+    tag = f'sw_{code_tag + "_" if code_tag else ""}{param}={value}'
     A = json.loads((gt_dir / 'alignment_v2.json').read_text())
     S = json.loads((gt_dir / 'summary.json').read_text())
     out = {}
@@ -104,12 +106,13 @@ def main():
     ap.add_argument('--inputs', default='r5', help='recorded full-pipeline runs <inputs>_v2_<seq> to replay')
     ap.add_argument('--gt-dir', default=str(REPO / 'eval' / 'results' / 'own'))
     ap.add_argument('--force', action='store_true')
+    ap.add_argument('--tag', default='', help='label of the tracker code version (keeps its runs/cache apart)')
     ap.add_argument('--gt-robustness', action='store_true',
                     help='also report state accuracy with GT dynamic thresholds 0.2 / 0.3 / 0.4 m/s')
     args = ap.parse_args()
     gt_dir = Path(args.gt_dir)
 
-    R = {v: run_value(args.param, v, args.inputs, gt_dir, args.force) for v in args.values}
+    R = {v: run_value(args.param, v, args.inputs, gt_dir, args.force, args.tag) for v in args.values}
     print(f'== {args.param}')
     print(f'{"value":>8} {"MOTA":>7} {"IDF1":>7} {"stateAcc":>8} {"FP":>5} {"FN":>5} {"IDSW":>4} | per-sequence MOTA')
     for v, res in R.items():
@@ -120,7 +123,7 @@ def main():
     if args.gt_robustness:
         print('state accuracy vs GT dynamic threshold (0.2 / 0.3 / 0.4 m/s):')
         for v in args.values:
-            r = state_acc_by_gt_threshold(args.param, v, gt_dir)
+            r = state_acc_by_gt_threshold(args.param, v, gt_dir, code_tag=args.tag)
             print(f'{v:>8} ' + ' '.join(f'{x * 100:6.2f}' for x in r.values()))
     # LOSO
     held = []

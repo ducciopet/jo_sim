@@ -82,4 +82,4 @@ Etichette GT: **D** = in movimento (≥ 0,3 m/s); **PD** = persona ferma; **S** 
 - [ ] Ricevitore RTK in più (se disponibile)
 - [ ] Consenso delle persone riprese
 - [ ] Per ogni ambiente: calibrazione (60 s) → controlli → esperimenti
-- [ ] Dopo ogni bag: durata e topic completi
+- [ ] Dopo ogni bag: durata, topic completi e **frequenza della depth** (`ros2 bag info`: ~30 Hz attesi; nelle bag di maggio scendeva a 20 Hz con buchi fino a 0,6 s)
