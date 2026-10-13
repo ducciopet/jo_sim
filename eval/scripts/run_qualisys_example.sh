@@ -1,0 +1,16 @@
+python3 detector_eval_pipeline.py \
+    --detector_bag  ./bags_results/duccio_test_20260519_1949_0 \
+    --gt_bag        ./qualysis/duccio_qualisys_20260519_1949_0 \
+    --gt_topic      /rigid_bodies \
+    --person_body   person \
+    --robot_body    JO \
+    --align_with_robot \
+    --odom_topic    /odometry/filtered \
+    --detector_ros_version jazzy \
+    --gt_ros_version       humble \
+    --exp_name exp4_person_still_robot_moving \
+    --t_start 10 \
+    --dyn_vel_thresh 0.2 \
+    --match_dist_thresh 0.5 \
+    --auto_align_window 50 \
+    --output_dir ./results
