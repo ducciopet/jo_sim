@@ -135,7 +135,9 @@ def main():
 
     print(' '.join(f'{k[:10]:>10}' for k in rows[0]))
     for r in rows:
-        print(' '.join(f'{fmt(r[k], pct=k in ("MOTA", "IDF1", "recall_D", "recall_PD"))[:10]:>10}' for k in r))
+        cells = {k: fmt(r[k], pct=k in ('MOTA', 'IDF1', 'recall_D', 'recall_PD')) for k in r}
+        cells['sequence'] = cells['sequence'][-4:]   # 20260519_1945 -> 1945
+        print(' '.join(f'{v[:10]:>10}' for v in cells.values()))
     print(f'\nsensitivity (GT dynamic threshold):')
     for s in sens:
         print(f"  {s['method']} thr={s['dyn_speed']}: recall D={fmt(s['recall_D'], True)}% "

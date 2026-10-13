@@ -1,86 +1,96 @@
 # Benchmark status
 
-Vedi `../BENCHMARK_PLAN.md` per il protocollo e `../PAPER_PLAN.md` per il piano del paper.
+Vedi `../BENCHMARK_PLAN.md` per il protocollo, `../PAPER_PLAN.md` per il piano del paper e `README.md` per l'uso dell'harness.
 
 ---
 
-## Fase 0: inventario (2026-10-13)
+## Fase 0: inventario (2026-10-13), praticamente chiusa
 
 ### Hardware e ambiente
 
 | Voce | Valore |
 |---|---|
 | GPU | NVIDIA GeForce RTX 4060 Laptop, 8 GB |
-| Driver / CUDA | 580.178.04 / CUDA 13.0 (driver); torch 2.14.0+cu130 nel container, `cuda.is_available() = True` |
+| Driver / CUDA | 580.178.04 / CUDA 13.0; torch 2.14.0+cu130 nel container, `cuda.is_available() = True` |
 | CPU / RAM | 20 thread / 31 GB |
 | ROS | ROS 2 Jazzy (container `jo-sim_lv_dot:latest`) |
 | Docker | 29.8.0, nvidia-container-toolkit installato |
-| Disco libero su `/` | **62 GB** su 503 GB (88% usato) |
+| Disco libero su `/` | **62 GB** su 503 GB |
 
-### Build
+### Cosa è stato risolto
 
-- `jo_detector` (v1) e `jo_detector_v2` compilano nel container (`colcon build`, nessun errore,
-  solo warning `-Wmaybe-uninitialized` in `static_structures_node.cpp:884`).
-- **L'immagine Docker è vecchia** (creata il 2026-09-14). Il suo `/entrypoint.sh` compila ancora
-  `onboard_detector` e non compila affatto v2; mancava anche `lap`, già aggiunto al Dockerfile del
-  repo il 2/10. Il container è stato ricreato il 2026-10-13 con i mount `jo_detector*` e i due
-  pacchetti sono stati compilati a mano. **Da fare: `docker compose build`.**
-- Nel container in esecuzione sono stati installati a mano `lap` e `rosbags`, che andranno persi
-  alla prossima ricreazione. Dopo il rebuild dell'immagine `lap` sarà incluso; `rosbags` va aggiunto
-  al Dockerfile se serve dentro il container.
+| Problema | Soluzione |
+|---|---|
+| Container con i vecchi mount `onboard_detector*` | ricreato; v1 e v2 compilati a mano |
+| `/entrypoint.sh` dell'immagine compila ancora `onboard_detector` e non compila v2 | **da fare: `docker compose build`** (il Dockerfile del repo è già corretto) |
+| `lap` assente nell'immagine, quindi i nodi YOLO di v2 andavano in crash | installato a mano nel container (temporaneo, è già nel Dockerfile) |
+| `numpy>=2` contro `cv_bridge` per numpy 1.x, quindi il YOLO di v1 andava in crash | `cv_bridge` rimosso dal nodo YOLO di v1 (jo_detector `e09610a`); nessun nodo usa scipy |
+| v1 non produceva output su bag: transport `compressedDepth`/`compressed` scritte nel codice | rese parametri (default invariati), con argomenti di launch |
+| la calibrazione ICP di v1 usava gli intrinseci colore sulla depth raw, quindi 0,5–1,1 m di errore | argomento `calibration_camera_info_topic` (jo_detector `ee170f3`) |
+| v2 non girava sulle bag con una sola camera | argomento `camera_names` (jo_detector_v2 `ba0353a`) |
+| alle bag di maggio mancano estrinseco, immagine compressa e nuvola di depth che v2 si aspetta | `adapters/realsense_bag_adapter.py`; estrinseco verificato identico al driver |
+| GLIM non è deterministico, quindi ogni run avrebbe un'odometria diversa | odometria generata **una volta** per sequenza (`scripts/make_odom.sh`) e riprodotta a tutti i metodi |
+| `motmetrics` non funziona nel container (scipy di sistema per numpy 1.x) | harness eseguito sull'host; nostre metriche verificate identiche a motmetrics |
 
-### Conflitto numpy nell'immagine (preesistente, bloccante per v1)
+### Ancora aperto
 
-Il Dockerfile installa `numpy>=2` via pip, mentre `python3-scipy` e `cv_bridge` (apt/ROS) sono compilati
-contro numpy 1.x. Conseguenze:
-- il nodo `yolov11_detector_node.py` di v1 va in crash all'import di `cv_bridge`, quindi **v1 non ha YOLO**;
-- `motmetrics` (che importa scipy) non funziona nel container, perciò `eval_tracking.py` va eseguito sull'host.
+1. `docker compose build` (lungo, 23 GB di immagine con 62 GB liberi).
+2. Disco per JRDB/CODa: con 62 GB liberi non si scarica nessuno dei due.
+3. La calibrazione online one-shot di v2 impiega circa 20 s; v1 va in timeout a 7 s e usa la media dei risultati validi.
+   Sulle sequenze da 50–70 s questo pesa, da cui la variante "dopo 25 s" qui sotto.
 
-I nodi YOLO di v2 non usano `cv_bridge` e funzionano.
-Possibili soluzioni (decisione aperta): togliere `cv_bridge` dal nodo YOLO di v1 (conversione
-numpy diretta, come fa v2), oppure creare un venv separato per l'harness.
+---
 
-### Harness esistente
+## Fase 1: harness, fatta
 
-- `jo_detector_v2/eval/` (`extract_obstacles.py`, `eval_tracking.py`, `GT_SCHEMA.md`) è già
-  committato e pushato nel submodule v2 (commit `b588136`).
-- Il test di regressione sintetico **passa** sull'host: MOTA 100%, IDF1 100%, debounce latency 1.50 s.
-- `eval/detector_eval_pipeline.py` (copiato da `bags/`, che è in `.gitignore`) valuta la classificazione D/PD/S
-  contro il GT Qualisys, con allineamento spaziale e temporale stimato. Esempio: `eval/scripts/run_qualisys_example.sh`.
+- `harness/`: formato unico, metriche (CLEAR MOT, IDF1, confusione D/PD/S, recall per stato, latenza di transizione)
+  su griglia comune a 10 Hz, GT da mocap, allineamento mocap↔odom.
+- **18 test sintetici verdi**: le metriche recuperano offset, ID switch, ritardo di classificazione, FP e FN
+  iniettati; MOTA, MOTP, IDF1 e IDSW coincidono con `py-motmetrics`; l'allineamento recupera trasformazioni e
+  offset di clock noti.
+- `report.py`: CSV + LaTeX in `tables/`; l'aggregato somma i conteggi, non media le percentuali.
 
-### Smoke test su bag del lab
+---
 
-Script: `eval/scripts/smoke_test.sh <v1|v2> [bag] [durata_s]`, da copiare in `bags/smoke/` (montato nel container);
-riepilogo con `eval/scripts/summarize_obstacles.py <bag_registrata>`. Esegue GLIM + EKF (`localization_detector.launch.py`)
-\+ il detector, headless, su `ROS_DOMAIN_ID=77`, e registra l'output.
+## E1: lab con GT Qualisys, primi numeri (2026-10-13)
 
-| Metodo | Bag | Esito |
+Dati: 6 sequenze del 19/05/2026 (49–71 s, in totale 2890 frame valutati a 10 Hz), una persona, solo camera frontale.
+
+| Seq. | Robot | Persona |
 |---|---|---|
-| v2 | `20260910_124939_validation_lab`, 80 s | **OK**: 787 msg a 9,9 Hz, 64 track ID, 1445 osservazioni D + 634 PD; ICP valido su entrambe le camere; YOLO-sem a circa 19 ms/frame |
-| v1 | `bags_benchmark/duccio_test_20260519_1942_0`, 65 s | **Nessun output.** Il detector resta su "Waiting for LiDAR to depth camera extrinsic calibration" anche se `velodyne→camera_refined` è presente su `/tf`. Il flag viene impostato solo nel callback sincronizzato con l'odometria: va indagata la catena sync/odometria. In più YOLO è in crash (vedi numpy). |
-| v1 | `validation_lab` | non compatibile con la config attuale: v1 si aspetta `depth/image_rect_raw`, la bag ha solo `aligned_depth_to_color/zstd` |
+| 1942 | fermo | ferma |
+| 1945 | fermo | cammina |
+| 1947 | fermo | cammina e si ferma |
+| 1949 | avanti e indietro | ferma |
+| 1950 | avanti e indietro | mista |
+| 1952 | avanti e indietro | cammina |
 
-### Dati disponibili localmente
+Allineamento: residuo 0–11 mm, offset di clock −0,18 s (correlazione delle velocità 0,99).
 
-| Cartella | Contenuto | Note |
-|---|---|---|
-| `bags/bags_benchmark/` (37 GB) | 6 sequenze, 49–71 s, 19/05/2026 | solo camera frontale, depth raw, **nessuna odometria e `/tf` vuoto** |
-| `bags/qualysis/` (3 MB) | GT mocap delle stesse 6 sequenze, `/rigid_bodies` circa 10 Hz | body `person` + `JO`; una sola persona |
-| `bags/20260910_124939_validation_lab` (4,8 GB) | 99 s, 2 camere, depth allineata zstd | nessun GT |
-| `bags/indoor_test`, `bags/outdoor_test` (34 GB) | 12 sequenze brevi (21–53 s), aprile 2026 | nessun GT |
+**Aggregato** (soglia GT 0,3 m/s, gate 1 m; dettaglio in `tables/own_mocap.csv`):
 
-### Stima dello spazio per i dataset esterni
+| | MOTA | IDF1 | MOTP | FP | FN | IDSW | Recall D | Recall PD | latenza →D |
+|---|---|---|---|---|---|---|---|---|---|
+| v1 | 44,3% | 45,8% | 0,16 m | 214 | 1342 | 55 | 84,8% | 21,5% | 1,12 s |
+| v2 | **71,7%** | 46,8% | **0,11 m** | **36** | **718** | 63 | 86,4% | **61,6%** | **0,41 s** |
 
-Ordini di grandezza, da verificare sulle pagine di download prima di scaricare:
-- **JRDB**: centinaia di GB (bag ROS1 + immagini a 360°); la sola partizione train supera comunque lo spazio libero.
-- **CODa**: nell'ordine dei TB nella versione completa; servirebbe un sottoinsieme di sequenze.
-- **DOALS**: decine di GB.
+Escludendo i primi 25 s (`tables/own_mocap_after25s.csv`): v1 MOTA 39,3%, IDF1 50,6%; v2 MOTA 72,7%, IDF1 54,7%.
 
-**Con 62 GB liberi non si scarica nessuno dei dataset con box 3D.** Serve un disco esterno o lo
-storage del laboratorio prima della Fase 2.
+Sensibilità alla soglia GT (0,2–0,5 m/s): l'ordine tra i metodi non cambia; recall PD di v2 tra 51% e 63%, di v1 tra 18% e 22%.
 
-### Cosa manca per chiudere la Fase 0
+**Cosa dicono i numeri**
+- Il guadagno principale di v2 è sulla **persona ferma** (PD): v1 la etichetta quasi sempre static/tracked, cioè la
+  perde come ostacolo d'interesse (1942: 0% contro 90%; 1949: 10% contro 85%).
+- v2 rileva prima l'inizio del movimento (0,41 s contro 1,12 s) e genera molti meno falsi positivi (36 contro 214).
+- **Debolezza di v2: frammentazione degli ID sulla persona ferma** (1942: 28 IDSW, 1949: 23), per cui l'IDF1 resta al
+  livello di v1 anche con MOTA molto più alta. Da indagare nel tracker prima di qualsiasi claim sugli ID.
+- 1950 è la sequenza peggiore per entrambi (FN alti): da guardare.
 
-1. Rebuild dell'immagine Docker e risoluzione del conflitto numpy/cv_bridge.
-2. Far produrre output a v1 su una bag del lab (catena sync/odometria).
-3. Decidere dove salvare i dataset esterni.
+**Limiti da dichiarare**
+- Una sola persona, 6 sequenze, circa 5 minuti: è un pilota, non l'E1 del paper (vedi PAPER_PLAN §4).
+- Il robot non ruota mai, quindi la posizione del rigid body Qualisys rispetto a `base_link` non è osservabile:
+  fissata a 0. Questo può introdurre un bias costante di qualche cm in MOTP (identico per i due metodi). Va misurata
+  sul robot e passata con `--t-base-jo`.
+- Le calibrazioni LiDAR–camera online variano tra sequenze (x da 0,04 a 0,31 m per v2), anche questo da riportare.
+  Alternativa più pulita per isolare il tracker: una calibrazione unica condivisa da tutti i metodi.
+- v2 riceve la depth tramite l'adattatore (deproiezione), v1 legge la depth raw: stessa informazione, percorso diverso.
