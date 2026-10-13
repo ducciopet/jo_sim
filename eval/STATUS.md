@@ -75,10 +75,11 @@ con lo stesso protocollo.
 |---|---|---|---|---|---|---|---|---|---|
 | v1 | 54,7% | 48,8% | 0,16 m | 168 | 1107 | 35 | 88,4% | 31,0% | 0,73 s |
 | v2 (`c2ca9fd`, duplicati corretti) | 79,6% | 70,2% | 0,11 m | 128 | 454 | 7 | 93,9% | 72,0% | 0,36 s |
-| **v2 (`7a91090`, messa a punto)** | **87,0%** | **79,3%** | **0,10 m** | **36** | **335** | **5** | 91,8% | **82,1%** | 0,45 s |
+| v2 (`7a91090`, messa a punto) | 87,0% | 79,3% | 0,10 m | 36 | 335 | 5 | 91,8% | 82,1% | 0,45 s |
+| **v2 (`889bae0`, passaggio di classe + box persona)** | **91,5%** | **79,2%** | **0,09 m** | 55 | **187** | 5 | **95,6%** | **87,4%** | **0,25 s** |
 
-Escludendo i primi 25 s (`tables/own_mocap_after25s.csv`): v1 MOTA 49,5%, IDF1 54,8%; v2 MOTA 85,7%, IDF1 89,1%.
-Sensibilità alla soglia GT (0,2–0,5 m/s): recall PD di v2 tra 67% e 84%, di v1 tra 26% e 32%.
+Escludendo i primi 25 s (`tables/own_mocap_after25s.csv`): v1 MOTA 49,5%, IDF1 54,8%; v2 (`889bae0`) MOTA 92,5%, IDF1 89,2%.
+Sensibilità alla soglia GT (0,2–0,5 m/s): recall PD di v2 (`889bae0`) tra 72% e 89%, di v1 tra 26% e 32%.
 Variabilità tra run della pipeline completa: pochi punti di MOTA/IDF1 per sequenza (es. 1950 IDF1 68,8% nel run completo
 contro 92,5% nel replay solo-tracker sugli input di un altro run). Il replay solo-tracker
 (`scripts/run_tracker_only.sh`) è invece deterministico: stessi input, stesso output.
@@ -123,6 +124,17 @@ MOTA 86,9 / 87,3 / 87,2%, FP 62 / 47 / 35, FN 312 / 318 / 331, IDSW 5 / 3 / 5, l
   LiDAR–camera iniziale (circa 3 s) o con una persona ferma dietro il robot (senza classe, quindi non pubblicata).
 - **Ipotesi da verificare**: con il robot in moto (1949) l'errore trasversale sale a 6 cm (1–2 cm a robot fermo):
   possibile piccolo sfasamento temporale tra LiDAR e odometria.
+
+**Passaggio di classe e box persona (`889bae0`)**, validati con la pipeline completa (riga in tabella):
+- *passaggio di classe*: un track nato da una detection che un track classificato vicino (< 0,5 m) ha scartato per
+  un'altra eredita la classe se entro 3 s quel track la perde (scambio d'identità, decadimento) o muore. Nella 1947
+  la persona che esce di lato dal FOV ora resta `person` dietro il robot (MOTA 1947: 69% → 93%); il passaggio scatta
+  una sola volta in tutte le sequenze, proprio in quel caso.
+- *box persona in uscita*: base sul pavimento (`base_footprint`), altezza minima 1,7 m, centro spostato di 0,07 m lungo
+  il raggio del LiDAR. Bias radiale residuo −5…+5 cm (prima −7…−12), MOTP 0,10 → 0,09 m.
+- Osservato e **non** cambiato: l'EKF di `jo_navigation` gira in `two_d_mode` (beccheggio e rollio sempre 0). Col
+  robot in moto l'8% dei punti della persona finisce sotto il pavimento (2% da fermo). Va corretto nella
+  localizzazione, non nel detector.
 
 Politica semantica attuale: in FOV ci si fida di YOLO (classe tolta dopo 3 tick senza conferma, 15 nella fascia di
 bordo); fuori FOV la classe resta finché il track vive, salvo scambio d'identità (box cresciuta oltre il 50% della
