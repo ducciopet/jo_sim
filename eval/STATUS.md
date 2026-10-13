@@ -83,7 +83,14 @@ Sensibilità alla soglia GT (0,2–0,5 m/s): l'ordine tra i metodi non cambia; r
   perde come ostacolo d'interesse (1942: 0% contro 90%; 1949: 10% contro 85%).
 - v2 rileva prima l'inizio del movimento (0,41 s contro 1,12 s) e genera molti meno falsi positivi (36 contro 214).
 - **Debolezza di v2: frammentazione degli ID sulla persona ferma** (1942: 28 IDSW, 1949: 23), per cui l'IDF1 resta al
-  livello di v1 anche con MOTA molto più alta. Da indagare nel tracker prima di qualsiasi claim sugli ID.
+  livello di v1 anche con MOTA molto più alta. Causa (analizzata sulla 1942): non sono track che muoiono, ma **track
+  duplicati sullo stesso oggetto**. Ogni 15–18 s nasce un secondo track mentre il primo è ancora vivo (es. 255 e 640
+  sovrapposti tra 25,3 e 28,4 s); i due non vengono mai pubblicati insieme, l'associazione si alterna tra loro e poi il
+  vecchio muore. Le box dei due hanno taglie diverse (0,56×0,28×1,23 m contro 0,82×0,54×1,73 m: frammento contro
+  persona intera fusa). Ipotesi: quando la detection cambia "modo", il gate sulla taglia la rifiuta per il track
+  esistente, `isCloseToExistingTrack` non blocca la nascita e da lì convivono due track.
+  Possibile intervento: fusione track-track dei duplicati, o un gate sulla taglia più tollerante per i track classificati.
+  **Non corretto**: è logica del metodo, e va fatto guardando solo lo split `tune/`, non queste sequenze (regola 1).
 - 1950 è la sequenza peggiore per entrambi (FN alti): da guardare.
 
 **Limiti da dichiarare**
