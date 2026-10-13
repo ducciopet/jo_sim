@@ -172,6 +172,11 @@ anche i punti sul prolungamento di un muro lontano; una persona ferma sulla line
 punti e la detection, e la "fetta" spezzava le persone in frammenti che diventavano track duplicati. Ora la rimozione
 è limitata all'estensione del muro (+0,2 m). Pipeline completa: MOTA 91,5 → 93,1%, IDF1 79,2 → 87,3%.
 
+**Altezza nell'associazione** (jo_detector_v2, commit dopo `52a5573`): il track tiene una media mobile della **cima**
+delle box associate; i candidati pagano 0,5 per metro di differenza (rifiuto oltre 1 m). Replay solo-tracker sugli input
+r6, 2 ripetizioni: FP 34/32 → 15/11, IDF1 74,4 → 80,8%, MOTA 93,2/93,3 → 93,8/93,9%, FN invariati. Lo scambio d'ID della
+1950 sparisce; quello della 1945 resta (l'ingombro ha una cima simile).
+
 Politica semantica attuale: in FOV ci si fida di YOLO (classe tolta dopo 3 tick senza conferma, 15 nella fascia di
 bordo); fuori FOV la classe resta finché il track vive, salvo scambio d'identità (box cresciuta oltre il 50% della
 taglia vista con YOLO per 5 tick).
