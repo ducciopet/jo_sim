@@ -105,13 +105,13 @@ RUN (for i in 1 2 3 4 5; do apt update -y && break || sleep 10; done) \
 # cuda-cudart-13-1/cuda-nvcc-13-1 install nvcc under the versioned path
 # /usr/local/cuda-13.1 — only the (much heavier) cuda-toolkit-13-1 meta-package
 # sets up the conventional /usr/local/cuda symlink via update-alternatives.
-# CUDAToolkit_ROOT=/usr/local/cuda (and gtsam_points'/onboard_detector's own
+# CUDAToolkit_ROOT=/usr/local/cuda (and gtsam_points'/jo_detector's own
 # find_package(CUDAToolkit), pulled in transitively via gtsam_points-config.cmake
 # since it was built with CUDA support) needs that symlink to resolve nvcc.
 RUN ln -s /usr/local/cuda-13.1 /usr/local/cuda
 
 # ============================================================
-# PYTHON ML DEPENDENCIES (required by onboard_detector)
+# PYTHON ML DEPENDENCIES (required by jo_detector)
 # ============================================================
 RUN (for i in 1 2 3 4 5; do apt-get update && break || sleep 10; done) \
     && apt-get remove -y \
@@ -148,7 +148,7 @@ RUN (for i in 1 2 3 4 5; do apt-get update && break || sleep 10; done) \
     && rm -rf /var/lib/apt/lists/*
 
 # lap ("lap>=0.5.12"): linear-assignment solver ultralytics' built-in
-# trackers (ByteTrack/BoT-SORT, used by onboard_detector_v2's
+# trackers (ByteTrack/BoT-SORT, used by jo_detector_v2's
 # yolo_seg_track_detector.py) need for frame-to-frame box matching.
 # Ultralytics normally auto-installs it on first model.track() call, but
 # that AutoUpdate path pip-installs at RUNTIME into this
@@ -229,13 +229,13 @@ COPY --chown=ros:ros jo_msgs               src/jo_msgs
 COPY --chown=ros:ros turtlebot_description src/turtlebot_description
 COPY --chown=ros:ros jo_sim                src/jo_sim
 COPY --chown=ros:ros jo_navigation         src/jo_navigation
-COPY --chown=ros:ros onboard_detector      src/onboard_detector
+COPY --chown=ros:ros jo_detector      src/jo_detector
 
 # Build rtabmap, glim, glim_ros, and jo_msgs (proper install, no symlinks).
 # jo_description/turtlebot_description/jo_sim/jo_navigation are light and built
 # with --symlink-install in the entrypoint so host edits are always picked up.
-# onboard_detector is heavy (~65s) so it is built here with --symlink-install;
-# at runtime the volume mount replaces src/onboard_detector so Python/launch/config
+# jo_detector is heavy (~65s) so it is built here with --symlink-install;
+# at runtime the volume mount replaces src/jo_detector so Python/launch/config
 # changes are reflected immediately — only C++ changes need a manual colcon build.
 # After the build, mark rtabmap and rtabmap_ros with COLCON_IGNORE so that any
 # subsequent `colcon build` inside the container never triggers a rebuild of those
@@ -243,7 +243,7 @@ COPY --chown=ros:ros onboard_detector      src/onboard_detector
 RUN source /opt/ros/jazzy/setup.bash \
  && colcon build \
     --packages-ignore \
-        jo_description turtlebot_description jo_sim jo_navigation onboard_detector \
+        jo_description turtlebot_description jo_sim jo_navigation jo_detector \
         xsens_mti_ros2_driver ntrip \
     --install-base /home/ros/local_install \
     --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DRTABMAP_SYNC_USER_DATA=ON -DCMAKE_BUILD_TYPE=Release \
@@ -262,7 +262,7 @@ RUN source /opt/ros/jazzy/setup.bash \
     --packages-select xsens_mti_ros2_driver ntrip \
     --install-base /home/ros/local_install
 
-# onboard_detector/CMakeLists.txt declares `cmake_minimum_required(VERSION 3.8)`,
+# jo_detector/CMakeLists.txt declares `cmake_minimum_required(VERSION 3.8)`,
 # older than CMake 3.12 which introduced policy CMP0074 ("find_package uses
 # <PackageName>_ROOT variables"). With that policy defaulting to OLD, CMake
 # never promotes the ENV{CUDAToolkit_ROOT} we set above into the plain
@@ -273,7 +273,7 @@ RUN source /opt/ros/jazzy/setup.bash \
 RUN source /opt/ros/jazzy/setup.bash \
  && source /home/ros/local_install/setup.bash \
  && colcon build \
-    --packages-select onboard_detector jo_navigation jo_sim jo_description turtlebot_description \
+    --packages-select jo_detector jo_navigation jo_sim jo_description turtlebot_description \
     --symlink-install \
     --install-base /home/ros/local_install \
     --cmake-args -DCMAKE_BUILD_TYPE=Release -DCUDAToolkit_ROOT=/usr/local/cuda

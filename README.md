@@ -33,14 +33,14 @@ A comprehensive ROS 2 robot description package for the Jo tracked robot platfor
 - `jo_description` — URDF model of the robot, complete with sensors
 - `jo_sim` — Simulation package; used to launch Gazebo sim and GLIM SLAM
 - `jo_navigation` — Configs and launch files for localization (EKF) and navigation (Nav2)
-- `onboard_detector` — Real-time 3D dynamic obstacle detection and tracking (depth + LiDAR + YOLO fusion)
+- `jo_detector` — Real-time 3D dynamic obstacle detection and tracking (depth + LiDAR + YOLO fusion)
 
 
 
 # Quick Start
 
 ## Clone the Repository
-This repo pulls in `glim`, `glim_ros2`, `jo_navigation`, `jo_description`, `onboard_detector` and `jo_sim/worlds/external` as git submodules (see [`.gitmodules`](.gitmodules)). Clone with `--recurse-submodules`, otherwise those folders will be empty and the Docker build will fail once `colcon build` tries to compile them:
+This repo pulls in `glim`, `glim_ros2`, `jo_navigation`, `jo_description`, `jo_detector` and `jo_sim/worlds/external` as git submodules (see [`.gitmodules`](.gitmodules)). Clone with `--recurse-submodules`, otherwise those folders will be empty and the Docker build will fail once `colcon build` tries to compile them:
 ```bash
 git clone --recurse-submodules <repo-url>
 ```

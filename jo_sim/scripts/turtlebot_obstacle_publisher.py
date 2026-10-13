@@ -44,7 +44,7 @@ class TurtlebotObstaclePublisher(Node):
         self.declare_parameter("jo_base_link_height", 0.373)
 
         self._pub = self.create_publisher(
-            ObstacleArray, "/onboard_detector/tracked_dynamic_obstacles", 10)
+            ObstacleArray, "/perception/tracked_dynamic_obstacles", 10)
 
         self.create_subscription(
             PoseArray, "/turtlebot/world_pose", self._cb, 10)

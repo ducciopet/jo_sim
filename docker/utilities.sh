@@ -39,10 +39,10 @@ dual_sim() { _log_run dual_sim ros2 launch jo_sim launch_dual_robot.launch.py gl
 
 # LV-DOT aliases
 alias glim_bbox='rviz2 -d $(ros2 pkg prefix jo_sim)/share/jo_sim/rviz/glim_bbox.rviz'
-alias detector='ros2 launch onboard_detector run_detector.launch.py'
+alias detector='ros2 launch jo_detector run_detector.launch.py'
 
 # when working with bags, we want the odom_pub to be true to have the odometry data in the bag, and we want to use sim time
-alias detector_bag='ros2 launch onboard_detector run_detector.launch.py odom_pub:=true'
+alias detector_bag='ros2 launch jo_detector run_detector.launch.py odom_pub:=true'
 alias localization_detector='ros2 launch jo_navigation localization_detector.launch.py'
 
 ros2 () {
@@ -50,7 +50,7 @@ ros2 () {
     shift 2
     local bag_path="$1"
     shift
-    # `ros2 bag play --all <path> ...` bypasses the onboard_detector topic
+    # `ros2 bag play --all <path> ...` bypasses the jo_detector topic
     # whitelist below and plays every topic in the bag, like a plain
     # `ros2 bag play` does outside the container (e.g. for bags such as
     # bags/*_validation_lab that carry GNSS/IMU/etc. topics the detector
