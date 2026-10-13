@@ -26,6 +26,15 @@ otherwise a correct detection there would be counted as a false positive.
 With ``roi = (xmin, xmax, ymin, ymax)`` (GT frame), predictions outside it are
 ignored, e.g. outside the motion-capture volume where no GT can exist.
 
+``label_mode`` picks the question the evaluation answers (same outputs, three readings):
+
+- ``full``          D / PD / S as labelled (this system's own task).
+- ``dynamic_only``  "does it flag what MOVES?" — GT positives are only the D phases, predictions only the D
+                    ones; a standing person (GT PD) labelled D is a false positive, labelled PD costs nothing.
+                    Comparable with moving-object segmentation (Dynablox, M-detector, LV-DOT dynamic).
+- ``merged``        "does it find and keep people / movable objects, moving or not?" — D and PD are one label
+                    on both sides. Comparable with person/object trackers (AB3DMOT, JRDB-style GT).
+
 Only predictions whose state is in ``pred_states`` are considered objects of
 interest (default: dynamic + potentially dynamic; a method's 'static' tracks
 are ignored, as the task is detecting dynamic / potentially dynamic obstacles).
@@ -54,6 +63,7 @@ class EvalConfig:
     t_end: float = None
     skip_missing_gt: bool = True   # skip frames where a GT track has a gap inside its span
     roi: tuple = None              # (xmin, xmax, ymin, ymax) in GT frame; predictions outside ignored
+    label_mode: str = 'full'       # 'full' | 'dynamic_only' | 'merged' — see the module docstring
 
 
 @dataclass
@@ -183,6 +193,17 @@ def evaluate(gt, pred, cfg=None):
     grid = grid[keep]
     G = [g for g, k in zip(G, keep) if k]
     P = [p for p, k in zip(P, keep) if k]
+    G_states = G  # original GT states, for transition latencies
+    # Relabel AFTER the dropout skip above, so that e.g. a GT person's PD phase in dynamic_only mode is a
+    # legitimate "nothing to flag here" frame, not a frame skipped as if the motion capture had lost them.
+    if cfg.label_mode == 'dynamic_only':
+        G = [[g for g in gs if g[3] == DYNAMIC] for gs in G]
+        P = [[p for p in ps if p[3] == DYNAMIC] for ps in P]
+    elif cfg.label_mode == 'merged':
+        G = [[(i, x, y, DYNAMIC) for i, x, y, _ in gs] for gs in G]
+        P = [[(i, x, y, DYNAMIC) for i, x, y, _ in ps] for ps in P]
+    elif cfg.label_mode != 'full':
+        raise ValueError(f'unknown label_mode {cfg.label_mode!r}')
 
     labels = list(STATES)
     conf = {a: {b: 0 for b in labels + [MISSED]} for a in labels}
@@ -251,7 +272,7 @@ def evaluate(gt, pred, cfg=None):
                            if col and row and (prec + rec_m) > 0 else float('nan'))
     res.mcc = _mcc(conf, labels)
 
-    res.latencies = _transition_latencies(grid, G, matched_state, cfg)
+    res.latencies = _transition_latencies(grid, G_states, matched_state, cfg) if cfg.label_mode != 'merged' else []
     for target in (DYNAMIC, POTENTIALLY_DYNAMIC):
         ls = [l['latency'] for l in res.latencies if l['to'] == target]
         ok = [x for x in ls if np.isfinite(x)]

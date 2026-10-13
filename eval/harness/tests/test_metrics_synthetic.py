@@ -166,3 +166,27 @@ def test_roi_drops_far_predictions():
     gt, pred = build()
     r = evaluate(gt, pred, EvalConfig(roi=(-1, 15, -1, 6)))
     assert r.fp == 0                            # the fake object at (20, 20) is outside
+
+
+def test_label_mode_dynamic_only():
+    """Only motion counts. GT positives: GT1's D phases (t<10: 100 frames, t>=20: 101). GT2 (always PD) and GT1's PD
+    phase are 'nothing to flag'. GT1's lagged label is still D on 10.0..10.8 (9 frames) -> FP there, and still PD on
+    20.0..20.8 (9 frames) -> FN there; the fake far dynamic object adds 50 FP; PD predictions cost nothing."""
+    gt, pred = build()
+    r = evaluate(gt, pred, EvalConfig(label_mode='dynamic_only'))
+    assert r.num_frames_skipped == 0            # PD phases are kept, not skipped as GT dropouts
+    assert r.num_gt == 201
+    assert r.tp == 192 and r.fn == 9
+    assert r.fp == 9 + 50
+    lat = {l['to']: l['latency'] for l in r.latencies}
+    assert lat[DYNAMIC] == pytest.approx(0.9, abs=1e-6)   # onset latency still measured
+
+
+def test_label_mode_merged():
+    """D and PD are one label: detection/tracking only, state ignored."""
+    gt, pred = build()
+    full = evaluate(gt, pred, EvalConfig())
+    r = evaluate(gt, pred, EvalConfig(label_mode='merged'))
+    assert (r.tp, r.fp, r.fn, r.idsw) == (full.tp, full.fp, full.fn, full.idsw)
+    assert r.state_recall[DYNAMIC] == pytest.approx(r.tp / r.num_gt)   # every match is "right", only misses count
+    assert r.latencies == []

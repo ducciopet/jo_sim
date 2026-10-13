@@ -19,6 +19,8 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 STATES = ('dynamic', 'potentially_dynamic', 'static')
+LEVEL = {'full': 'D/PD/S labels', 'dynamic_only': 'moving objects only (D vs rest)',
+         'merged': 'D and PD merged (people/movable objects, moving or not)'}
 SHORT = {'dynamic': 'D', 'potentially_dynamic': 'PD', 'static': 'S'}
 
 
@@ -128,7 +130,8 @@ def main():
         w.writeheader()
         w.writerows(sens)
     (out / f'{args.name}.tex').write_text(latex(
-        rows, f'Lab sequences with motion-capture ground truth (GT dynamic threshold {main_thr}\\,m/s, '
+        rows, f'Lab sequences with motion-capture ground truth, {LEVEL.get(S.get("label_mode", "full"), "")} '
+              f'(GT dynamic threshold {main_thr}\\,m/s, '
               f'match gate {S["match_dist"]}\\,m'
               + (f', first {S["t_start"]:g}\\,s of each sequence excluded' if S.get('t_start') else '') + ').',
         f'tab:{args.name}'))

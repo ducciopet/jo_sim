@@ -73,6 +73,9 @@ def main():
                     help='GT dynamic threshold(s) [m/s]; the first is the main one, the rest a sensitivity sweep')
     ap.add_argument('--match-dist', type=float, default=1.0)
     ap.add_argument('--roi-margin', type=float, default=0.5)
+    ap.add_argument('--label-modes', nargs='+', default=['full', 'dynamic_only', 'merged'],
+                    choices=['full', 'dynamic_only', 'merged'],
+                    help='evaluation levels (see harness/metrics.py); full -> summary.json, others -> summary_<mode>.json')
     ap.add_argument('--t-start', type=float, default=None,
                     help='skip the first N s of every sequence (e.g. online-calibration warm-up)')
     ap.add_argument('--t-base-jo', type=float, nargs=2, default=[0.0, 0.0], metavar=('X', 'Y'),
@@ -94,8 +97,12 @@ def main():
     roi = (allxy[:, 0].min() - args.roi_margin, allxy[:, 0].max() + args.roi_margin,
            allxy[:, 1].min() - args.roi_margin, allxy[:, 1].max() + args.roi_margin)
 
-    summary = {'created': datetime.datetime.now().isoformat(timespec='seconds'), 'roi': roi, 't_start': args.t_start,
-               'dyn_speed': args.dyn_speed, 'match_dist': args.match_dist, 'methods': {}, 'sequences': sorted(mocap)}
+    def new_summary(mode):
+        return {'created': datetime.datetime.now().isoformat(timespec='seconds'), 'roi': roi, 't_start': args.t_start,
+                'label_mode': mode, 'dyn_speed': args.dyn_speed, 'match_dist': args.match_dist, 'methods': {},
+                'sequences': sorted(mocap)}
+    summaries = {m: new_summary(m) for m in args.label_modes}
+    summary = summaries.get('full', new_summary('full'))
 
     for method in args.methods:
         seq_runs = {s: runs / f'{method}_{s}' for s in mocap if (runs / f'{method}_{s}').is_dir()}
@@ -110,8 +117,9 @@ def main():
               f'(translation observable: {align["t_base_JO_observable"]}) delta={align["delta"]["median"]:+.3f}s '
               f'rms_xy={ {k: round(v, 3) for k, v in align["rms_xy"].items()} }')
 
-        summary['methods'][method] = {'alignment_rms_xy': align['rms_xy'],
-                                      't_base_JO_observable': align['t_base_JO_observable'], 'per_seq': {}}
+        for sm in summaries.values():
+            sm['methods'][method] = {'alignment_rms_xy': align['rms_xy'],
+                                     't_base_JO_observable': align['t_base_JO_observable'], 'per_seq': {}}
         for s, run in seq_runs.items():
             pred_odom, frame_id, topic = load_obstacles(run)
             if frame_id and frame_id != 'odom':
@@ -121,17 +129,22 @@ def main():
             (seq_dir / method).mkdir(parents=True, exist_ok=True)
             write_tracks(pred, seq_dir / method / 'tracks.csv')
 
-            per_thr = {}
+            per_mode = {m: {} for m in args.label_modes}
             for thr in args.dyn_speed:
                 gt, ids = gt_tracks({args.person_body: mocap[s][args.person_body]}, dyn_speed=thr)
                 if thr == args.dyn_speed[0]:
                     (seq_dir / 'gt').mkdir(parents=True, exist_ok=True)
                     write_tracks(gt, seq_dir / 'gt' / 'tracks.csv')
-                cfg = EvalConfig(match_dist=args.match_dist, roi=roi, t_start=args.t_start)
-                per_thr[thr] = evaluate(gt, pred, cfg).to_dict()
+                for m in args.label_modes:
+                    cfg = EvalConfig(match_dist=args.match_dist, roi=roi, t_start=args.t_start, label_mode=m)
+                    per_mode[m][thr] = evaluate(gt, pred, cfg).to_dict()
+            for m in args.label_modes:
+                summaries[m]['methods'][method]['per_seq'][s] = {str(k): v for k, v in per_mode[m].items()}
+            per_thr = per_mode['full'] if 'full' in per_mode else per_mode[args.label_modes[0]]
             main_res = per_thr[args.dyn_speed[0]]
             (seq_dir / method / 'metrics.json').write_text(json.dumps(jsonable(
-                {'main': main_res, 'sensitivity': {str(k): v for k, v in per_thr.items()}}), indent=2))
+                {'main': main_res, 'sensitivity': {str(k): v for k, v in per_thr.items()},
+                 'by_label_mode': {m: v[args.dyn_speed[0]] for m, v in per_mode.items()}}), indent=2))
             manifest = {
                 'method': method, 'sequence': s, 'run_bag': str(run), 'output_topic': topic,
                 'run_recorded': datetime.datetime.fromtimestamp(run.stat().st_mtime).isoformat(timespec='seconds'),
@@ -145,12 +158,12 @@ def main():
                 'host': platform.node(), 'evaluated': datetime.datetime.now().isoformat(timespec='seconds'),
             }
             (seq_dir / method / 'manifest.json').write_text(json.dumps(jsonable(manifest), indent=2))
-            summary['methods'][method]['per_seq'][s] = {str(k): v for k, v in per_thr.items()}
             print(f'  {s}: MOTA={main_res["mota"]:.3f} IDF1={main_res["idf1"]:.3f} '
                   f'recall D={main_res["state_recall"]["dynamic"]:.2f} PD={main_res["state_recall"]["potentially_dynamic"]:.2f} '
                   f'FP={main_res["fp"]} FN={main_res["fn"]} IDSW={main_res["idsw"]}')
 
-    (out / 'summary.json').write_text(json.dumps(jsonable(summary), indent=2))
+    for m, sm in summaries.items():
+        (out / ('summary.json' if m == 'full' else f'summary_{m}.json')).write_text(json.dumps(jsonable(sm), indent=2))
     print(f'wrote {out}')
 
 
