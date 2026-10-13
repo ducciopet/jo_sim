@@ -7,7 +7,7 @@ Protocollo: `../BENCHMARK_PLAN.md`. Stato e numeri: `STATUS.md`.
 | Percorso | Cosa fa |
 |---|---|
 | `harness/tracks.py` | formato unico `tracks.csv` (`t_ns,track_id,x,y,z,l,w,h,yaw,vx,vy,vz,state,class,score`) |
-| `harness/metrics.py` | CLEAR MOT, IDF1, confusione D/PD/S, recall per stato, latenza di transizione, su una griglia temporale comune |
+| `harness/metrics.py` | CLEAR MOT, IDF1, confusione D/PD/S, recall per stato, latenza di transizione, su una griglia temporale comune; tre livelli (`label_mode`): D/PD/S completo, solo moto (D contro il resto), D e PD unite |
 | `harness/gt_mocap.py` | GT da motion capture (stato dalla velocità) e allineamento mocap ↔ odom basato solo sulle pose del robot |
 | `harness/ros_io.py` | lettura bag (rosbags, nessuna installazione ROS necessaria) |
 | `harness/tests/` | test sintetici: le metriche e l'allineamento devono recuperare valori iniettati noti |
@@ -30,7 +30,9 @@ docker exec <container> bash /home/ros/bags/replay/run_qualisys_batch.sh
 
 # valutazione + tabelle (sull'host)
 python3 eval/run_own_eval.py --runs bags/replay --mocap bags/qualysis --methods v1 v2 --dyn-speed 0.3 0.2 0.4 0.5
-python3 eval/report.py
+python3 eval/report.py --name own_mocap_full                                              # livello D/PD/S
+python3 eval/report.py --summary eval/results/own/summary_dynamic_only.json --name own_mocap_dynamic_only
+python3 eval/report.py --summary eval/results/own/summary_merged.json --name own_mocap_merged
 ```
 
 ## Scelte di protocollo
