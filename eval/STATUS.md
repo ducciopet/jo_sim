@@ -275,10 +275,25 @@ dell'associazione a parità di input.
   sugli input di ciascun run v2 (`r8<rep>g_v2_<seq>`). 54 job, circa 1,5 min l'uno.
 - **Ripresa**: ogni job finito lascia `<out>.done`; rilanciare lo script salta i job finiti e rifà da capo quello
   interrotto. Stato e orari in `bags/replay/r8_state.log`.
-  - interrompere: `docker exec jo_sim_lv-dot-jo-sim_lv-dot-1 bash -c "pkill -f run_campaign.sh; bash /home/ros/bags/replay/cleanup.sh"`
+  - interrompere: `docker exec jo_sim_lv-dot-jo-sim_lv-dot-1 bash -c "pkill -f '[r]un_campaign.sh'; pkill -f '[r]un_tracker_only.sh'; pkill -f '[r]un_method.sh'; bash /home/ros/bags/replay/cleanup.sh"`
+    (le parentesi quadre servono: senza, `pkill -f` uccide anche la shell che lo esegue e il resto non parte)
     (oppure `touch bags/replay/r8.stop` per fermarsi alla fine del job corrente)
   - riprendere: `rm -f bags/replay/r8.stop; docker exec jo_sim_lv-dot-jo-sim_lv-dot-1 bash -c "CAMPAIGN=r8 bash /home/ros/bags/replay/run_campaign.sh"`
 - Valutazione (sull'host, anche su campagna parziale: aggrega solo le ripetizioni complete per metodo):
   `python3 eval/campaign_report.py --campaign r8 --reps a b c` → `results/own_r8<rep>/`,
   `tables/own_r8<rep>_<livello>.*`, `tables/own_r8_<livello>_reps{,_perseq}.csv`, `.tex`.
 - Video top-down GT vs track: `python3 eval/make_video.py --results eval/results/own_r8a --seq <seq> --methods v1 v2 --out eval/videos/<nome>.mp4`.
+
+**Stato al 2026-10-14 (interrotta su richiesta, 17:22 ora del container):** le 3 ripetizioni a pipeline completa sono
+fatte per v2 e v1, tranne v1 rep c 1942 da rifare: la bag era stata riprodotta solo per 32 s su 64, per errori DDS
+dopo che l'interfaccia `10.42.0.95` (hotspot) è sparita. Run invalidato (`.done` tolto, log in
+`r8c_v1_20260519_1942_logs_truncated`). Gli script usano ora `ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST` e
+`campaign_report.py` esclude i run che coprono meno del 97% della bag. Ablation `greedy_kuhn`: 8 replay su 18 fatti
+(rep a completa, rep b 1942 e 1945). Alla ripresa lo script rifà nell'ordine v1 rep c 1942 e i 10 replay mancanti
+(circa 15 min).
+
+Risultati parziali (D/PD/S, media ± std; v1 su 3 ripetizioni compreso il run troncato, da ricalcolare):
+v2 MOTA 96,46 ± 0,26%, IDF1 80,7 ± 6,7%, IDSW 3,0 ± 0. Gli scambi di ID di v2 sono sempre negli stessi punti:
+1947 a 28,3 s (uscita laterale dal FOV, 3 run su 3), 1945 a 18,7 s (2 su 3), 1950 a circa 38 s (3 su 3; in rep b
+l'ID torna dopo 0,2 s). Pagina report: `eval/make_report_page.py` + `report_template.html` + `report_r8_notes.html`
+(i segnaposto `__...__` nelle note vanno riempiti coi numeri finali), video in `eval/videos/r8/`.

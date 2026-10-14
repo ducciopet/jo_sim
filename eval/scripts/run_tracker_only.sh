@@ -3,6 +3,8 @@
 # usage: run_tracker_only.sh <input_run_bag> <out_bag> [rate] -- [-p name:=value ...]
 IN=$1; OUT=$2; RATE=${3:-1.0}; shift 3; [ "$1" = "--" ] && shift
 export ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-77}
+# DDS on loopback only: an interface vanishing mid-run (e.g. a hotspot) stalled playback once (r8c v1 1942)
+export ROS_AUTOMATIC_DISCOVERY_RANGE=${ROS_AUTOMATIC_DISCOVERY_RANGE:-LOCALHOST}
 source /opt/ros/jazzy/setup.bash; source /home/ros/local_install/setup.bash
 CFG=$(ros2 pkg prefix jo_detector_v2)/share/jo_detector_v2/cfg/indoor/tracker.yaml
 rm -rf $OUT; LOG=${OUT}_logs; rm -rf $LOG; mkdir -p $LOG

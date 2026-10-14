@@ -1,0 +1,37 @@
+<h2>Cosa dicono i numeri</h2>
+<ul>
+  <li><b>MOTA di v2 stabile:</b> __V2MOTA__ sulle tre ripetizioni. La variabilità tra run della pipeline completa
+    sposta il MOTA di pochi decimi; v1 varia di più (__V1MOTA__).</li>
+  <li><b>IDF1 di v2 variabile in modo binario:</b> __V2IDF1__. In ogni sequenza lo scambio di ID o succede o no, e
+    con una persona sola un singolo scambio a metà sequenza dimezza l'IDF1 di quella sequenza. Gli scambi sono
+    sempre negli stessi punti:
+    <ul>
+      <li><b>1947, 28,3 s</b> (3 run su 3): la persona esce di lato dal FOV, il box passa da LiDAR+camera a solo
+        LiDAR, il centro salta e il track rinasce. Il passaggio di classe salva la classe ma non l'ID.</li>
+      <li><b>1945, 18,7 s</b> (2 run su 3): persona dietro il robot, senza classe, che inverte la direzione vicino a
+        un ingombro; il track si perde per circa 1,2 s.</li>
+      <li><b>1950, circa 38 s</b> (3 run su 3): un nuovo track prende la persona; nella ripetizione b il vecchio ID
+        torna dopo 0,2 s e l'IDF1 della sequenza resta al 99,6%.</li>
+    </ul>
+  </li>
+  <li><b>Hungarian contro greedy-Kuhn:</b> __ABL__</li>
+  <li><b>v1:</b> i falsi positivi restano il problema principale (__V1FP__ per ripetizione, quasi tutti nella 1947 e
+    nella 1950) e la recall PD è più bassa e più variabile (__V1RPD__).</li>
+</ul>
+
+<h3>Un run scartato</h3>
+<p>Nella prima esecuzione della ripetizione c, v1 sulla 1942 ha fatto MOTA 3%: la bag era stata riprodotta solo
+  per 32 s su 64. Un'interfaccia di rete (un hotspot, <code>10.42.0.95</code>) è sparita durante il run, la
+  riproduzione ha rallentato per gli errori DDS e il timeout l'ha tagliata. Il run è stato rifatto. Da allora gli
+  script usano <code>ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST</code> e <code>campaign_report.py</code> esclude ogni
+  run che non copre almeno il 97% della bag.</p>
+
+<h3>Prossimi passi</h3>
+<ul>
+  <li>Correzione della 1947: quando la camera sparisce, associare il box alla parte LiDAR del track invece che al
+    box fuso. È lo scambio più frequente (3 run su 3).</li>
+  <li>Guardare lo scambio della 1950 a 38 s: si ripete in tutti i run, quindi è un caso deterministico da
+    diagnosticare con <code>tracker_debug_lifecycle</code>.</li>
+  <li>Smettere di mettere a punto su queste 6 sequenze: per numeri da paper servono dati non visti e scene con più
+    persone (campagna sul campo, <code>eval/FIELD_PROTOCOL.md</code>), dove anche l'associazione si vede davvero.</li>
+</ul>

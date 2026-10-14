@@ -5,6 +5,8 @@
 # usage: make_odom.sh <sensor_bag> <out_bag>
 BAG=$1; OUT=$2
 export ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-77}
+# DDS on loopback only: an interface vanishing mid-run (e.g. a hotspot) stalled playback once (r8c v1 1942)
+export ROS_AUTOMATIC_DISCOVERY_RANGE=${ROS_AUTOMATIC_DISCOVERY_RANGE:-LOCALHOST}
 source /opt/ros/jazzy/setup.bash; source /home/ros/local_install/setup.bash
 DIR=$(dirname $0); rm -rf $OUT; LOG=${OUT}_logs; rm -rf $LOG; mkdir -p $LOG
 DUR=$(python3 -c "import yaml;print(int(yaml.safe_load(open('$BAG/metadata.yaml'))['rosbag2_bagfile_information']['duration']['nanoseconds']/1e9)+3)")

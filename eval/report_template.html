@@ -1,0 +1,416 @@
+<title>Benchmark r8 jo_detector</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: lab notebook. One narrow reading column, charts break out to a wider measure; mono for every number. */
+:root {
+  --bg: #f6f7f8; --surface: #fcfcfb; --ink: #121417; --ink-2: #4b5058; --ink-3: #7b818a;
+  --rule: #dfe2e6; --grid: #e9ebee; --accent: #2a78d6;
+  --m-v2: #2a78d6; --m-v1: #eb6834; --m-v2g: #1baf7a;
+  --good: #1f7a3a; --warn: #a15c00;
+  --f-display: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121315; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --ink-3: #8f9096;
+  --rule: #2e3034; --grid: #26282b; --accent: #3987e5;
+  --m-v2: #3987e5; --m-v1: #d95926; --m-v2g: #199e70; --good: #5cc27a; --warn: #e0a040; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121315; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --ink-3: #8f9096;
+  --rule: #2e3034; --grid: #26282b; --accent: #3987e5;
+  --m-v2: #3987e5; --m-v1: #d95926; --m-v2g: #199e70; --good: #5cc27a; --warn: #e0a040; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 15px/1.6 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 1040px; margin: 0 auto; padding-block: 40px 80px; display: grid; gap: 56px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.1; }
+h2 { font-size: 24px; }
+h3 { font-size: 16px; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font: 600 12px var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.mono, .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+section { display: grid; gap: 18px; min-width: 0; }
+.lede { color: var(--ink-2); font-size: 17px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 18px; font: 13px var(--f-mono); color: var(--ink-2); }
+.meta b { color: var(--ink); font-weight: 600; }
+.progress { height: 6px; background: var(--grid); border-radius: 3px; overflow: hidden; max-width: 420px; }
+.progress > div { height: 100%; background: var(--accent); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: var(--rule);
+  border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.tile { background: var(--surface); padding: 16px 18px; display: grid; gap: 4px; align-content: start; }
+.tile .label { font-size: 13px; color: var(--ink-2); }
+.tile .value { font: 600 30px/1.1 var(--f-body); font-variant-numeric: tabular-nums; }
+.tile .value small { font: 400 14px var(--f-mono); color: var(--ink-3); }
+.tile .cmp { font: 13px var(--f-mono); color: var(--ink-2); }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--rule); }
+.tabs button { font: 600 13px var(--f-body); color: var(--ink-2); background: transparent; border: 1px solid var(--rule);
+  border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.tabs button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.tabs button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tabs .hint { align-self: center; font-size: 13px; color: var(--ink-3); margin-left: 6px; }
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
+.card .sub { color: var(--ink-2); font-size: 14px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 16px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend svg { width: 14px; height: 14px; flex: none; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--ink-2); font: 11px var(--f-mono); }
+svg .lab { fill: var(--ink); font: 12px var(--f-body); }
+svg .grid { stroke: var(--grid); stroke-width: 1; }
+svg .axis { stroke: var(--rule); stroke-width: 1; }
+.hit { fill: transparent; cursor: pointer; }
+#tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font: 12px/1.45 var(--f-body);
+  padding: 8px 10px; border-radius: 6px; max-width: 260px; z-index: 20; }
+#tip b { font: 600 14px var(--f-mono); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { padding: 7px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--grid); }
+th { font: 600 12px var(--f-body); color: var(--ink-2); background: var(--surface); position: sticky; top: 0; }
+td { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+th:first-child, td:first-child { text-align: left; font-family: var(--f-body); }
+tr.best td { font-weight: 600; }
+.key { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: -1px; margin-right: 6px; }
+.videos { display: grid; gap: 12px; }
+.videos .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+select { font: 14px var(--f-body); color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 10px; }
+video { width: 100%; max-width: 100%; border-radius: 8px; border: 1px solid var(--rule); background: #fff; }
+.notes { display: grid; gap: 14px; }
+.notes h3 { margin-top: 6px; }
+.notes ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 72ch; }
+.notes code, p code { font: 13px var(--f-mono); background: var(--grid); padding: 1px 5px; border-radius: 4px; }
+.empty { color: var(--ink-3); font-style: italic; }
+@media (prefers-reduced-motion: no-preference) { .progress > div { transition: width .4s ease; } }
+</style>
+
+<main>
+  <header style="display:grid;gap:14px">
+    <div class="eyebrow">jo_detector · benchmark E1 · Qualisys lab</div>
+    <h1 id="title">Campagna r8: v2 con associazione Hungarian contro v1</h1>
+    <p class="lede">Sei sequenze di laboratorio (19/05/2026, una persona, camera frontale) con ground truth da motion
+      capture. Ogni metodo gira tre volte a pipeline completa sugli stessi sensori e sulla stessa odometria; i numeri
+      sono media ± deviazione standard tra le ripetizioni. L'ablation <code>greedy_kuhn</code> riusa gli input
+      registrati in ciascun run di v2, così la sola differenza è l'associazione.</p>
+    <div class="meta" id="meta"></div>
+    <div class="progress" aria-label="avanzamento campagna"><div id="prog"></div></div>
+  </header>
+
+  <section>
+    <div class="eyebrow">Sintesi · livello D/PD/S</div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <div class="tabs" role="group" aria-label="Livello di valutazione">
+    <button data-level="full" aria-pressed="true">D/PD/S completo</button>
+    <button data-level="dynamic_only" aria-pressed="false">Solo moto</button>
+    <button data-level="merged" aria-pressed="false">D e PD unite</button>
+    <span class="hint" id="levelhint"></span>
+  </div>
+
+  <section>
+    <h2>Risultato complessivo per ripetizione</h2>
+    <p class="sub" style="color:var(--ink-2)">Ogni punto è una ripetizione (conteggi sommati sulle 6 sequenze); la barra
+      verticale è la media, il tratto orizzontale ± 1 deviazione standard.</p>
+    <div class="legend" id="legend1"></div>
+    <div class="grid2">
+      <div class="card"><h3>MOTA</h3><div id="c-mota"></div></div>
+      <div class="card"><h3>IDF1</h3><div id="c-idf1"></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Per sequenza</h2>
+    <div class="grid2">
+      <div class="card"><h3>MOTA per sequenza</h3><div class="sub">media ± std sulle ripetizioni</div><div id="c-seq-mota"></div></div>
+      <div class="card"><h3>IDF1 per sequenza</h3><div class="sub">un solo cambio di ID a metà sequenza dimezza l'IDF1</div><div id="c-seq-idf1"></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Da dove vengono gli errori</h2>
+    <p style="color:var(--ink-2)">Media per ripetizione, somma sulle 6 sequenze (2890 frame valutati a 10 Hz). Scale
+      separate: gli scambi di ID sono un ordine di grandezza più rari.</p>
+    <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))">
+      <div class="card"><h3>Falsi positivi</h3><div id="c-fp"></div></div>
+      <div class="card"><h3>Falsi negativi</h3><div id="c-fn"></div></div>
+      <div class="card"><h3>Scambi di ID</h3><div id="c-idsw"></div></div>
+    </div>
+    <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))">
+      <div class="card"><h3>Recall D</h3><div id="c-rd"></div></div>
+      <div class="card"><h3>Recall PD</h3><div id="c-rpd"></div></div>
+      <div class="card"><h3>Latenza verso D</h3><div class="sub">secondi dalla partenza vera alla prima uscita "dynamic"</div><div id="c-lat"></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Ablation dell'associazione</h2>
+    <p style="color:var(--ink-2)">Stessi input del tracker, solo <code>track_assignment_method</code> cambia. Il replay
+      del solo tracker è deterministico: le differenze qui sono dovute all'associazione, non al rumore tra run.</p>
+    <div class="grid2">
+      <div class="card"><h3>Scambi di ID per ripetizione</h3><div id="c-abl-idsw"></div></div>
+      <div class="card"><h3>IDF1 per ripetizione</h3><div id="c-abl-idf1"></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Come ci si è arrivati</h2>
+    <p style="color:var(--ink-2)">MOTA di v2 a pipeline completa lungo lo sviluppo (run singoli, da <code>eval/STATUS.md</code>),
+      con il riferimento di v1 dopo la correzione del benchmark. Il vecchio 54,7% di v1 era dovuto alla depth
+      interpretata con gli intrinseci della camera a colori e non va più usato.</p>
+    <div class="card"><div id="c-hist"></div></div>
+  </section>
+
+  <section class="videos">
+    <h2>Video: GT contro track</h2>
+    <p style="color:var(--ink-2)">Vista dall'alto nel sistema del motion capture, velocità 2×, ripetizione a. Anello
+      tratteggiato = persona (mocap) con scia di 3 s; box = track pubblicati, rosso D, arancio PD, grigio S, con ID.
+      Il cuneo azzurro è il campo visivo della camera frontale.</p>
+    <div class="bar"><label for="vsel">Sequenza</label><select id="vsel"></select><span id="vinfo" style="color:var(--ink-2)"></span></div>
+    <video id="vid" controls muted playsinline preload="metadata"></video>
+  </section>
+
+  <section>
+    <h2>Tabella completa</h2>
+    <div class="tablewrap"><table id="tbl"></table></div>
+    <h3 style="margin-top:8px">Per sequenza</h3>
+    <div class="tablewrap"><table id="tbl-seq"></table></div>
+  </section>
+
+  <section class="notes" id="notes"></section>
+
+  <footer class="meta" id="foot"></footer>
+</main>
+<div id="tip" hidden></div>
+
+<script>
+const D = /*__DATA__*/null;
+const M = { v2: 'v2 Hungarian', v1: 'v1', v2g: 'v2 greedy-Kuhn' };
+const MCOL = { v2: 'var(--m-v2)', v1: 'var(--m-v1)', v2g: 'var(--m-v2g)' };
+const SHAPE = { v2: 'circle', v1: 'square', v2g: 'diamond' };
+const ORDER = ['v2', 'v2g', 'v1'];
+const LEVELHINT = { full: 'stato D/PD/S deve coincidere', dynamic_only: 'conta solo chi si muove (D contro il resto)', merged: 'D e PD come unica classe' };
+const NS = 'http://www.w3.org/2000/svg';
+let level = 'full';
+try { const s = localStorage.getItem('r8-level'); if (s && D.levels[s]) level = s; } catch (e) {}
+
+const pct = v => (v == null || isNaN(v)) ? '–' : (100 * v).toFixed(1).replace('.', ',') + '%';
+const f1 = v => (v == null || isNaN(v)) ? '–' : v.toFixed(1).replace('.', ',');
+const f2 = v => (v == null || isNaN(v)) ? '–' : v.toFixed(2).replace('.', ',');
+const mean = a => a.reduce((s, x) => s + x, 0) / a.length;
+const std = a => a.length > 1 ? Math.sqrt(a.reduce((s, x) => s + (x - mean(a)) ** 2, 0) / (a.length - 1)) : 0;
+const short = s => s.slice(-4);
+
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function txt(parent, x, y, s, attrs = {}) { const t = el('text', { x, y, ...attrs }, parent); t.textContent = s; return t; }
+function marker(g, m, x, y, r = 5) {
+  const a = { fill: MCOL[m], stroke: 'var(--surface)', 'stroke-width': 2 };
+  if (SHAPE[m] === 'square') return el('rect', { x: x - r, y: y - r, width: 2 * r, height: 2 * r, rx: 1.5, ...a }, g);
+  if (SHAPE[m] === 'diamond') return el('path', { d: `M${x} ${y - r - 1}L${x + r + 1} ${y}L${x} ${y + r + 1}L${x - r - 1} ${y}Z`, ...a }, g);
+  return el('circle', { cx: x, cy: y, r, ...a }, g);
+}
+const tip = document.getElementById('tip');
+function hover(node, html) {
+  const show = ev => {
+    tip.replaceChildren();
+    html.forEach(([b, s]) => { const d = document.createElement('div'); if (b) { const e = document.createElement('b'); e.textContent = b; d.appendChild(e); d.append(' '); } d.append(s); tip.appendChild(d); });
+    tip.hidden = false;
+    const r = ev.clientX !== undefined && ev.type !== 'focus' ? { x: ev.clientX, y: ev.clientY } : (() => { const b = node.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top }; })();
+    tip.style.left = Math.min(window.innerWidth - 270, r.x + 12) + 'px'; tip.style.top = (r.y + 14) + 'px';
+  };
+  node.setAttribute('tabindex', '0');
+  node.addEventListener('pointermove', show); node.addEventListener('focus', show);
+  node.addEventListener('pointerleave', () => tip.hidden = true); node.addEventListener('blur', () => tip.hidden = true);
+}
+function niceTicks(lo, hi, n = 5) {
+  const span = hi - lo || 1, step0 = span / n, mag = 10 ** Math.floor(Math.log10(step0));
+  const step = [1, 2, 2.5, 5, 10].map(s => s * mag).find(s => span / s <= n) || 10 * mag;
+  const t = []; for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) t.push(+v.toFixed(10));
+  return t;
+}
+
+/* rows: [{label, sub, items:[{m, vals:[..], hover:[..]}]}]; horizontal strips, one lane per method */
+function strip(id, rows, { fmt, scale = 1, lo, hi, unit = '', header = false }) {
+  const host = document.getElementById(id); host.replaceChildren();
+  const all = rows.flatMap(r => r.items.flatMap(i => i.vals)).filter(v => v != null && !isNaN(v)).map(v => v * scale);
+  if (!all.length) { const p = document.createElement('p'); p.className = 'empty'; p.textContent = 'Nessuna ripetizione completa ancora.'; host.appendChild(p); return; }
+  let a = lo ?? Math.min(...all), b = hi ?? Math.max(...all);
+  const pad = (b - a) * 0.12 || 1; if (lo == null) a -= pad; if (hi == null) b += pad;
+  const ticks = niceTicks(a, b); a = Math.min(a, ticks[0]); b = Math.max(b, ticks[ticks.length - 1]);
+  const W = 460, L = header ? 8 : 104, R = 14, lane = header ? 14 : 18, gap = 14, hh = header ? 18 : 0;
+  const H = 22 + rows.reduce((s, r) => s + hh + r.items.length * lane + gap, 0) + 6;
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img' }, host);
+  const x = v => L + (v - a) / (b - a) * (W - L - R);
+  ticks.forEach(t => { el('line', { x1: x(t), x2: x(t), y1: 16, y2: H - 4, class: 'grid' }, svg); txt(svg, x(t), 11, fmt(t / scale) + unit, { 'text-anchor': 'middle' }); });
+  let y = 22;
+  rows.forEach(r => {
+    const h = r.items.length * lane;
+    if (header) { const t = txt(svg, L, y + 12, r.label, { class: 'lab' }); if (r.sub) { const u = el('tspan', { fill: 'var(--ink-3)' }, t); u.textContent = '  ' + r.sub; } y += hh; }
+    else txt(svg, 0, y + h / 2 + 4, r.label, { class: 'lab' });
+    r.items.forEach((it, k) => {
+      const cy = y + k * lane + lane / 2, vs = it.vals.filter(v => v != null && !isNaN(v));
+      if (!vs.length) return;
+      const g = el('g', {}, svg), mu = mean(vs), sd = std(vs);
+      if (vs.length > 1) el('line', { x1: x((mu - sd) * scale), x2: x((mu + sd) * scale), y1: cy, y2: cy, stroke: MCOL[it.m], 'stroke-width': 2, 'stroke-linecap': 'round', opacity: .55 }, g);
+      el('line', { x1: x(mu * scale), x2: x(mu * scale), y1: cy - 7, y2: cy + 7, stroke: MCOL[it.m], 'stroke-width': 2.5, 'stroke-linecap': 'round' }, g);
+      vs.forEach(v => marker(g, it.m, x(v * scale), cy, 4));
+      el('rect', { x: L, y: cy - lane / 2, width: W - L - R, height: lane, class: 'hit' }, g);
+      hover(g, [[fmt(mu) + unit + (vs.length > 1 ? ' ± ' + fmt(sd) : ''), M[it.m]], ['', r.label + (r.sub ? ' · ' + r.sub : '')], ...(it.hover || vs.map((v, i) => ['', 'rep ' + 'abc'[i] + ': ' + fmt(v) + unit]))]);
+    });
+    y += h + gap;
+  });
+}
+
+/* horizontal bars of the mean, one per method, with the per-rep range as a thin whisker */
+function bars(id, key, { fmt, scale = 1, unit = '' }) {
+  const host = document.getElementById(id); host.replaceChildren();
+  const L = D.levels[level], ms = ORDER.filter(m => L[m]);
+  if (!ms.length) return;
+  const vals = ms.map(m => L[m].reps.map(r => L[m].per_rep[r][key] * scale));
+  const max = Math.max(...vals.flat(), 1e-9), ticks = niceTicks(0, max * 1.1, 4), top = ticks[ticks.length - 1];
+  const W = 340, Lp = 112, R = 62, bh = 20, gap = 12, H = 20 + ms.length * (bh + gap);
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img' }, host);
+  const x = v => Lp + v / top * (W - Lp - R);
+  ticks.forEach(t => { el('line', { x1: x(t), x2: x(t), y1: 14, y2: H, class: 'grid' }, svg); txt(svg, x(t), 10, fmt(t / scale), { 'text-anchor': 'middle' }); });
+  ms.forEach((m, i) => {
+    const y = 18 + i * (bh + gap), v = vals[i], mu = mean(v), g = el('g', {}, svg);
+    txt(g, 0, y + bh / 2 + 4, M[m], { class: 'lab' });
+    const w = Math.max(0, x(mu) - Lp), r = Math.min(4, w / 2);
+    el('path', { d: `M${Lp} ${y}H${Lp + w - r}Q${Lp + w} ${y} ${Lp + w} ${y + r}V${y + bh - r}Q${Lp + w} ${y + bh} ${Lp + w - r} ${y + bh}H${Lp}Z`, fill: MCOL[m] }, g);
+    if (v.length > 1) el('line', { x1: x(Math.min(...v)), x2: x(Math.max(...v)), y1: y + bh / 2, y2: y + bh / 2, stroke: 'var(--ink)', 'stroke-width': 1.5, opacity: .55 }, g);
+    txt(g, x(Math.max(mu, ...v)) + 6, y + bh / 2 + 4, fmt(mu / scale) + unit, { fill: 'var(--ink)' });
+    el('rect', { x: 0, y: y - 4, width: W, height: bh + 8, class: 'hit' }, g);
+    hover(g, [[fmt(mu / scale) + unit, M[m] + ' (media)'], ...v.map((x_, k) => ['', 'rep ' + L[m].reps[k] + ': ' + fmt(x_ / scale) + unit])]);
+  });
+}
+
+function history() {
+  const host = document.getElementById('c-hist'); host.replaceChildren();
+  const pts = D.history.map(h => ({ label: h.commit, sub: h.label, v: h.mota }));
+  const L = D.levels.full;
+  if (L.v2) pts.push({ label: 'r8', sub: 'Hungarian, media 3 run', v: 100 * mean(L.v2.reps.map(r => L.v2.per_rep[r].MOTA)), sd: 100 * std(L.v2.reps.map(r => L.v2.per_rep[r].MOTA)) });
+  const v1 = L.v1 ? 100 * mean(L.v1.reps.map(r => L.v1.per_rep[r].MOTA)) : 81.7;
+  const W = 900, H = 260, Lp = 44, R = 20, T = 16, B = 54;
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img' }, host);
+  const lo = 70, hi = 100, x = i => Lp + i / (pts.length - 1) * (W - Lp - R), y = v => T + (hi - v) / (hi - lo) * (H - T - B);
+  niceTicks(lo, hi, 6).forEach(t => { el('line', { x1: Lp, x2: W - R, y1: y(t), y2: y(t), class: 'grid' }, svg); txt(svg, Lp - 8, y(t) + 4, t + '%', { 'text-anchor': 'end' }); });
+  el('line', { x1: Lp, x2: W - R, y1: y(v1), y2: y(v1), stroke: 'var(--m-v1)', 'stroke-width': 2, 'stroke-dasharray': '6 5' }, svg);
+  txt(svg, W - R - 4, y(v1) + 16, `v1 corretto, ${f1(v1)}%`, { fill: 'var(--ink-2)', 'text-anchor': 'end' });
+  el('path', { d: 'M' + pts.map((p, i) => `${x(i)} ${y(p.v)}`).join('L'), fill: 'none', stroke: 'var(--m-v2)', 'stroke-width': 2, 'stroke-linejoin': 'round' }, svg);
+  el('path', { d: `M${x(0)} ${y(lo)}L` + pts.map((p, i) => `${x(i)} ${y(p.v)}`).join('L') + `L${x(pts.length - 1)} ${y(lo)}Z`, fill: 'var(--m-v2)', opacity: .08 }, svg);
+  pts.forEach((p, i) => {
+    const g = el('g', {}, svg);
+    if (p.sd) el('line', { x1: x(i), x2: x(i), y1: y(p.v - p.sd), y2: y(p.v + p.sd), stroke: 'var(--m-v2)', 'stroke-width': 2 }, g);
+    marker(g, 'v2', x(i), y(p.v), i === pts.length - 1 ? 6 : 4);
+    txt(g, x(i), H - B + 18, p.label, { 'text-anchor': 'middle', fill: 'var(--ink)' });
+    if (i === pts.length - 1 || i === 0) txt(g, x(i), y(p.v) - 12, f1(p.v) + '%', { 'text-anchor': 'middle', fill: 'var(--ink)' });
+    el('rect', { x: x(i) - 30, y: T, width: 60, height: H - T - B + 24, class: 'hit' }, g);
+    hover(g, [[f1(p.v) + '%' + (p.sd ? ' ± ' + f1(p.sd) : ''), 'MOTA v2'], ['', p.label + ' · ' + p.sub]]);
+  });
+  txt(svg, Lp, H - 8, 'commit di jo_detector_v2 (ordine cronologico)');
+}
+
+function legend(id, ms) {
+  const h = document.getElementById(id); h.replaceChildren();
+  ms.forEach(m => { const s = document.createElement('span'); const k = document.createElementNS(NS, 'svg'); k.setAttribute('width', 14); k.setAttribute('height', 14); k.setAttribute('viewBox', '0 0 14 14'); marker(k, m, 7, 7, 5); s.appendChild(k); s.append(M[m]); h.appendChild(s); });
+}
+
+function render() {
+  const L = D.levels[level] || {}, ms = ORDER.filter(m => L[m]);
+  document.getElementById('levelhint').textContent = LEVELHINT[level];
+  legend('legend1', ms);
+  strip('c-mota', ms.map(m => ({ label: M[m], items: [{ m, vals: L[m].reps.map(r => L[m].per_rep[r].MOTA) }] })), { fmt: v => f1(100 * v), scale: 1, unit: '%' });
+  strip('c-idf1', ms.map(m => ({ label: M[m], items: [{ m, vals: L[m].reps.map(r => L[m].per_rep[r].IDF1) }] })), { fmt: v => f1(100 * v), unit: '%' });
+  const seqs = Object.keys(D.seq_info), sm = ms.filter(m => m !== 'v2g');
+  strip('c-seq-mota', seqs.map(s => ({ label: short(s), sub: D.seq_info[s], items: sm.map(m => ({ m, vals: L[m].reps.map(r => L[m].per_seq_rep[s][r].MOTA) })) })), { fmt: v => f1(100 * v), unit: '%', header: true });
+  strip('c-seq-idf1', seqs.map(s => ({ label: short(s), sub: D.seq_info[s], items: sm.map(m => ({ m, vals: L[m].reps.map(r => L[m].per_seq_rep[s][r].IDF1) })) })), { fmt: v => f1(100 * v), unit: '%', header: true });
+  bars('c-fp', 'FP', { fmt: f1 }); bars('c-fn', 'FN', { fmt: f1 }); bars('c-idsw', 'IDSW', { fmt: f1 });
+  bars('c-rd', 'recall_D', { fmt: v => f1(100 * v), unit: '%' }); bars('c-rpd', 'recall_PD', { fmt: v => f1(100 * v), unit: '%' });
+  bars('c-lat', 'lat_to_D_s', { fmt: f2, unit: ' s' });
+  const abl = ['v2', 'v2g'].filter(m => L[m]), reps = L.v2 ? L.v2.reps.filter(r => !L.v2g || L.v2g.reps.includes(r)) : [];
+  strip('c-abl-idsw', reps.map(r => ({ label: 'rep ' + r, items: abl.map(m => ({ m, vals: [L[m].per_rep[r]?.IDSW], hover: [] })) })), { fmt: v => v.toFixed(0), lo: 0 });
+  strip('c-abl-idf1', reps.map(r => ({ label: 'rep ' + r, items: abl.map(m => ({ m, vals: [L[m].per_rep[r]?.IDF1], hover: [] })) })), { fmt: v => f1(100 * v), unit: '%' });
+  table(L, ms); tableSeq(L, sm);
+}
+
+function cell(tr, s, tag = 'td') { const c = document.createElement(tag); c.textContent = s; tr.appendChild(c); return c; }
+function table(L, ms) {
+  const t = document.getElementById('tbl'); t.replaceChildren();
+  const cols = [['MOTA', v => pct(v)], ['IDF1', v => pct(v)], ['MOTP_m', f2], ['FP', f1], ['FN', f1], ['IDSW', f1], ['recall_D', v => pct(v)], ['recall_PD', v => pct(v)], ['lat_to_D_s', f2]];
+  const hd = document.createElement('tr'); ['Metodo', 'rep', 'MOTA', 'IDF1', 'MOTP [m]', 'FP', 'FN', 'IDSW', 'Recall D', 'Recall PD', '→D [s]'].forEach(h => cell(hd, h, 'th')); t.appendChild(hd);
+  ms.forEach(m => {
+    const P = L[m];
+    const tr = document.createElement('tr'); tr.className = 'best';
+    const c0 = cell(tr, ''); const k = document.createElement('span'); k.className = 'key'; k.style.background = MCOL[m]; c0.append(k, M[m] + ' (media ± std)');
+    cell(tr, P.reps.length);
+    cols.forEach(([key, f]) => { const v = P.reps.map(r => P.per_rep[r][key]); const isPct = ['MOTA', 'IDF1', 'recall_D', 'recall_PD'].includes(key); cell(tr, f(mean(v)) + ' ± ' + (isPct ? f1(100 * std(v)) : (key === 'MOTP_m' || key === 'lat_to_D_s' ? f2 : f1)(std(v)))); });
+    t.appendChild(tr);
+    P.reps.forEach(r => { const tr = document.createElement('tr'); cell(tr, '   ' + M[m]); cell(tr, r); cols.forEach(([key, f]) => cell(tr, f(P.per_rep[r][key]))); t.appendChild(tr); });
+  });
+}
+function tableSeq(L, ms) {
+  const t = document.getElementById('tbl-seq'); t.replaceChildren();
+  const hd = document.createElement('tr'); ['Sequenza', 'Metodo', 'MOTA', 'IDF1', 'FP', 'FN', 'IDSW'].forEach(h => cell(hd, h, 'th')); t.appendChild(hd);
+  Object.keys(D.seq_info).forEach(s => ms.forEach(m => {
+    const P = L[m], tr = document.createElement('tr'), g = k => P.reps.map(r => P.per_seq_rep[s][r][k]);
+    cell(tr, short(s) + ' · ' + D.seq_info[s]); cell(tr, M[m]);
+    ['MOTA', 'IDF1'].forEach(k => cell(tr, pct(mean(g(k))) + ' ± ' + f1(100 * std(g(k)))));
+    ['FP', 'FN', 'IDSW'].forEach(k => cell(tr, f1(mean(g(k))) + ' ± ' + f1(std(g(k)))));
+    t.appendChild(tr);
+  }));
+}
+
+function header() {
+  const meta = document.getElementById('meta'), L = D.levels.full || {};
+  const items = [['v2', D.commits.v2], ['v1', D.commits.v1], ['repo', D.commits.repo], ['job', `${D.jobs_done}/${D.jobs_total}`],
+    ['ripetizioni complete', ORDER.filter(m => L[m]).map(m => `${M[m]} ${L[m].reps.length}`).join(' · ') || 'nessuna'], ['generato', D.generated]];
+  items.forEach(([k, v]) => { const s = document.createElement('span'); s.append(k + ' '); const b = document.createElement('b'); b.textContent = v; s.appendChild(b); meta.appendChild(s); });
+  document.getElementById('prog').style.width = (100 * D.jobs_done / D.jobs_total) + '%';
+  const tiles = document.getElementById('tiles');
+  const agg = (m, k) => L[m] ? L[m].reps.map(r => L[m].per_rep[r][k]) : null;
+  const tile = (label, m, k, isPct, cmpm, cmpLabel) => {
+    const v = agg(m, k); if (!v) return;
+    const d = document.createElement('div'); d.className = 'tile';
+    const l = document.createElement('div'); l.className = 'label'; l.textContent = label;
+    const val = document.createElement('div'); val.className = 'value';
+    val.append(isPct ? f1(100 * mean(v)) + '%' : f1(mean(v)));
+    const sm = document.createElement('small'); sm.textContent = ' ± ' + (isPct ? f1(100 * std(v)) : f1(std(v))); val.appendChild(sm);
+    d.append(l, val);
+    const c = agg(cmpm, k);
+    if (c) { const e = document.createElement('div'); e.className = 'cmp'; e.textContent = `${cmpLabel} ${isPct ? f1(100 * mean(c)) + '%' : f1(mean(c))}`; d.appendChild(e); }
+    tiles.appendChild(d);
+  };
+  tile('MOTA v2 (Hungarian)', 'v2', 'MOTA', true, 'v1', 'v1:');
+  tile('IDF1 v2 (Hungarian)', 'v2', 'IDF1', true, 'v1', 'v1:');
+  tile('Scambi di ID v2 (Hungarian)', 'v2', 'IDSW', false, 'v2g', 'greedy-Kuhn:');
+  tile('Recall PD v2 (Hungarian)', 'v2', 'recall_PD', true, 'v1', 'v1:');
+  if (!tiles.children.length) { const p = document.createElement('p'); p.className = 'empty'; p.style.padding = '16px'; p.textContent = 'Nessuna ripetizione completa ancora.'; tiles.appendChild(p); }
+  document.getElementById('foot').textContent = `Generato da eval/make_report_page.py · dati eval/results/own_${D.campaign}_reps.json · soglia GT dinamica 0,3 m/s, gate 1 m, griglia 10 Hz`;
+  if (D.notes) document.getElementById('notes').innerHTML = D.notes;   // our own findings file, not external input
+}
+
+function videos() {
+  const sel = document.getElementById('vsel'), vid = document.getElementById('vid'), info = document.getElementById('vinfo');
+  if (!D.videos.length) { sel.disabled = true; vid.hidden = true; info.textContent = 'Video non ancora generati.'; return; }
+  D.videos.forEach((v, i) => { const o = document.createElement('option'); o.value = i; o.textContent = short(v.seq); sel.appendChild(o); });
+  const pick = i => { const v = D.videos[i]; vid.src = v.file; info.textContent = v.info; };
+  sel.addEventListener('change', () => pick(+sel.value));
+  const start = D.videos.findIndex(v => v.seq.endsWith('1947')); sel.value = start >= 0 ? start : 0; pick(+sel.value);
+}
+
+document.querySelectorAll('.tabs button').forEach(b => {
+  b.setAttribute('aria-pressed', b.dataset.level === level);
+  b.addEventListener('click', () => {
+    level = b.dataset.level; try { localStorage.setItem('r8-level', level); } catch (e) {}
+    document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-pressed', x === b)); render();
+  });
+});
+header(); render(); history(); videos();
+</script>

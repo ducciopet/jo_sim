@@ -23,12 +23,24 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from report import aggregate  # noqa: E402
+from harness.ros_io import load_odometry  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
 REPLAY = REPO / 'bags' / 'replay'
 SEQS = ['20260519_1942', '20260519_1945', '20260519_1947', '20260519_1949', '20260519_1950', '20260519_1952']
 METHODS = {'v1': '{c}{r}_v1_{s}', 'v2': '{c}{r}_v2_{s}', 'v2g': '{c}{r}g_v2_{s}'}
 LEVELS = {'full': 'summary.json', 'dynamic_only': 'summary_dynamic_only.json', 'merged': 'summary_merged.json'}
+MIN_COVERAGE = 0.97   # a run whose recorded odometry ends earlier than this fraction of the sensor bag was truncated
+
+
+def coverage(run, seq):
+    import yaml
+    meta = yaml.safe_load(open(REPO / 'bags' / 'bags_benchmark' / f'duccio_test_{seq}_0' / 'metadata.yaml'))
+    info = meta['rosbag2_bagfile_information']
+    t0 = info['starting_time']['nanoseconds_since_epoch'] / 1e9
+    return (load_odometry(run)[:, 0].max() - t0) / (info['duration']['nanoseconds'] / 1e9)
+
+
 METRICS = [('MOTA', 'mota', True), ('IDF1', 'idf1', True), ('MOTP_m', 'motp', False), ('FP', 'fp', False),
            ('FN', 'fn', False), ('IDSW', 'idsw', False)]
 
@@ -64,6 +76,13 @@ def main():
         done = []
         for m, pat in METHODS.items():
             ok = all((REPLAY / (pat.format(c=c, r=r, s=s) + '.done')).exists() for s in SEQS)
+            if ok:
+                for s in SEQS:
+                    cov = coverage(REPLAY / pat.format(c=c, r=r, s=s), s)
+                    if cov < MIN_COVERAGE:
+                        print(f'WARNING {pat.format(c=c, r=r, s=s)}: replay covered only {cov:.0%} of the bag, '
+                              f'rep {r} of {m} left out (remove its .done and rerun run_campaign.sh)')
+                        ok = False
             for s in SEQS:
                 src, link = REPLAY / pat.format(c=c, r=r, s=s), d / f'{m}_{s}'
                 if link.is_symlink():
