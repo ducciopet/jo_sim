@@ -261,3 +261,24 @@ usato**.
 **Aggiornamento (2026-10-14, sera):** `track_assignment_method` ha ora default `hungarian` (codice e
 `cfg/{indoor,outdoor}/tracker.yaml`, `jo_detector_v2` `6ff364b`); `greedy_kuhn` resta per l'ablation. I numeri r7
 sopra sono stati misurati con `greedy_kuhn`; con `hungarian` sugli stessi input: MOTA 97,44, IDF1 88,92, IDSW 4.
+
+---
+
+## Campagna r8 (2026-10-14, in corso): `hungarian` a pipeline completa, 3 ripetizioni
+
+Obiettivo: numeri da paper con media ± deviazione standard (l'IDF1 cambia di vari punti tra run) e l'ablation
+dell'associazione a parità di input.
+
+- Codice: `jo_detector_v2` `6ff364b` (default `hungarian`), `jo_detector` `e2bd34a` (config indoor).
+- `scripts/run_campaign.sh` (copia in `bags/replay/`): per ripetizione a, b, c e per sequenza, v2 e v1 a pipeline
+  completa (`r8<rep>_{v2,v1}_<seq>`, v2 registra anche gli input del tracker), poi `greedy_kuhn` col solo tracker
+  sugli input di ciascun run v2 (`r8<rep>g_v2_<seq>`). 54 job, circa 1,5 min l'uno.
+- **Ripresa**: ogni job finito lascia `<out>.done`; rilanciare lo script salta i job finiti e rifà da capo quello
+  interrotto. Stato e orari in `bags/replay/r8_state.log`.
+  - interrompere: `docker exec jo_sim_lv-dot-jo-sim_lv-dot-1 bash -c "pkill -f run_campaign.sh; bash /home/ros/bags/replay/cleanup.sh"`
+    (oppure `touch bags/replay/r8.stop` per fermarsi alla fine del job corrente)
+  - riprendere: `rm -f bags/replay/r8.stop; docker exec jo_sim_lv-dot-jo-sim_lv-dot-1 bash -c "CAMPAIGN=r8 bash /home/ros/bags/replay/run_campaign.sh"`
+- Valutazione (sull'host, anche su campagna parziale: aggrega solo le ripetizioni complete per metodo):
+  `python3 eval/campaign_report.py --campaign r8 --reps a b c` → `results/own_r8<rep>/`,
+  `tables/own_r8<rep>_<livello>.*`, `tables/own_r8_<livello>_reps{,_perseq}.csv`, `.tex`.
+- Video top-down GT vs track: `python3 eval/make_video.py --results eval/results/own_r8a --seq <seq> --methods v1 v2 --out eval/videos/<nome>.mp4`.
