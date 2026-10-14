@@ -257,3 +257,7 @@ usato**.
   confrontare il box con la parte LiDAR del track quando la camera sparisce.
 - I buchi della depth registrata (fino a 0,63 s) sono un problema della registrazione: per le prove sul campo
   controllare il frame rate della depth nella bag (`ros2 bag info`), non solo che il topic ci sia.
+
+**Aggiornamento (2026-10-14, sera):** `track_assignment_method` ha ora default `hungarian` (codice e
+`cfg/{indoor,outdoor}/tracker.yaml`, `jo_detector_v2` `6ff364b`); `greedy_kuhn` resta per l'ablation. I numeri r7
+sopra sono stati misurati con `greedy_kuhn`; con `hungarian` sugli stessi input: MOTA 97,44, IDF1 88,92, IDSW 4.
