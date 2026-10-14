@@ -17,6 +17,10 @@ Protocollo: `../BENCHMARK_PLAN.md`. Stato e numeri: `STATUS.md`.
 | `scripts/make_odom.sh` | genera l'odometria **una volta** per sequenza (GLIM + EKF) |
 | `scripts/run_method.sh` | fa girare un metodo su bag sensori + bag odometria condivisa |
 | `scripts/run_qualisys_batch.sh` | tutte le sequenze Qualisys, v1 e v2 |
+| `scripts/run_campaign.sh` | campagna ripetuta e riprendibile: N ripetizioni di v2 e v1 a pipeline completa + ablation `greedy_kuhn` col solo tracker |
+| `campaign_report.py` | valuta ogni ripetizione, scarta i run troncati (copertura < 97%), tabelle media ± std |
+| `make_video.py` | video dall'alto GT contro track, metodi affiancati |
+| `make_report_page.py` | pagina HTML della campagna (grafici + video) da `report_template.html` e `report_<C>_notes.html` |
 | `detector_eval_pipeline.py` | valutatore precedente (solo classificazione D/PD/S), tenuto come riferimento |
 
 ## Uso
@@ -33,6 +37,12 @@ python3 eval/run_own_eval.py --runs bags/replay --mocap bags/qualysis --methods 
 python3 eval/report.py --name own_mocap_full                                              # livello D/PD/S
 python3 eval/report.py --summary eval/results/own/summary_dynamic_only.json --name own_mocap_dynamic_only
 python3 eval/report.py --summary eval/results/own/summary_merged.json --name own_mocap_merged
+
+# campagna ripetuta (numeri da paper): run nel container, poi valutazione, video e pagina sull'host
+docker exec <container> bash -c "CAMPAIGN=r8 bash /home/ros/bags/replay/run_campaign.sh"   # rilanciabile: salta i job finiti
+python3 eval/campaign_report.py --campaign r8 --reps a b c
+python3 eval/make_video.py --results eval/results/own_r8a --seq 20260519_1947 --methods v1 v2 --out eval/videos/r8/r8a_1947.mp4
+python3 eval/make_report_page.py --campaign r8                                            # -> eval/report_r8/index.html
 ```
 
 ## Scelte di protocollo

@@ -51,7 +51,8 @@ def main():
         seq = '20260519_' + v.stem.split('_')[-1]
         vids.append({'file': f'videos/{v.name}', 'seq': seq, 'info': SEQ_INFO.get(seq, '')})
     state_log = REPO / 'bags' / 'replay' / f'{c}_state.log'
-    done_jobs = sum(1 for l in state_log.read_text().splitlines() if ' done ' in l) if state_log.exists() else 0
+    done_jobs = len({l.split(' done ', 1)[1].strip() for l in state_log.read_text().splitlines() if ' done ' in l}) \
+        if state_log.exists() else 0   # a redone job counts once
     data = {
         'campaign': c, 'levels': reps, 'seq_info': SEQ_INFO, 'videos': vids,
         'history': [{'commit': h, 'label': l, 'mota': m} for h, l, m in HISTORY],

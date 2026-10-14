@@ -82,6 +82,9 @@ Il protocollo di dettaglio (split, manifest, formato `tracks.csv`, metriche) è 
 - Metodi: v2, v1, LV-DOT (ROS1, stesse bag convertite), e v2 senza YOLO.
 - Le 6 sequenze attuali (`bags_benchmark/` + `qualysis/`, circa 6 minuti in tutto, una sola
   persona, solo camera frontale, nessuna odometria registrata) **non bastano**: vedi §4.
+- **Stato (2026-10-14, campagna r8, 3 ripetizioni)**: v2 MOTA 96,5 ± 0,3%, IDF1 80,7 ± 6,7%, IDSW 3 contro
+  v1 81,1 ± 2,3%, 60,4 ± 0,9%, 26. Numeri da riportare come media ± std (l'IDF1 cambia molto tra run). Dettaglio
+  in `eval/STATUS.md`, tabelle `eval/tables/own_r8_*_reps.*`.
 
 **E2. Dataset pubblico con box 3D: JRDB (prima scelta) o CODa.**
 - Serve per i confronti esterni e la generalità. Metriche MOT: HOTA, MOTA, IDF1 per la detection
@@ -95,6 +98,8 @@ Serve solo come sanity check del harness e come riga "LiDAR-only" in tabella. No
 **E4. Ablation di v2** (richiedono flag nel codice, vedi Fase 5):
 senza disocclusione, senza budget di occlusione, dt nominale, senza class continuity,
 senza YOLO, solo depth, camera singola invece di N.
+Associazione `hungarian` contro `greedy_kuhn` (r8, solo tracker sugli stessi input): nessuna differenza
+misurabile con una persona; va ripetuta sulle sequenze con più persone.
 
 **E5. Runtime** su hardware onboard (il PC del robot, non il portatile con la RTX 4060):
 latenza per nodo, CPU/GPU, frequenza effettiva, con un grafico a barre impilate.

@@ -264,7 +264,7 @@ sopra sono stati misurati con `greedy_kuhn`; con `hungarian` sugli stessi input:
 
 ---
 
-## Campagna r8 (2026-10-14, in corso): `hungarian` a pipeline completa, 3 ripetizioni
+## Campagna r8 (2026-10-14, completata): `hungarian` a pipeline completa, 3 ripetizioni
 
 Obiettivo: numeri da paper con media ± deviazione standard (l'IDF1 cambia di vari punti tra run) e l'ablation
 dell'associazione a parità di input.
@@ -297,3 +297,31 @@ v2 MOTA 96,46 ± 0,26%, IDF1 80,7 ± 6,7%, IDSW 3,0 ± 0. Gli scambi di ID di v2
 1947 a 28,3 s (uscita laterale dal FOV, 3 run su 3), 1945 a 18,7 s (2 su 3), 1950 a circa 38 s (3 su 3; in rep b
 l'ID torna dopo 0,2 s). Pagina report: `eval/make_report_page.py` + `report_template.html` + `report_r8_notes.html`
 (i segnaposto `__...__` nelle note vanno riempiti coi numeri finali), video in `eval/videos/r8/`.
+
+### Risultati finali r8 (campagna completa, 54 job; pagina: https://claude.ai/artifact/XvJ67raKwMDW5NQ4qMcnx3)
+
+Media ± std su 3 ripetizioni (`tables/own_r8_{full,dynamic_only,merged}_reps{,_perseq}.csv`, `.tex`); ablation
+`greedy_kuhn` col solo tracker sugli input registrati di ciascun run v2.
+
+| Livello D/PD/S | MOTA | IDF1 | IDSW | FP | FN | Recall D | Recall PD | →D |
+|---|---|---|---|---|---|---|---|---|
+| v1 | 81,1 ± 2,3% | 60,4 ± 0,9% | 26,0 ± 8,5 | 287,7 | 231,7 | 92,1% | 83,6% | 0,55 s |
+| **v2 `hungarian`** | **96,5 ± 0,3%** | **80,7 ± 6,7%** | **3,0 ± 0** | **32,7** | **66,7** | **94,1%** | **95,2%** | **0,27 s** |
+| v2 `greedy_kuhn` | 96,5 ± 0,2% | 80,7 ± 6,7% | 3,3 ± 0,6 | 33,0 | 66,0 | 94,0% | 95,2% | 0,26 s |
+
+Solo moto: v1 73,3 ± 2,1%, v2 88,3 ± 0,7% di MOTA (IDF1 48,6 / 81,1%).
+
+- **v2 stabile sul MOTA** (96,3–96,8%), **IDF1 binario per sequenza** (76,9 / 88,4 / 76,9%): gli scambi sono sempre
+  1947 a 28,3 s (3/3, uscita laterale dal FOV), 1945 a 18,7 s (2/3), 1950 a circa 38 s (3/3; in rep b l'ID torna
+  dopo 0,2 s). Il r7 (IDF1 88,9%) era un run fortunato.
+- **Associazione**: `hungarian` e `greedy_kuhn` identici a parità di input, salvo uno scambio in meno con
+  `hungarian` (1949, rep c). Con una persona sola non ci sono casi ambigui: il confronto vero richiede più persone.
+  Default `hungarian` confermato (mai peggio).
+- **v1**: FP concentrati nella 1947 (circa 120 per run) e nella 1950 (circa 100 in 2 run su 3).
+- **Run scartato**: v1 rep c 1942 riprodotto solo per metà (vedi sopra), rifatto: MOTA v1 81,1% invece del 77,7%
+  con il run troncato.
+- Video dall'alto (rep a, v1 contro v2) in `videos/r8/`; pagina rigenerabile con `make_report_page.py --campaign r8`.
+
+**Prossimi passi**: correzione della 1947 (associazione sulla parte LiDAR del track quando la camera sparisce);
+diagnosi dello scambio deterministico della 1950 a 38 s; poi stop alla messa a punto su queste 6 sequenze e
+campagna sul campo (`FIELD_PROTOCOL.md`) con più persone.

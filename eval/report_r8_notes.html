@@ -1,8 +1,8 @@
 <h2>Cosa dicono i numeri</h2>
 <ul>
-  <li><b>MOTA di v2 stabile:</b> __V2MOTA__ sulle tre ripetizioni. La variabilità tra run della pipeline completa
-    sposta il MOTA di pochi decimi; v1 varia di più (__V1MOTA__).</li>
-  <li><b>IDF1 di v2 variabile in modo binario:</b> __V2IDF1__. In ogni sequenza lo scambio di ID o succede o no, e
+  <li><b>MOTA di v2 stabile:</b> 96,5 ± 0,3%, tra 96,3 e 96,8% sulle tre ripetizioni. La variabilità tra run della pipeline completa
+    sposta il MOTA di pochi decimi; v1 varia di più (81,1 ± 2,3%, tra 78,5 e 82,6%).</li>
+  <li><b>IDF1 di v2 variabile in modo binario:</b> 80,7 ± 6,7% (76,9 / 88,4 / 76,9%). In ogni sequenza lo scambio di ID o succede o no, e
     con una persona sola un singolo scambio a metà sequenza dimezza l'IDF1 di quella sequenza. Gli scambi sono
     sempre negli stessi punti:
     <ul>
@@ -14,9 +14,9 @@
         torna dopo 0,2 s e l'IDF1 della sequenza resta al 99,6%.</li>
     </ul>
   </li>
-  <li><b>Hungarian contro greedy-Kuhn:</b> __ABL__</li>
-  <li><b>v1:</b> i falsi positivi restano il problema principale (__V1FP__ per ripetizione, quasi tutti nella 1947 e
-    nella 1950) e la recall PD è più bassa e più variabile (__V1RPD__).</li>
+  <li><b>Hungarian contro greedy-Kuhn:</b> a parità di input sono praticamente identici: MOTA 96,46 ± 0,26% contro 96,46 ± 0,17%, IDF1 80,7% in entrambi, scambi di ID 3,0 contro 3,3 (Hungarian ne evita uno nella 1949 della ripetizione c, l'unica differenza). Con una persona sola per sequenza l'associazione ha pochissimi casi ambigui; gli scambi residui non dipendono dall'associazione ma dalla geometria del box (1947) e dalle detection. La scelta di Hungarian come default resta giustificata (mai peggio, più semplice da descrivere: matching di peso massimo), ma il confronto che conta va fatto su scene con più persone.</li>
+  <li><b>v1:</b> i falsi positivi restano il problema principale (287,7 in media per ripetizione, circa 120 nella sola 1947 e, in due run su tre, circa 100 nella 1950),
+    gli scambi di ID sono 26 contro 3 e la recall PD è più bassa (83,6% contro 95,2% di v2).</li>
 </ul>
 
 <h3>Un run scartato</h3>
