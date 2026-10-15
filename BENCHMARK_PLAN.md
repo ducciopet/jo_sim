@@ -167,3 +167,19 @@ results/                        # non versionato (.gitignore), solo i CSV finali
 - Quante sequenze per dataset sono sostenibili come tempo di calcolo.
 - Se annotare anche le bag del lab, e con che strumento.
 - Venue target (cambia il peso tra ablation e confronto esterno).
+
+## Dataset candidati (ricerca del 2026-10-15)
+
+| Dataset | Piattaforma e sensori | Annotazioni | Uso proposto |
+|---|---|---|---|
+| **JRDB** (Martín-Martín et al., 2019; JRDB 2022) | robot JackRabbot: 2 Velodyne VLP-16, camera stereo cilindrica 360°, RGB-D | 1,8 M box 3D di persone con ID (~3500 traiettorie), 54 sequenze, 64 min, indoor/outdoor; benchmark online; CC BY-NC-SA, serve un account | **E2 principale**: stesso LiDAR del nostro robot, persone, ID → HOTA/IDF1 |
+| **THÖR-MAGNI** (Schreiter et al., IJRR 2024) | robot mobile: Ouster 3D + camera fisheye (solo scenari 3–5, robot in moto); mocap delle persone | posizioni da motion capture, 40 partecipanti, 3,5 h, più persone; CC-BY-4.0 | **come il nostro laboratorio ma con più persone**; manca la depth camera: v2 gira solo-LiDAR + YOLO su fisheye |
+| **CODa** (Zhang et al., 2023, UT Austin) | robot: LiDAR 128 linee, stereo RGB 1,25 MP, RGB-D | 1,3 M box 3D con instance ID, 53 classi, 58 min annotati su 8,5 h | E2 alternativo; dominio di UniMT (equo per lui) |
+| **SiT** (NeurIPS 2023) | robot in folla: 2 LiDAR 3D, 5 camere 360°, RTK | box 2D/3D con ID, 6 classi, 60 scene | folle dense, molte persone |
+| **CrowdBot v2** (Qolo, EPFL, rev. 2025) | 2 Velodyne VLP-16 + RealSense D435 (sensori come i nostri) | tracce di pedoni da tracker (pseudo-GT, non manuali) | solo qualitativo / falsi allarmi |
+| **GrandTour** (Tuna et al., IJRR 2026, ETH) | ANYmal: Velodyne VLP-16, Hesai XT-32, Livox Mid-360, 8 camere, 6 RealSense D435i, ZED2i | solo traiettorie del robot (RTK, total station); tag "People"/"Dynamic Objects" per missione, **nessun box di persone** | robustezza su robot con zampe e terreni veri (stessi sensori VLP-16 + D435i): falsi allarmi/min sulle missioni statiche, qualitativo o annotazione manuale di poche missioni con persone (ETH-1/2/3, SPX) |
+| STCrowd (2022) | veicolo fermo, LiDAR + RGB | box 3D di pedoni in folla | opzionale |
+| nuScenes / KITTI tracking | auto, camera + LiDAR | box 3D con ID | solo se serve confronto con la letteratura MOT automotive |
+| DOALS, SemanticKITTI-MOS, HeLiMOS | solo LiDAR | punti dinamici | controllo di Dynablox/M-detector (E3) |
+
+Spazio: JRDB, CODa e GrandTour richiedono il disco esterno (≥ 2 TB); THÖR-MAGNI e SiT sono più piccoli (da verificare).
