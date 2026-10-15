@@ -404,3 +404,22 @@ si guardano sui dati nuovi, non qui.
 - Valutazione: `python3 eval/campaign_report.py --campaign r9 --reps a b c`.
 - Istruzioni complete per chi riprende (anche da un altro account Claude):
   `~/Desktop/claude_account_backup/jo_detector_v2_handoff/LEGGIMI_PRIMA.md`.
+
+### Risultati r9 (completata il 2026-10-15, 18 job, nessun run troncato)
+
+Media ± std su 3 ripetizioni a pipeline completa (`tables/own_r9_{full,dynamic_only,merged}_reps{,_perseq}.csv`, `.tex`;
+v1 identico a r8 perché i run sono gli stessi).
+
+| Livello D/PD/S | MOTA | IDF1 | IDSW | FP | FN | Recall D | Recall PD | →D |
+|---|---|---|---|---|---|---|---|---|
+| v1 | 81,1 ± 2,3% | 60,4 ± 0,9% | 26,0 ± 8,5 | 287,7 | 231,7 | 92,1% | 83,6% | 0,55 s |
+| v2 r8 (`6ff364b`) | 96,5 ± 0,3% | 80,7 ± 6,7% | 3,0 ± 0 | 32,7 | 66,7 | 94,1% | 95,2% | 0,27 s |
+| **v2 r9 (`4a41b17`)** | **98,1 ± 0,1%** | **99,05 ± 0,05%** | **2,7 ± 3,1** | **9,7** | **42,7** | **96,1%** | **95,2%** | **0,26 s** |
+
+- La pipeline completa conferma le due correzioni (e va oltre il solo tracker: 98,1 contro 97,2 di MOTA).
+- Nessuna perdita d'identità persistente in nessun run: IDF1 per sequenza 96–100%. Anche lo scambio della 1945
+  a 18,7 s non compare più in nessuna delle 3 ripetizioni (non era un obiettivo delle correzioni; da verificare sui
+  dati nuovi se è un effetto della correzione della classe o fortuna).
+- Gli IDSW rimasti (0 / 6 / 2 per ripetizione) sono tutti lampi di andata e ritorno di un tick, a IDF1 99%:
+  1950 (b, c) e 1949 (b, 4 IDSW). Per la regola sulle 6 sequenze non si correggono qui; nel paper riportare IDF1
+  insieme agli IDSW, perché gli IDSW contano i lampi come scambi.
