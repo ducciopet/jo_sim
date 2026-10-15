@@ -7,6 +7,8 @@ Reads eval/results/own_<C>_reps.json and the videos in eval/videos/<C>/, writes 
 
 Usage
   python3 eval/make_report_page.py --campaign r8
+  python3 eval/make_report_page.py --campaign r9 --compare r8 --jobs-total 18
+    (--compare adds that campaign's v2 as 'v2r8' and its greedy ablation as 'v2g', next to this campaign's v1/v2)
 """
 
 import argparse
@@ -40,9 +42,18 @@ def git(path, *a):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--campaign', default='r8')
+    ap.add_argument('--compare', default=None, help='earlier campaign whose v2 (and v2g) are shown alongside')
+    ap.add_argument('--jobs-total', type=int, default=54)
     args = ap.parse_args()
     c = args.campaign
     reps = json.loads((REPO / 'eval' / 'results' / f'own_{c}_reps.json').read_text())
+    if args.compare:
+        old = json.loads((REPO / 'eval' / 'results' / f'own_{args.compare}_reps.json').read_text())
+        for lvl, ms in old.items():
+            if 'v2' in ms:
+                reps[lvl]['v2r8'] = ms['v2']
+            if 'v2g' in ms and 'v2g' not in reps[lvl]:
+                reps[lvl]['v2g'] = ms['v2g']
     out = REPO / 'eval' / f'report_{c}'
     (out / 'videos').mkdir(parents=True, exist_ok=True)
     vids = []
@@ -59,13 +70,14 @@ def main():
         'commits': {'v2': git(REPO / 'jo_detector_v2', 'rev-parse', '--short', 'HEAD'),
                     'v1': git(REPO / 'jo_detector', 'rev-parse', '--short', 'HEAD'),
                     'repo': git(REPO, 'rev-parse', '--short', 'HEAD')},
-        'jobs_done': done_jobs, 'jobs_total': 54,
+        'jobs_done': done_jobs, 'jobs_total': args.jobs_total, 'compare': args.compare,
         # hand-written findings (HTML), kept next to the results so a regenerated page keeps them
         'notes': (REPO / 'eval' / f'report_{c}_notes.html').read_text()
         if (REPO / 'eval' / f'report_{c}_notes.html').exists() else '',
         'generated': datetime.datetime.now().strftime('%Y-%m-%d %H:%M'),
     }
     html = (Path(__file__).resolve().parent / 'report_template.html').read_text()
+    html = html.replace('__CAMPAIGN__', c)
     html = html.replace('/*__DATA__*/null', json.dumps(data, default=lambda x: None).replace('</', '<\\/'))
     (out / 'index.html').write_text(html)
     print('wrote', out / 'index.html', 'videos:', len(vids))

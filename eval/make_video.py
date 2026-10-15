@@ -49,10 +49,12 @@ def main():
     ap.add_argument('--out', required=True)
     ap.add_argument('--speed', type=float, default=2.0, help='playback speed factor')
     ap.add_argument('--dpi', type=int, default=90)
+    ap.add_argument('--names', nargs='+', default=None, help='panel titles, one per method (default: built-in names)')
     args = ap.parse_args()
 
     res = Path(args.results)
     gt = pd.read_csv(res / args.seq / 'gt' / 'tracks.csv')
+    names = dict(zip(args.methods, args.names)) if args.names else NAME
     preds = {m: pd.read_csv(res / args.seq / m / 'tracks.csv') for m in args.methods}
     bodies = load_mocap(glob.glob(str(REPO / 'bags' / 'qualysis' / f'*{args.seq}_0'))[0])
     jo = bodies['JO']
@@ -82,7 +84,7 @@ def main():
                 ax.clear()
                 ax.set_xlim(lo[0], hi[0]); ax.set_ylim(lo[1], hi[1]); ax.set_aspect('equal')
                 ax.set_xticks([]); ax.set_yticks([])
-                ax.set_title(NAME.get(m, m), fontsize=12)
+                ax.set_title(names.get(m, m), fontsize=12)
                 ax.add_patch(Wedge((rx, ry), 6.0, np.rad2deg(ryaw - HFOV / 2), np.rad2deg(ryaw + HFOV / 2),
                                    color='#4c78a8', alpha=0.08, lw=0))
                 ax.add_patch(Polygon(box(rx, ry, 0.55, 0.45, ryaw), closed=True, fc='#4c78a8', ec='#1f3b5c'))

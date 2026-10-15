@@ -1,4 +1,4 @@
-<title>Benchmark r8 jo_detector</title>
+<title>Benchmark __CAMPAIGN__ jo_detector</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -7,7 +7,7 @@
 :root {
   --bg: #f6f7f8; --surface: #fcfcfb; --ink: #121417; --ink-2: #4b5058; --ink-3: #7b818a;
   --rule: #dfe2e6; --grid: #e9ebee; --accent: #2a78d6;
-  --m-v2: #2a78d6; --m-v1: #eb6834; --m-v2g: #1baf7a;
+  --m-v2: #2a78d6; --m-v1: #eb6834; --m-v2g: #1baf7a; --m-v2r8: #6da7ec;
   --good: #1f7a3a; --warn: #a15c00;
   --f-display: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
   --f-body: "Public Sans", "Segoe UI", system-ui, sans-serif;
@@ -16,11 +16,11 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #121315; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --ink-3: #8f9096;
   --rule: #2e3034; --grid: #26282b; --accent: #3987e5;
-  --m-v2: #3987e5; --m-v1: #d95926; --m-v2g: #199e70; --good: #5cc27a; --warn: #e0a040; color-scheme: dark } }
+  --m-v2: #3987e5; --m-v1: #d95926; --m-v2g: #199e70; --m-v2r8: #1c5cab; --good: #5cc27a; --warn: #e0a040; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #121315; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --ink-3: #8f9096;
   --rule: #2e3034; --grid: #26282b; --accent: #3987e5;
-  --m-v2: #3987e5; --m-v1: #d95926; --m-v2g: #199e70; --good: #5cc27a; --warn: #e0a040; color-scheme: dark }
+  --m-v2: #3987e5; --m-v1: #d95926; --m-v2g: #199e70; --m-v2r8: #1c5cab; --good: #5cc27a; --warn: #e0a040; color-scheme: dark }
 body { background: var(--bg); color: var(--ink); font: 15px/1.6 var(--f-body);
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 main { max-width: 1040px; margin: 0 auto; padding-block: 40px 80px; display: grid; gap: 56px; }
@@ -51,7 +51,7 @@ section { display: grid; gap: 18px; min-width: 0; }
 .tabs button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .tabs button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .tabs .hint { align-self: center; font-size: 13px; color: var(--ink-3); margin-left: 6px; }
-.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 18px; display: grid; gap: 12px; min-width: 0; align-content: start; }
 .card .sub { color: var(--ink-2); font-size: 14px; }
 .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 16px; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-2); }
@@ -83,6 +83,11 @@ video { width: 100%; max-width: 100%; border-radius: 8px; border: 1px solid var(
 .notes ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 72ch; }
 .notes code, p code { font: 13px var(--f-mono); background: var(--grid); padding: 1px 5px; border-radius: 4px; }
 .empty { color: var(--ink-3); font-style: italic; }
+.conf { display: grid; grid-template-columns: 1fr; gap: 16px; max-width: 760px; }
+.conf table td.diag { font-weight: 600; color: var(--ink); }
+.conf table td { color: var(--ink-2); }
+.conf table th:first-child, .conf table td:first-child { font-family: var(--f-body); }
+.note { color: var(--ink-2); font-size: 14px; max-width: 72ch; }
 @media (prefers-reduced-motion: no-preference) { .progress > div { transition: width .4s ease; } }
 </style>
 
@@ -90,7 +95,7 @@ video { width: 100%; max-width: 100%; border-radius: 8px; border: 1px solid var(
   <header style="display:grid;gap:14px">
     <div class="eyebrow">jo_detector · benchmark E1 · Qualisys lab</div>
     <h1 id="title">Campagna r8: v2 con associazione Hungarian contro v1</h1>
-    <p class="lede">Sei sequenze di laboratorio (19/05/2026, una persona, camera frontale) con ground truth da motion
+    <p class="lede" id="lede">Sei sequenze di laboratorio (19/05/2026, una persona, camera frontale) con ground truth da motion
       capture. Ogni metodo gira tre volte a pipeline completa sugli stessi sensori e sulla stessa odometria; i numeri
       sono media ± deviazione standard tra le ripetizioni. L'ablation <code>greedy_kuhn</code> riusa gli input
       registrati in ciascun run di v2, così la sola differenza è l'associazione.</p>
@@ -145,6 +150,25 @@ video { width: 100%; max-width: 100%; border-radius: 8px; border: 1px solid var(
     </div>
   </section>
 
+  <section id="labels">
+    <h2>Score per label D/PD/S</h2>
+    <p class="note">Sui frame in cui la persona è abbinata a un track (gate 1 m), con lo stato D/PD/S del livello
+      completo, qualunque sia la scheda selezionata sopra. Precision di una label = quota dei frame a cui il metodo dà
+      quella label in cui la GT ha davvero quella label; recall = quota dei frame GT con quella label che il metodo
+      etichetta così (una persona non abbinata conta come mancata). Media ± std sulle ripetizioni.</p>
+    <div class="legend" id="legend2"></div>
+    <div class="grid2">
+      <div class="card"><h3>F1 per label</h3><div id="c-f1"></div></div>
+      <div class="card"><h3>Precision e recall per label</h3><div id="c-pr"></div></div>
+    </div>
+    <div class="tablewrap"><table id="tbl-labels"></table></div>
+    <p class="note" id="snote"></p>
+    <h3>Matrici di confusione</h3>
+    <p class="note">Righe = stato GT, colonne = stato dato dal metodo; frame per ripetizione (media sulle ripetizioni) e,
+      tra parentesi, la quota della riga. "Mancato" = persona non abbinata a nessun track.</p>
+    <div class="conf" id="confs"></div>
+  </section>
+
   <section>
     <h2>Ablation dell'associazione</h2>
     <p style="color:var(--ink-2)">Stessi input del tracker, solo <code>track_assignment_method</code> cambia. Il replay
@@ -187,14 +211,15 @@ video { width: 100%; max-width: 100%; border-radius: 8px; border: 1px solid var(
 
 <script>
 const D = /*__DATA__*/null;
-const M = { v2: 'v2 Hungarian', v1: 'v1', v2g: 'v2 greedy-Kuhn' };
-const MCOL = { v2: 'var(--m-v2)', v1: 'var(--m-v1)', v2g: 'var(--m-v2g)' };
-const SHAPE = { v2: 'circle', v1: 'square', v2g: 'diamond' };
-const ORDER = ['v2', 'v2g', 'v1'];
+const M = { v2: 'v2 Hungarian', v1: 'v1', v2g: 'v2 greedy-Kuhn', v2r8: 'v2 r8' };
+if (D.compare) Object.assign(M, { v2: `v2 ${D.campaign}`, v2r8: `v2 ${D.compare}`, v2g: `v2 ${D.compare} greedy` });
+const MCOL = { v2: 'var(--m-v2)', v1: 'var(--m-v1)', v2g: 'var(--m-v2g)', v2r8: 'var(--m-v2r8)' };
+const SHAPE = { v2: 'circle', v1: 'square', v2g: 'diamond', v2r8: 'ring' };
+const ORDER = ['v2', 'v2r8', 'v2g', 'v1'];
 const LEVELHINT = { full: 'stato D/PD/S deve coincidere', dynamic_only: 'conta solo chi si muove (D contro il resto)', merged: 'D e PD come unica classe' };
 const NS = 'http://www.w3.org/2000/svg';
 let level = 'full';
-try { const s = localStorage.getItem('r8-level'); if (s && D.levels[s]) level = s; } catch (e) {}
+try { const s = localStorage.getItem(D.campaign + '-level'); if (s && D.levels[s]) level = s; } catch (e) {}
 
 const pct = v => (v == null || isNaN(v)) ? '–' : (100 * v).toFixed(1).replace('.', ',') + '%';
 const f1 = v => (v == null || isNaN(v)) ? '–' : v.toFixed(1).replace('.', ',');
@@ -213,6 +238,7 @@ function txt(parent, x, y, s, attrs = {}) { const t = el('text', { x, y, ...attr
 function marker(g, m, x, y, r = 5) {
   const a = { fill: MCOL[m], stroke: 'var(--surface)', 'stroke-width': 2 };
   if (SHAPE[m] === 'square') return el('rect', { x: x - r, y: y - r, width: 2 * r, height: 2 * r, rx: 1.5, ...a }, g);
+  if (SHAPE[m] === 'ring') return el('circle', { cx: x, cy: y, r: r - 0.5, fill: 'var(--surface)', stroke: MCOL[m], 'stroke-width': 2.5 }, g);
   if (SHAPE[m] === 'diamond') return el('path', { d: `M${x} ${y - r - 1}L${x + r + 1} ${y}L${x} ${y + r + 1}L${x - r - 1} ${y}Z`, ...a }, g);
   return el('circle', { cx: x, cy: y, r, ...a }, g);
 }
@@ -295,7 +321,9 @@ function history() {
   const host = document.getElementById('c-hist'); host.replaceChildren();
   const pts = D.history.map(h => ({ label: h.commit, sub: h.label, v: h.mota }));
   const L = D.levels.full;
-  if (L.v2) pts.push({ label: 'r8', sub: 'Hungarian, media 3 run', v: 100 * mean(L.v2.reps.map(r => L.v2.per_rep[r].MOTA)), sd: 100 * std(L.v2.reps.map(r => L.v2.per_rep[r].MOTA)) });
+  const camp = (m, label, sub) => { if (L[m]) pts.push({ label, sub, v: 100 * mean(L[m].reps.map(r => L[m].per_rep[r].MOTA)), sd: 100 * std(L[m].reps.map(r => L[m].per_rep[r].MOTA)) }); };
+  if (D.compare) { camp('v2r8', D.compare, 'Hungarian, media 3 run'); camp('v2', D.campaign, 'correzioni frammenti e classe, media 3 run'); }
+  else camp('v2', D.campaign, 'Hungarian, media 3 run');
   const v1 = L.v1 ? 100 * mean(L.v1.reps.map(r => L.v1.per_rep[r].MOTA)) : 81.7;
   const W = 900, H = 260, Lp = 44, R = 20, T = 16, B = 54;
   const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img' }, host);
@@ -334,11 +362,52 @@ function render() {
   bars('c-fp', 'FP', { fmt: f1 }); bars('c-fn', 'FN', { fmt: f1 }); bars('c-idsw', 'IDSW', { fmt: f1 });
   bars('c-rd', 'recall_D', { fmt: v => f1(100 * v), unit: '%' }); bars('c-rpd', 'recall_PD', { fmt: v => f1(100 * v), unit: '%' });
   bars('c-lat', 'lat_to_D_s', { fmt: f2, unit: ' s' });
-  const abl = ['v2', 'v2g'].filter(m => L[m]), reps = L.v2 ? L.v2.reps.filter(r => !L.v2g || L.v2g.reps.includes(r)) : [];
+  const ref = L.v2r8 && L.v2g ? 'v2r8' : 'v2';
+  const abl = [ref, 'v2g'].filter(m => L[m]), reps = L[ref] ? L[ref].reps.filter(r => !L.v2g || L.v2g.reps.includes(r)) : [];
   strip('c-abl-idsw', reps.map(r => ({ label: 'rep ' + r, items: abl.map(m => ({ m, vals: [L[m].per_rep[r]?.IDSW], hover: [] })) })), { fmt: v => v.toFixed(0), lo: 0 });
   strip('c-abl-idf1', reps.map(r => ({ label: 'rep ' + r, items: abl.map(m => ({ m, vals: [L[m].per_rep[r]?.IDF1], hover: [] })) })), { fmt: v => f1(100 * v), unit: '%' });
   table(L, ms); tableSeq(L, sm);
 }
+
+/* per-label scores: always the D/PD/S (full) level, whatever tab is selected */
+function labels() {
+  const L = D.levels.full || {}, ms = ORDER.filter(m => L[m] && m !== 'v2g');
+  if (!ms.length || L[ms[0]].per_rep[L[ms[0]].reps[0]].f1_D === undefined) { document.getElementById('labels').hidden = true; return; }
+  legend('legend2', ms);
+  const vals = (m, k) => L[m].reps.map(r => L[m].per_rep[r][k]);
+  const LB = [['D', 'dynamic'], ['PD', 'potentially dynamic']];
+  strip('c-f1', LB.map(([k, sub]) => ({ label: k, sub, items: ms.map(m => ({ m, vals: vals(m, 'f1_' + k) })) })), { fmt: v => f1(100 * v), unit: '%', header: true });
+  strip('c-pr', LB.flatMap(([k]) => [['prec_', 'precision'], ['recall_', 'recall']].map(([p, n]) => ({ label: `${k} ${n}`, items: ms.map(m => ({ m, vals: vals(m, p + k) })) }))), { fmt: v => f1(100 * v), unit: '%', header: true });
+  const t = document.getElementById('tbl-labels'); t.replaceChildren();
+  const hd = document.createElement('tr'); ['Metodo', 'Precision D', 'Recall D', 'F1 D', 'Precision PD', 'Recall PD', 'F1 PD', 'Frame persona → S'].forEach(h => cell(hd, h, 'th')); t.appendChild(hd);
+  const pm = (m, k) => { const v = vals(m, k); return pct(mean(v)) + ' ± ' + f1(100 * std(v)); };
+  ms.forEach(m => {
+    const tr = document.createElement('tr'), c0 = cell(tr, ''), k = document.createElement('span'); k.className = 'key'; k.style.background = MCOL[m]; c0.append(k, M[m]);
+    ['prec_D', 'recall_D', 'f1_D', 'prec_PD', 'recall_PD', 'f1_PD'].forEach(key => cell(tr, pm(m, key)));
+    cell(tr, f1(mean(L[m].reps.map(r => L[m].per_rep[r].conf_D_S + L[m].per_rep[r].conf_PD_S))));
+    t.appendChild(tr);
+  });
+  const nS = ms.reduce((s, m) => s + L[m].reps.reduce((a, r) => a + L[m].per_rep[r].conf_S_S + L[m].per_rep[r].conf_S_D + L[m].per_rep[r].conf_S_PD + L[m].per_rep[r].conf_S_miss, 0), 0);
+  document.getElementById('snote').textContent = 'Label S: in queste sequenze la ground truth è solo la persona, che è sempre D (si muove) o PD (ferma, ma di una classe che può muoversi); ' +
+    (nS ? `${nS} frame GT S.` : 'nessun frame GT è S, quindi precision, recall e F1 di S non sono definiti. ') +
+    "Si può misurare solo l'errore opposto, la persona etichettata S: l'ultima colonna, che è 0 per tutti i metodi. Gli oggetti statici veri si valutano con altri dati (scene con oggetti annotati, JRDB/CODa).";
+  const host = document.getElementById('confs'); host.replaceChildren();
+  ms.forEach(m => {
+    const card = document.createElement('div'); card.className = 'card';
+    const h = document.createElement('h3'); const k = document.createElement('span'); k.className = 'key'; k.style.background = MCOL[m]; h.append(k, M[m]); card.appendChild(h);
+    const w = document.createElement('div'); w.className = 'tablewrap'; const tb = document.createElement('table'); w.appendChild(tb); card.appendChild(w);
+    const hr = document.createElement('tr'); ['GT \\ metodo', 'D', 'PD', 'S', 'mancato'].forEach(x => cell(hr, x, 'th')); tb.appendChild(hr);
+    [['D', 'D'], ['PD', 'PD']].forEach(([g, gl]) => {
+      const tr = document.createElement('tr'); cell(tr, gl);
+      const cnt = ['D', 'PD', 'S', 'miss'].map(p => mean(L[m].reps.map(r => L[m].per_rep[r][p === 'miss' ? `conf_${g}_miss` : `conf_${g}_${p}`])));
+      const tot = cnt.reduce((a, b) => a + b, 0);
+      ['D', 'PD', 'S', 'miss'].forEach((p, i) => { const c = cell(tr, `${Math.round(cnt[i])} (${tot ? (100 * cnt[i] / tot).toFixed(1).replace('.', ',') : '–'}%)`); if (p === g) c.className = 'diag'; });
+      tb.appendChild(tr);
+    });
+    host.appendChild(card);
+  });
+}
+
 
 function cell(tr, s, tag = 'td') { const c = document.createElement(tag); c.textContent = s; tr.appendChild(c); return c; }
 function table(L, ms) {
@@ -375,7 +444,7 @@ function header() {
   document.getElementById('prog').style.width = (100 * D.jobs_done / D.jobs_total) + '%';
   const tiles = document.getElementById('tiles');
   const agg = (m, k) => L[m] ? L[m].reps.map(r => L[m].per_rep[r][k]) : null;
-  const tile = (label, m, k, isPct, cmpm, cmpLabel) => {
+  const tile = (label, m, k, isPct, cmps) => {
     const v = agg(m, k); if (!v) return;
     const d = document.createElement('div'); d.className = 'tile';
     const l = document.createElement('div'); l.className = 'label'; l.textContent = label;
@@ -383,15 +452,25 @@ function header() {
     val.append(isPct ? f1(100 * mean(v)) + '%' : f1(mean(v)));
     const sm = document.createElement('small'); sm.textContent = ' ± ' + (isPct ? f1(100 * std(v)) : f1(std(v))); val.appendChild(sm);
     d.append(l, val);
-    const c = agg(cmpm, k);
-    if (c) { const e = document.createElement('div'); e.className = 'cmp'; e.textContent = `${cmpLabel} ${isPct ? f1(100 * mean(c)) + '%' : f1(mean(c))}`; d.appendChild(e); }
+    const parts = cmps.map(([cm, cl]) => { const c = agg(cm, k); return c ? `${cl} ${isPct ? f1(100 * mean(c)) + '%' : f1(mean(c))}` : null; }).filter(Boolean);
+    if (parts.length) { const e = document.createElement('div'); e.className = 'cmp'; e.textContent = parts.join(' · '); d.appendChild(e); }
     tiles.appendChild(d);
   };
-  tile('MOTA v2 (Hungarian)', 'v2', 'MOTA', true, 'v1', 'v1:');
-  tile('IDF1 v2 (Hungarian)', 'v2', 'IDF1', true, 'v1', 'v1:');
-  tile('Scambi di ID v2 (Hungarian)', 'v2', 'IDSW', false, 'v2g', 'greedy-Kuhn:');
-  tile('Recall PD v2 (Hungarian)', 'v2', 'recall_PD', true, 'v1', 'v1:');
+  if (D.compare) {
+    const c = [['v2r8', D.compare + ':'], ['v1', 'v1:']];
+    tile(`MOTA ${M.v2}`, 'v2', 'MOTA', true, c); tile(`IDF1 ${M.v2}`, 'v2', 'IDF1', true, c);
+    tile(`F1 label D ${M.v2}`, 'v2', 'f1_D', true, c); tile(`F1 label PD ${M.v2}`, 'v2', 'f1_PD', true, c);
+  } else {
+    tile('MOTA v2 (Hungarian)', 'v2', 'MOTA', true, [['v1', 'v1:']]);
+    tile('IDF1 v2 (Hungarian)', 'v2', 'IDF1', true, [['v1', 'v1:']]);
+    tile('Scambi di ID v2 (Hungarian)', 'v2', 'IDSW', false, [['v2g', 'greedy-Kuhn:']]);
+    tile('Recall PD v2 (Hungarian)', 'v2', 'recall_PD', true, [['v1', 'v1:']]);
+  }
   if (!tiles.children.length) { const p = document.createElement('p'); p.className = 'empty'; p.style.padding = '16px'; p.textContent = 'Nessuna ripetizione completa ancora.'; tiles.appendChild(p); }
+  if (D.compare) {
+    document.getElementById('title').textContent = `Campagne ${D.compare} e ${D.campaign}: le correzioni di v2 a pipeline completa`;
+    document.getElementById('lede').textContent = `Sei sequenze di laboratorio (19/05/2026, una persona, camera frontale) con ground truth da motion capture. ${M.v2} contiene le due correzioni dell'associazione (frammenti solo-camera, proprietà della classe); ${M.v2r8} è la versione precedente; v1 è lo stesso codice in entrambe le campagne, quindi i suoi run sono condivisi. Tre ripetizioni a pipeline completa per metodo, numeri come media ± deviazione standard. L'ablation greedy-Kuhn è quella di ${D.compare}.`;
+  }
   document.getElementById('foot').textContent = `Generato da eval/make_report_page.py · dati eval/results/own_${D.campaign}_reps.json · soglia GT dinamica 0,3 m/s, gate 1 m, griglia 10 Hz`;
   if (D.notes) document.getElementById('notes').innerHTML = D.notes;   // our own findings file, not external input
 }
@@ -402,15 +481,15 @@ function videos() {
   D.videos.forEach((v, i) => { const o = document.createElement('option'); o.value = i; o.textContent = short(v.seq); sel.appendChild(o); });
   const pick = i => { const v = D.videos[i]; vid.src = v.file; info.textContent = v.info; };
   sel.addEventListener('change', () => pick(+sel.value));
-  const start = D.videos.findIndex(v => v.seq.endsWith('1947')); sel.value = start >= 0 ? start : 0; pick(+sel.value);
+  const start = D.videos.findIndex(v => v.seq.endsWith(D.compare ? '1950' : '1947')); sel.value = start >= 0 ? start : 0; pick(+sel.value);
 }
 
 document.querySelectorAll('.tabs button').forEach(b => {
   b.setAttribute('aria-pressed', b.dataset.level === level);
   b.addEventListener('click', () => {
-    level = b.dataset.level; try { localStorage.setItem('r8-level', level); } catch (e) {}
+    level = b.dataset.level; try { localStorage.setItem(D.campaign + '-level', level); } catch (e) {}
     document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-pressed', x === b)); render();
   });
 });
-header(); render(); history(); videos();
+header(); render(); labels(); history(); videos();
 </script>

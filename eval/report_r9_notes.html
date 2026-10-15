@@ -1,0 +1,39 @@
+<h2>Cosa dicono i numeri</h2>
+<ul>
+  <li><b>Le correzioni reggono a pipeline completa.</b> v2 passa da MOTA 96,5 ± 0,3% (r8) a 98,1 ± 0,1% e da IDF1
+    80,7 ± 6,7% a 99,05 ± 0,05%. La variabilità tra run dell'IDF1, che in r8 dipendeva dal fatto che uno scambio
+    avvenisse o no, è sparita: in nessun run c'è una perdita d'identità persistente (IDF1 per sequenza tra 96 e 100%).</li>
+  <li><b>Score per label.</b> F1 di D da 95,1 ± 0,5 a 96,2 ± 0,2%, di PD da 96,3 ± 0,1 a 96,4 ± 0,0%. Il guadagno su D
+    viene dalla recall (94,1 → 96,1%): i frame in cui la persona che si muove resta senza track scendono da 38,7 a 15
+    per ripetizione, perché non perde più il track all'uscita laterale dal FOV nella 1947. La precision non cambia
+    (96,2 → 96,3% su D, 97,5 → 97,7% su PD): le confusioni D↔PD rimaste sono soprattutto ritardi nelle
+    transizioni (circa 49 frame PD dati come D e 36 D dati come PD per ripetizione). v1 resta indietro soprattutto su
+    PD: recall 83,6 ± 3,2%, con circa 159 frame per ripetizione di persona ferma non abbinata e 100 data come D.</li>
+  <li><b>Label S.</b> La GT di queste sequenze è solo la persona, quindi non ci sono frame GT S: per S si misura solo
+    l'errore opposto (persona etichettata S), che è zero per tutti i metodi.</li>
+  <li><b>Scambi di ID rimasti</b> (2,7 in media): sono tutti lampi di un tick, andata e ritorno (1950 nelle
+    ripetizioni b e c, 1949 nella b), con IDF1 al 99%. Un track statico, trascinato dai box fusi persona+oggetto e per
+    un attimo pubblicato "dynamic", passa a pochi cm dalla persona. Per questo nel paper va riportato l'IDF1 accanto
+    agli IDSW.</li>
+  <li><b>Lo scambio della 1945</b> (18,7 s, 2 run su 3 in r8) non compare in nessuna ripetizione di r9. Non era un
+    obiettivo delle correzioni: va verificato sui dati nuovi se è un loro effetto o un caso.</li>
+</ul>
+
+<h3>Le due correzioni</h3>
+<ul>
+  <li><b>Frammenti solo-camera</b> (<code>track_camera_fragment_dist</code>, <code>df56a77</code>, 1947): la fusione
+    spezzava la persona che esce di lato dal FOV in un box solo-LiDAR su di lei e uno solo-camera, sullo sfondo, con
+    la classe <code>person</code>. Il bonus di classe faceva vincere il frammento. Ora un candidato senza punti LiDAR
+    viene scartato se lo stesso track ha, entro 0,6 m, un candidato con punti LiDAR.</li>
+  <li><b>Proprietà della classe</b> (<code>track_class_ownership</code>, <code>4a41b17</code>, 1950): l'assegnazione
+    massimizza prima il numero di coppie, quindi il track di un oggetto statico, trascinato verso la persona, poteva
+    prenderle il box <code>person</code> lasciando il track giusto su un frammento. Ora un box con classe X non va a un
+    track non classificato che lo valuta peggio del miglior track già classificato X.</li>
+</ul>
+<p>Entrambe sono disattivabili con un parametro e verificate prima con A/B sul solo tracker a parità di input, poi con
+  questa campagna a pipeline completa.</p>
+
+<h3>Cautela</h3>
+<p>Queste 6 sequenze sono ora lo split <code>tune/</code>: le correzioni sono nate guardandole, quindi questi numeri
+  confermano le correzioni ma non sono il risultato del paper. Dal 15/10 non si mettono più a punto pesi o parametri
+  su di esse; i numeri da pubblicare verranno dalla nuova campagna mocap con più persone e da JRDB/CODa.</p>

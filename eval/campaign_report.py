@@ -41,6 +41,7 @@ def coverage(run, seq):
     return (load_odometry(run)[:, 0].max() - t0) / (info['duration']['nanoseconds'] / 1e9)
 
 
+LABELS = {'dynamic': 'D', 'potentially_dynamic': 'PD', 'static': 'S'}
 METRICS = [('MOTA', 'mota', True), ('IDF1', 'idf1', True), ('MOTP_m', 'motp', False), ('FP', 'fp', False),
            ('FN', 'fn', False), ('IDSW', 'idsw', False)]
 
@@ -49,7 +50,19 @@ def metrics_of(a):
     m = {k: a[src] for k, src, _ in METRICS}
     m['recall_D'] = a['state_recall']['dynamic']
     m['recall_PD'] = a['state_recall']['potentially_dynamic']
+    m['recall_S'] = a['state_recall']['static']
     m['lat_to_D_s'] = a['latency_mean']['to_dynamic']
+    # per-label scores on the matched frames (D/PD/S confusion summed over the sequences): precision = share of the
+    # frames given label s whose GT is s, recall = share of the GT-s frames given s (unmatched GT counts as missed)
+    conf = a['confusion']
+    for s, k in LABELS.items():
+        pred_s = sum(conf[g].get(s, 0) for g in conf)
+        p = conf[s].get(s, 0) / pred_s if pred_s else float('nan')
+        r = a['state_recall'][s]
+        m[f'prec_{k}'], m[f'f1_{k}'] = p, (2 * p * r / (p + r) if p == p and r == r and p + r > 0 else float('nan'))
+        for g, gk in LABELS.items():
+            m[f'conf_{gk}_{k}'] = conf[g].get(s, 0)
+        m[f'conf_{k}_miss'] = conf[s].get('missed', 0)
     return m
 
 
