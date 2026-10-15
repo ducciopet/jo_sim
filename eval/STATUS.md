@@ -391,3 +391,16 @@ Entrambe le correzioni vanno confermate in una campagna a pipeline completa prim
 **Decisione (2026-10-15)**: niente sweep dei pesi dell'associazione, del costo di non-assegnazione o dei parametri
 del filtro di Kalman su queste 6 sequenze (regola in PAPER_PLAN §1). Lo scambio della 1945 e il lampo della 1950
 si guardano sui dati nuovi, non qui.
+
+---
+
+## Campagna r9 (avviata il 2026-10-15): le due correzioni a pipeline completa
+
+- Codice: `jo_detector_v2` `4a41b17` (frammenti + classe). v1 non è cambiato: i run v1 sono quelli di r8, collegati
+  come `r9<rep>_v1_*`. Niente ablation greedy (`V1=0 GREEDY=0`, nuove opzioni di `scripts/run_campaign.sh`).
+- 18 job v2 (3 ripetizioni × 6 sequenze), stato in `bags/replay/r9_state.log`.
+- Interrompere: `touch bags/replay/r9.stop` (alla fine del job in corso) oppure il `pkill` della sezione r8.
+- Riprendere: `rm -f bags/replay/r9.stop; docker exec -d jo_sim_lv-dot-jo-sim_lv-dot-1 bash -c "cd /home/ros/bags/replay && CAMPAIGN=r9 V1=0 GREEDY=0 bash run_campaign.sh > r9_campaign.log 2>&1"`
+- Valutazione: `python3 eval/campaign_report.py --campaign r9 --reps a b c`.
+- Istruzioni complete per chi riprende (anche da un altro account Claude):
+  `~/Desktop/claude_account_backup/jo_detector_v2_handoff/LEGGIMI_PRIMA.md`.
