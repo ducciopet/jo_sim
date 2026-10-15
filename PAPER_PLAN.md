@@ -31,6 +31,11 @@ Calendario a ritroso da una submission prevista il **2027-02-22** (circa 19 sett
 | 13–17 | 18/1 – 21/2 | Scrittura, figure, video | Fase 6 |
 | 17–18 | 8/2 – 21/2 | Revisione interna (relatore + un lettore esterno al gruppo) | — |
 
+**Regola sulle 6 sequenze di laboratorio (decisa il 2026-10-15)**: sono lo split `tune/`. Su di esse non si
+fanno più sweep di pesi o di parametri del tracker né del filtro di Kalman. Si accettano solo correzioni con una
+causa fisica identificata nei log, disattivabili con un parametro e verificate con A/B a parità di input (come
+`df56a77` e `4a41b17`). I numeri del paper vengono da dati non visti (nuova campagna mocap, JRDB/CODa).
+
 **Regola del freeze**: dopo il tag `paper-v1` si correggono solo bug, documentati, e ogni fix
 richiede di rifare tutta la matrice. Sono vietati il tuning e l'aggiunta di feature.
 

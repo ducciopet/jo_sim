@@ -387,3 +387,7 @@ ferma che poi cammina deve restare libera di muoversi).
 
 **Scambi rimasti**: 1945 a 18,7 s (2 run su 3, persona dietro il robot senza classe) e il lampo della 1950.
 Entrambe le correzioni vanno confermate in una campagna a pipeline completa prima di usarle nei numeri del paper.
+
+**Decisione (2026-10-15)**: niente sweep dei pesi dell'associazione, del costo di non-assegnazione o dei parametri
+del filtro di Kalman su queste 6 sequenze (regola in PAPER_PLAN §1). Lo scambio della 1945 e il lampo della 1950
+si guardano sui dati nuovi, non qui.
