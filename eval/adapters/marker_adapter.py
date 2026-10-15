@@ -19,7 +19,7 @@ from pathlib import Path
 import numpy as np
 from rosbags.highlevel import AnyReader
 
-from harness.tracks import EMPTY_FRAME_ID, make_tracks
+from harness.tracks import EMPTY_FRAME_ID, empty_tracks, make_tracks
 
 
 def load_marker_boxes(bag, topic, persistent_ids=False, state='dynamic'):
@@ -27,7 +27,11 @@ def load_marker_boxes(bag, topic, persistent_ids=False, state='dynamic'):
     with AnyReader([Path(bag)]) as r:
         cs = [c for c in r.connections if c.topic == topic]
         if not cs:
-            raise ValueError(f'{bag}: no {topic}')
+            # Dynablox publishes only non-empty results: a recorded run with no message on the topic (other topics
+            # present, e.g. the odometry) means it flagged nothing at all, not a failed run
+            if any(c.msgcount for c in r.connections):
+                return empty_tracks()
+            raise ValueError(f'{bag}: no {topic} and no other message')
         for c, t, raw in r.messages(cs):
             m = r.deserialize(raw, c.msgtype)
             boxes = [k for k in m.markers if k.action == 0 and k.type == 5 and len(k.points) >= 8]  # 5 = LINE_LIST

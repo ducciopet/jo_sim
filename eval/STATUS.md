@@ -487,3 +487,24 @@ falsi dinamici su oggetti statici da `static_eval`, `results/own_r9_static_lvdot
 - Al livello "solo movimento" crolla (MODA −54%, 402 falsi allarmi/min) perché tiene la persona "dinamica" anche da
   ferma: non ha lo stato PD, e il suo `dynamic_consistency`/`frames_force_dynamic` mantiene l'etichetta.
 - Variabilità tra run bassa (std ≤ 4 punti).
+
+### Dynablox (campagna completa, 18 run) e note su M-detector (2026-10-15 sera)
+
+Dynablox (solo LiDAR, `eval/baselines/dynablox/`, patch output-only per gli ID dei cluster): deterministico (le 3
+ripetizioni danno lo stesso risultato: elabora ogni nuvola in ordine). Pubblica solo quando vede moto: nella 1942
+(tutto fermo) il topic manca, trattato come uscita vuota (`marker_adapter`).
+
+| | Solo movimento: recall | falsi allarmi/min | IDF1 | Ferma o no: recall |
+|---|---|---|---|---|
+| v2 | 96,1% | 11,9 | 95,8% | 98,5% |
+| Dynablox | 96,6% | 68,1 | 64,7% | 52,7% |
+| LV-DOT | 94,3% | 402 | – | 96,4% |
+
+Dynablox trova la persona che cammina quanto v2, ma con 6 volte i falsi allarmi e meno identità; la persona ferma
+la perde (52,7%), come atteso da un metodo di sola segmentazione del moto.
+
+M-detector: accoppia la n-esima nuvola con la n-esima odometria (upstream FAST-LIO ne pubblica una per scansione);
+la nostra odometria a 40 Hz andava quindi ricampionata: `make_input.py` scrive un'odometria per nuvola, interpolata
+al suo timestamp, nel frame velodyne. Prima della correzione i muri risultavano dinamici (recall 0); dopo, sulla 1950:
+solo movimento recall 89,5%, 32 falsi allarmi. Uscita usata: `/m_detector/point_out` (punti), raggruppati con il
+DBSCAN comune di `points_adapter.py` (eps 0,5 m, 5 punti), senza ID.

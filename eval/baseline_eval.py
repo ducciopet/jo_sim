@@ -32,14 +32,17 @@ from harness.gt_mocap import tracks_to_mocap  # noqa: E402
 from harness.metrics import EvalConfig, evaluate  # noqa: E402
 from harness.tracks import read_tracks  # noqa: E402
 from marker_adapter import load_marker_boxes  # noqa: E402
+from points_adapter import load_dynamic_points  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
 SEQS = ['20260519_1942', '20260519_1945', '20260519_1947', '20260519_1949', '20260519_1950', '20260519_1952']
 LEVELS = ('dynamic_only', 'merged')
-IDENTITY = {'v1': True, 'v2': True, 'lvdot': False, 'dynablox': True}
+IDENTITY = {'v1': True, 'v2': True, 'lvdot': False, 'dynablox': True, 'mdetector': False, 'xurgbd': False}
 # baseline -> (output dir under bags/, run prefix, marker topic, persistent ids)
 BASELINES = {'lvdot': ('lvdot_out', 'lvdot', '/onboard_detector/dynamic_bboxes', False),
-             'dynablox': ('dynablox_out', 'dynablox', '/motion_detector/visualization/clusters', True)}
+             'dynablox': ('dynablox_out', 'dynablox', '/motion_detector/visualization/clusters', True),
+             'xurgbd': ('xu_rgbd_out', 'xurgbd', '/onboard_detector/dynamic_bboxes', False),
+             'mdetector': ('mdetector_out', 'mdetector', '/m_detector/point_out', None)}  # None = dynamic points
 
 
 def predictions(method, campaign, rep, seq, res, align):
@@ -49,7 +52,8 @@ def predictions(method, campaign, rep, seq, res, align):
     out = REPO / 'bags' / d
     if not (out / f'{prefix}{rep}_{seq}.done').exists():
         return None
-    boxes = load_marker_boxes(out / f'{prefix}{rep}_{seq}.bag', topic, persistent_ids=ids)
+    bag = out / f'{prefix}{rep}_{seq}.bag'
+    boxes = load_dynamic_points(bag, topic) if ids is None else load_marker_boxes(bag, topic, persistent_ids=ids)
     return tracks_to_mocap(boxes, align['T_mocap_odom'][seq], align['delta'][seq])
 
 
@@ -57,7 +61,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--campaign', default='r9')
     ap.add_argument('--reps', nargs='+', default=['a', 'b', 'c'])
-    ap.add_argument('--methods', nargs='+', default=['v2', 'v1', 'lvdot', 'dynablox'])
+    ap.add_argument('--methods', nargs='+', default=['v2', 'v1', 'lvdot', 'dynablox', 'mdetector', 'xurgbd'])
     args = ap.parse_args()
     out = {}
     for r in args.reps:
