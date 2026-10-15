@@ -462,3 +462,10 @@ riportare i falsi dinamici al minuto, non l'F1 di S.
   "dinamica" anche da ferma: al livello "solo movimento" 427 falsi allarmi contro 13 di v2.
 
 Prossimi: Dynablox e M-detector (solo LiDAR, punti dinamici → box con lo stesso clustering per entrambi).
+
+**Metriche con una sola persona (decisione del 2026-10-15).** Con un solo oggetto nella GT il MOTA coincide in pratica
+col MODA (un ID switch vale 1/2890: per v2 r9 2,7 IDSW = 0,09 punti) e non misura l'associazione; scende sotto zero
+quando i falsi allarmi superano i frame (LV-DOT −138% sulla 1950). Sulle prove con una persona si riportano quindi,
+separate: recall, falsi allarmi al minuto (e su oggetti statici), F1 per stato e latenza, IDF1 e numero di ID dati alla
+persona, MOTP. Il MOTA resta come riga di confronto con la nota "single subject: MOTA ≈ MODA". Sulle prove con più
+persone e su JRDB/CODa: HOTA come metrica principale, più IDF1 e MOTA.

@@ -67,9 +67,21 @@ def headline(L, S, m):
         'alarms': mean([p['FP'] / minutes for p in P]),
         'static_alarms': mean([S[m][r]['false_dyn_per_min'] for r in reps]) if S.get(m) else None,
         'lat': mean([p['lat_to_D_s'] for p in P]),
-        'seq': {s: 100 * mean([L[m]['per_seq_rep'][s][r]['MOTA'] for r in reps]) for s, *_ in SEQS},
+        'seq': {s: per_seq(L[m]['per_seq_rep'][s], reps) for s, *_ in SEQS},
         'reps': len(reps),
     }
+
+
+def per_seq(PS, reps):
+    """found [%], false alarms per minute and IDF1 [%] of one sequence, mean over the repetitions"""
+    out = {'found': [], 'alarms': [], 'idf1': []}
+    for r in reps:
+        p = PS[r]
+        gt = sum(p[f'conf_{g}_{k}'] for g in ('D', 'PD') for k in ('D', 'PD', 'S', 'miss'))
+        out['found'].append(100 * (1 - p['FN'] / gt))
+        out['alarms'].append(p['FP'] / (gt / 600.0))   # one person per frame at 10 Hz: gt frames / 600 = minutes
+        out['idf1'].append(100 * p['IDF1'])
+    return {k: mean(v) for k, v in out.items()}
 
 
 def bar_row(label, hint, v2, v1, unit='%', nd=1, maxv=100.0):
@@ -106,8 +118,6 @@ def main():
                 v2['state'], v1['state']),
         bar_row('La persona tiene lo stesso numero', 'Quanto a lungo la persona resta lo stesso oggetto per il robot, '
                 'senza cambiare identità (IDF1).', v2['idf1'], v1['idf1']),
-        bar_row('Punteggio complessivo', 'Riassume persone mancate, falsi allarmi e cambi di identità in un numero; '
-                '100% vuol dire nessun errore (MOTA).', v2['mota'], v1['mota']),
     ])
     amax = max(v1['alarms'], v2['alarms']) * 1.05
     lower = ''.join([
@@ -118,8 +128,10 @@ def main():
                 maxv=max(v1['lat'], v2['lat']) * 1.05),
     ])
     seq_rows = ''.join(
-        f'<tr><td>{s[-4:]}</td><td>robot {robot}, persona {person}</td><td class="n">{num(v1["seq"][s])}%</td>'
-        f'<td class="n strong">{num(v2["seq"][s])}%</td></tr>' for s, robot, person in SEQS)
+        f'<tr><td>{s[-4:]}</td><td>robot {robot}, persona {person}</td>'
+        f'<td class="n">{num(v1["seq"][s]["found"])}%</td><td class="n strong">{num(v2["seq"][s]["found"])}%</td>'
+        f'<td class="n">{num(v1["seq"][s]["alarms"])}</td><td class="n strong">{num(v2["seq"][s]["alarms"])}</td></tr>'
+        for s, robot, person in SEQS)
     hist_rows = ''.join(f'<tr{" class=now" if k == c else ""}><td>{k}</td><td>{html.escape(t)}</td><td class="n">{v}%</td></tr>'
                         for k, t, v in HISTORY)
     options = ''.join(f'<option value="{f}"{" selected" if s.endswith("1947") else ""} data-note="{html.escape(VIDEO_NOTE.get(s, ""))}">'
@@ -127,7 +139,7 @@ def main():
     first = next((v for v in vids if v[0].endswith('1947')), vids[0] if vids else None)
     ratio = v1['alarms'] / v2['alarms'] if v2['alarms'] else float('nan')
     page = TEMPLATE.format(
-        mota2=num(v2['mota']), mota1=num(v1['mota']), idf2=num(v2['idf1'], 0), idf1=num(v1['idf1'], 0),
+        mota2=num(v2['mota']), mota1=num(v1['mota']), found2=num(v2['found']), found1=num(v1['found']), idf2=num(v2['idf1'], 0), idf1=num(v1['idf1'], 0),
         al2=num(v2['alarms']), al1=num(v1['alarms']), ratio=f'{ratio:.0f}', reps=v2['reps'],
         percent=percent, lower=lower, seq_rows=seq_rows, hist_rows=hist_rows, options=options,
         first_src=first[3] if first else '', first_note=html.escape(VIDEO_NOTE.get(first[0], '')) if first else '',
@@ -232,9 +244,8 @@ footer {{ font: 13px var(--f-num); color: var(--ink-3); }}
 
   <section class="verdict" aria-label="In breve">
     <div class="eyebrow">In breve</div>
-    <p>v2 segue la persona quasi senza errori: punteggio complessivo <b>{mota2}%</b> contro <b>{mota1}%</b> di v1.
-      Tiene la stessa identità per tutta la prova (<b>{idf2}%</b> contro <b>{idf1}%</b>) e dà circa <b>{ratio} volte
-      meno falsi allarmi</b> ({al2} al minuto contro {al1}).</p>
+    <p>v2 trova la persona il <b>{found2}%</b> del tempo (v1 il {found1}%), la segue con la stessa identità
+      (<b>{idf2}%</b> contro {idf1}%) e dà circa <b>{ratio} volte meno falsi allarmi</b> ({al2} al minuto contro {al1}).</p>
   </section>
 
   <section>
@@ -248,11 +259,22 @@ footer {{ font: 13px var(--f-num); color: var(--ink-3); }}
   </section>
 
   <section>
+    <h2>Perché non un punteggio unico</h2>
+    <p class="sub">Il punteggio usato di solito per il tracking (MOTA) somma persone mancate, falsi allarmi e cambi di
+      identità. È pensato per scene con molte persone: qui ce n'è una sola, quindi un cambio di identità pesa quasi zero
+      e il MOTA misura solo "trovarla e non segnalare altro". Per questo le misure sopra sono tenute separate. Per
+      confronto con la letteratura: MOTA <b>{mota2}%</b> per v2 e {mota1}% per v1. Con più persone, nelle prossime
+      registrazioni, si userà anche HOTA, lo standard attuale.</p>
+  </section>
+
+  <section>
     <h2>Prova per prova</h2>
-    <p class="sub">Punteggio complessivo nelle 6 registrazioni. v1 scende sotto l'80% in quattro prove su sei; v2 resta
-      sopra il 93% in tutte.</p>
+    <p class="sub">Quanto spesso la persona viene trovata e quanti falsi allarmi al minuto, in ciascuna registrazione.
+      v1 dà falsi allarmi in tutte le prove (da 16 a 103 al minuto), v2 al massimo 6. Col robot in movimento v1 perde
+      più spesso la persona (la trova tra l'82 e l'89% del tempo), v2 resta sopra il 93%.</p>
     <div class="tablewrap"><table>
-      <tr><th>Prova</th><th>Robot / persona</th><th class="n">v1</th><th class="n">v2</th></tr>
+      <tr><th>Prova</th><th>Robot / persona</th><th class="n">Trovata v1</th><th class="n">Trovata v2</th>
+        <th class="n">Allarmi/min v1</th><th class="n">Allarmi/min v2</th></tr>
       {seq_rows}
     </table></div>
   </section>
@@ -270,9 +292,10 @@ footer {{ font: 13px var(--f-num); color: var(--ink-3); }}
   <section>
     <h2>Come ci siamo arrivati</h2>
     <p class="sub">Ogni "campagna" è un giro completo sulle 6 prove dopo una modifica di v2. Fino a r7 è un singolo
-      giro, da r8 la media di 3 giri: per questo r8 sembra più basso di r7, che era stato un giro fortunato.</p>
+      giro, da r8 la media di 3 giri: per questo r8 sembra più basso di r7, che era stato un giro fortunato. La colonna è
+      il MOTA, l'unica misura registrata per tutte le campagne.</p>
     <div class="tablewrap"><table>
-      <tr><th>Campagna</th><th>Cosa è cambiato in v2</th><th class="n">Punteggio</th></tr>
+      <tr><th>Campagna</th><th>Cosa è cambiato in v2</th><th class="n">MOTA</th></tr>
       {hist_rows}
     </table></div>
   </section>
