@@ -508,3 +508,23 @@ la nostra odometria a 40 Hz andava quindi ricampionata: `make_input.py` scrive u
 al suo timestamp, nel frame velodyne. Prima della correzione i muri risultavano dinamici (recall 0); dopo, sulla 1950:
 solo movimento recall 89,5%, 32 falsi allarmi. Uscita usata: `/m_detector/point_out` (punti), raggruppati con il
 DBSCAN comune di `points_adapter.py` (eps 0,5 m, 5 punti), senza ID.
+
+### Confronto completo con 4 metodi della letteratura (2026-10-15 sera, 3 ripetizioni ciascuno)
+
+`results/baselines_r9.json`, `tables/baselines_r9.csv`; pagina: https://claude.ai/artifact/XGLMmauGC6XHbai8ygpQaz.
+
+| Metodo | Sensori | Ferma o no: recall | Solo movimento: recall | Falsi allarmi/min (movimento) | IDF1 |
+|---|---|---|---|---|---|
+| **v2** | LiDAR + RGB-D | **98,5%** | 96,1% | **11,9** | **99,1%** |
+| v1 | LiDAR + RGB-D | 92,0% | 92,1% | 49,3 | 60,4% |
+| LV-DOT | LiDAR + RGB-D | 96,4% | 94,3% | 402 | – |
+| Dynablox | LiDAR | 52,7% | 96,6% | 68,1 | 51,1% |
+| M-detector | LiDAR | 48,6% | **97,9%** | 44,4 | – |
+| Xu et al. 2023 | RGB-D | 5,9% | 3,1% | 37,6 | – |
+
+- I due metodi solo LiDAR trovano la persona che cammina quanto o più di v2, ma con 4–6 volte i falsi allarmi, e la
+  perdono quando si ferma. LV-DOT la tiene "in movimento" da ferma. Nessuno ha lo stato PD.
+- Xu et al. (variante di default, senza YOLO) traccia la persona fusa con gli oggetti vicini (box larghi 2,9 m in
+  media) e quasi mai la dichiara dinamica: probabilmente il vincolo di forma `target_object_size` scarta i box fusi.
+  Da verificare con il modulo YOLO (serve la depth allineata al colore) prima di usarlo nel paper.
+- UniMT da fare; JRMOT bloccato (vedi `eval/baselines/README_baselines.md`).
