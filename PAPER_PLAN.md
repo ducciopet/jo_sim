@@ -85,8 +85,8 @@ Il protocollo di dettaglio (split, manifest, formato `tracks.csv`, metriche) è 
 - **Stato (2026-10-14, campagna r8, 3 ripetizioni)**: v2 MOTA 96,5 ± 0,3%, IDF1 80,7 ± 6,7%, IDSW 3 contro
   v1 81,1 ± 2,3%, 60,4 ± 0,9%, 26. Numeri da riportare come media ± std (l'IDF1 cambia molto tra run). Dettaglio
   in `eval/STATUS.md`, tabelle `eval/tables/own_r8_*_reps.*`.
-  Correzione dei frammenti solo-camera (`df56a77`, A/B col solo tracker sugli input r8): MOTA 97,2 ± 0,3%, IDF1
-  90,8 ± 6,6%, IDSW 2; va confermata nella prossima campagna a pipeline completa.
+  Correzioni dei frammenti solo-camera (`df56a77`) e della classe (`4a41b17`), A/B col solo tracker sugli input r8:
+  MOTA 97,2 ± 0,4%, IDF1 94,9 ± 3,1%, IDSW 2; vanno confermate nella prossima campagna a pipeline completa.
 
 **E2. Dataset pubblico con box 3D: JRDB (prima scelta) o CODa.**
 - Serve per i confronti esterni e la generalità. Metriche MOT: HOTA, MOTA, IDF1 per la detection

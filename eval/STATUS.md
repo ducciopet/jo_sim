@@ -354,4 +354,36 @@ del LiDAR è sempre vista dal LiDAR, quindi il box solo-camera accanto è un fra
 1945 a 18,7 s (2 su 3) e 1950 a circa 38 s (3 su 3). I numeri r8 a pipeline completa restano quelli della campagna;
 la correzione entrerà nella prossima campagna a pipeline completa.
 
-**Prossimi passi**: diagnosi dello scambio della 1950 a 38 s, poi campagna sul campo.
+**Prossimi passi**: ~~diagnosi dello scambio della 1950 a 38 s~~ (fatto, sotto), poi campagna sul campo.
+
+## Correzione della 1950 (2026-10-15, `jo_detector_v2` `4a41b17`)
+
+**Causa** (stesso metodo, log dei candidati esteso per un momento anche ai track non classificati): #594 è un track
+non classificato e "statico" di un oggetto alto vicino a (2,9, 1,0) in odom. Quando la persona (#22, `person`) gli
+passa accanto, i box fusi persona+oggetto lo trascinano verso di lei in passi da 0,1–0,2 m (ognuno sotto i gate).
+Al tick decisivo #22 ha come candidati il box `person` (+0,35) e un frammento (−0,72); #594 ha solo il box `person`
+(−0,47). L'assegnazione massimizza prima il numero di coppie e poi il punteggio (con `hungarian` per via dei
+costi FORBIDDEN, con `greedy_kuhn` per costruzione), quindi sceglie le due coppie scadenti: #594 prende la persona
+e diventa `person`, #22 finisce sul frammento e muore. Per questo succede in 3 run su 3 con entrambi i metodi.
+
+**Correzione**: `track_class_ownership` (default true): un box che porta la classe X non può andare a un track non
+classificato che lo valuta peggio del miglior track già classificato X. Il track di una seconda persona, nuova e
+non ancora classificata, non perde il proprio box, perché su quello ha il punteggio più alto.
+
+**Verifica**: solo tracker sugli input dei 18 run v2 di r8 (`bags/replay/fo{a,b,c}_v2_*`, `results/fix1950_{a,b,c}`),
+contro i run con la sola correzione della 1947 (`fx`).
+
+| D/PD/S, 3 ripetizioni | MOTA | IDF1 | IDSW | FP | FN |
+|---|---|---|---|---|---|
+| r8 (nessuna correzione) | 96,40 ± 0,27% | 80,7 ± 6,6% | 3,0 | 34,3 | 66,7 |
+| frammenti (`df56a77`) | 97,17 ± 0,32% | 90,8 ± 6,6% | 2,0 | 22,0 | 57,7 |
+| **frammenti + classe (`4a41b17`)** | **97,24 ± 0,36%** | **94,9 ± 3,1%** | **2,0** | **20,0** | **57,7** |
+
+1950: IDF1 68% → 99% in 3 run su 3; nessun'altra sequenza cambia. Gli IDSW non scendono perché in a e b resta un
+lampo di un tick (0,1 s): #594, trascinato e quindi pubblicato `dynamic`, passa a 4 cm dalla persona e la metrica
+conta un andata e ritorno (2 IDSW). Resta da capire il trascinamento dei track statici da parte dei box fusi
+(un'àncora di posizione per i track fermi da molto tempo, da valutare con cautela: una persona non classificata
+ferma che poi cammina deve restare libera di muoversi).
+
+**Scambi rimasti**: 1945 a 18,7 s (2 run su 3, persona dietro il robot senza classe) e il lampo della 1950.
+Entrambe le correzioni vanno confermate in una campagna a pipeline completa prima di usarle nei numeri del paper.
