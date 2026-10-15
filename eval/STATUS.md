@@ -469,3 +469,21 @@ quando i falsi allarmi superano i frame (LV-DOT −138% sulla 1950). Sulle prove
 separate: recall, falsi allarmi al minuto (e su oggetti statici), F1 per stato e latenza, IDF1 e numero di ID dati alla
 persona, MOTP. Il MOTA resta come riga di confronto con la nota "single subject: MOTA ≈ MODA". Sulle prove con più
 persone e su JRDB/CODa: HOTA come metrica principale, più IDF1 e MOTA.
+
+### Risultati LV-DOT (campagna completa, 18 run, 2026-10-15)
+
+Media ± std su 3 ripetizioni, stesse bag e odometria di r9 (`results/baselines_r9.json`, `tables/baselines_r9.csv`;
+falsi dinamici su oggetti statici da `static_eval`, `results/own_r9_static_lvdot.json`).
+
+| | Persona trovata (D e PD insieme) | Falsi allarmi/min (D e PD insieme) | di cui su oggetti statici | MODA solo movimento | IDF1 |
+|---|---|---|---|---|---|
+| **v2** | **98,5 ± 0,1%** | **2,0** | **1,8** | **91,7%** | **99,1%** |
+| v1 | 92,0 ± 1,8% | 59,7 | 28,7 | 73,9% | 60,4% |
+| LV-DOT | 96,4 ± 1,8% | 79,2 | 5,6 | −54,2% | – (nessun ID persistente) |
+
+- LV-DOT trova la persona più spesso di v1 (96,4 contro 92,0%) ma meno di v2 (98,5%).
+- I suoi falsi allarmi sono quasi tutti **doppioni sulla persona** (box multipli entro 1 m): 79,2/min in totale, solo
+  5,6/min su oggetti statici (v2 1,8, v1 28,7).
+- Al livello "solo movimento" crolla (MODA −54%, 402 falsi allarmi/min) perché tiene la persona "dinamica" anche da
+  ferma: non ha lo stato PD, e il suo `dynamic_consistency`/`frames_force_dynamic` mantiene l'etichetta.
+- Variabilità tra run bassa (std ≤ 4 punti).
