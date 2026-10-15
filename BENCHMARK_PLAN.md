@@ -31,9 +31,17 @@ Lavora una fase alla volta. A fine fase aggiorna `eval/STATUS.md` con cosa funzi
 | `xu_rgbd` | onboard_detector (Xu et al., RA-L 2023) | solo RGB-D | github.com/Zhefan-Xu/onboard_detector | ROS1 Noetic | come LV-DOT |
 | `dynablox` | Dynablox (Schmid et al., RA-L 2023) | solo LiDAR | github.com/ethz-asl/dynablox | ROS1 Noetic | punti dinamici |
 | `mdetector` | M-detector (Wu et al., Nat. Comm. 2024) | solo LiDAR | github.com/hku-mars/M-detector | ROS1 (richiede livox_ros_driver anche con LiDAR non-Livox) | punti dinamici |
+| `unimt` | UniMT + SimpleTrack (He et al., arXiv 2025) | LiDAR 16 linee + RGB-D (D435i) | github.com/TossherO/3D_Perception, ros_packages | Python 3.10, mmdet3d 1.4, pacchetti ROS | box 3D di persone con ID (nessuno stato moto/fermo) |
+| `jrmot` | JRMOT (Shenoi et al., IROS 2020) | RGB + LiDAR Velodyne | github.com/StanfordVL/JRMOT_ROS | ROS1 | tracking 3D di persone con ID |
+| `eagermot` | EagerMOT (Kim et al., ICRA 2021), opzionale | fusione di detection 2D + 3D esterne | github.com/aleksandrkim61/EagerMOT | offline, Python | tracking 3D con ID; più adatto a JRDB |
+| `spencer` | SPENCER people tracking, opzionale | RGB-D + laser 2D (da VLP-16) | github.com/spencer-project/spencer_people_tracking | ROS1 | posizioni di persone con ID |
 | `ab3dmot` | AB3DMOT (Weng et al., IROS 2020) | tracker puro | github.com/xinshuoweng/AB3DMOT | Python | track 3D |
 
 Note:
+- **Ibridi aggiunti il 2026-10-15** (`unimt`, `jrmot`, opzionali `eagermot`, `spencer`): sono tracker di persone, non
+  classificano moto/fermo. Si confrontano al livello "D e PD insieme" e, dato che hanno ID persistenti, anche su
+  IDF1. Nessun metodo esterno ha lo stato PD: va detto nel related work. UniMT è addestrato su CODa (LiDAR a 128
+  linee): un calo sul VLP-16 può essere di dominio, da dichiarare.
 - **v1 deriva da LV-DOT.** Il pacchetto si chiama `onboard_detector` e contiene `dynamicDetector.cpp` con
   `lidarPoseCB` e `classificationCB`. Annota in `eval/STATUS.md` quali parti di v1 differiscono da LV-DOT,
   perché il paper deve dichiararlo.

@@ -84,7 +84,8 @@ Il protocollo di dettaglio (split, manifest, formato `tracks.csv`, metriche) è 
 
 **E1. Lab con GT motion capture (Qualisys): esperimento principale, irrinunciabile.**
 - Metriche: precision/recall/F1 per classe D/PD/S, MCC, latenza di onset e di stop, ID switch.
-- Metodi: v2, v1, LV-DOT (ROS1, stesse bag convertite), e v2 senza YOLO.
+- Metodi: v2, v1, LV-DOT (ROS1, stesse bag convertite), Dynablox e M-detector (solo LiDAR), UniMT e JRMOT
+  (ibridi camera + LiDAR, tracker di persone: livello "D e PD insieme" + IDF1), e v2 senza YOLO.
 - Le 6 sequenze attuali (`bags_benchmark/` + `qualysis/`, circa 6 minuti in tutto, una sola
   persona, solo camera frontale, nessuna odometria registrata) **non bastano**: vedi §4.
 - **Stato (2026-10-14, campagna r8, 3 ripetizioni)**: v2 MOTA 96,5 ± 0,3%, IDF1 80,7 ± 6,7%, IDSW 3 contro
