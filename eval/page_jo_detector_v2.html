@@ -1,0 +1,216 @@
+<title>jo_detector_v2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column, the pipeline told as a numbered sequence of steps; a few figures, each explained. */
+:root {
+  --bg: #f5f7f9; --surface: #ffffff; --ink: #14181d; --ink-2: #4a525c; --ink-3: #7a838e; --rule: #dde2e8;
+  --track: #e8ecf0; --accent: #2a78d6; --accent-2: #eb6834;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-num: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121418; --surface: #1a1d22; --ink: #eef0f2; --ink-2: #b9c0c8; --ink-3: #8a929c; --rule: #2c3138;
+  --track: #262b31; --accent: #3987e5; --accent-2: #d95926; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121418; --surface: #1a1d22; --ink: #eef0f2; --ink-2: #b9c0c8; --ink-3: #8a929c; --rule: #2c3138;
+  --track: #262b31; --accent: #3987e5; --accent-2: #d95926; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 16px/1.6 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 760px; margin: 0 auto; padding-block: 40px 72px; display: grid; gap: 48px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 600; }
+h1 { font-size: clamp(28px, 5vw, 38px); line-height: 1.15; }
+h2 { font-size: 22px; }
+h3 { font-size: 16px; }
+p { margin: 0; max-width: 65ch; }
+a { color: var(--accent); }
+section { display: grid; gap: 16px; min-width: 0; }
+.eyebrow { font: 500 12px var(--f-num); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.lede { color: var(--ink-2); font-size: 17px; }
+.sub { color: var(--ink-2); }
+.note { font-size: 14px; color: var(--ink-3); max-width: 65ch; }
+code { font: 14px var(--f-num); background: var(--track); padding: 1px 5px; border-radius: 4px; }
+.facts { display: grid; gap: 0; border-top: 1px solid var(--rule); }
+.fact { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px 24px; padding-block: 16px;
+  border-bottom: 1px solid var(--rule); align-items: baseline; }
+.fact .big { font: 500 26px/1.2 var(--f-num); font-variant-numeric: tabular-nums; }
+.fact .big small { font-size: 14px; color: var(--ink-3); }
+.fact p { color: var(--ink-2); }
+.diagram { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; overflow-x: auto; }
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; counter-reset: s; }
+ol.steps li { counter-increment: s; display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 14px; }
+ol.steps li::before { content: counter(s); width: 28px; height: 28px; border-radius: 50%; background: var(--accent);
+  color: var(--surface); font: 600 14px/28px var(--f-num); text-align: center; }
+ol.steps h3 { margin-bottom: 2px; }
+ol.steps p { color: var(--ink-2); }
+figure { margin: 0; display: grid; gap: 8px; }
+video { width: 100%; max-width: 100%; border-radius: 10px; background: #000; display: block; }
+figcaption { font-size: 14px; color: var(--ink-3); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--rule); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font-size: 13px; font-weight: 500; color: var(--ink-3); }
+td.old { color: var(--ink-2); }
+.time { display: grid; gap: 10px; }
+.trow { display: grid; grid-template-columns: minmax(0, 190px) minmax(0, 1fr) 92px; gap: 12px; align-items: center; }
+.trow .lab { font-size: 15px; }
+.trow .track { height: 14px; background: var(--track); border-radius: 3px; overflow: hidden; }
+.trow .fill { display: block; height: 100%; border-radius: 3px; background: var(--accent); }
+.trow .fill.wait { background: var(--ink-3); }
+.trow .val { font: 500 15px var(--f-num); text-align: right; font-variant-numeric: tabular-nums; }
+ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; max-width: 65ch; }
+ul li { color: var(--ink-2); }
+ul li b { color: var(--ink); font-weight: 600; }
+footer { font: 13px var(--f-num); color: var(--ink-3); }
+@media (max-width: 620px) {
+  .fact { grid-template-columns: minmax(0, 1fr); }
+  .trow { grid-template-columns: minmax(0, 1fr) 80px; }
+  .trow .lab { grid-column: 1 / -1; }
+}
+</style>
+
+<main>
+  <header style="display:grid;gap:14px">
+    <div class="eyebrow">jo_detector · come funziona</div>
+    <h1>Come funziona jo_detector_v2</h1>
+    <p class="lede">È il sistema che permette al robot di vedere le persone e gli oggetti intorno a sé, capire se si
+      stanno muovendo e seguirli nel tempo. Mette insieme il LiDAR (un sensore laser che vede a 360°) e le camere di
+      profondità, e usa una rete neurale (YOLO) per riconoscere le persone nelle immagini. È la nuova versione di
+      <code>jo_detector</code> (v1), riscritta da zero.</p>
+  </header>
+
+  <section>
+    <h2>In breve</h2>
+    <div class="facts">
+      <div class="fact"><div class="big">98,1<small> %</small></div>
+        <p>Punteggio complessivo nelle prove in laboratorio con motion capture, contro l'81,1% di v1. Dettagli nella
+          pagina <a href="https://claude.ai/artifact/XvJ67raKwMDW5NQ4qMcnx3" target="_blank" rel="noopener">Benchmark jo_detector</a>.</p></div>
+      <div class="fact"><div class="big">10<small> Hz</small></div>
+        <p>Tiene il passo del LiDAR: elabora tutte le scansioni che arrivano (circa 10 al secondo) senza perderne
+          nessuna e senza accumulare ritardo.</p></div>
+      <div class="fact"><div class="big">8<small> %</small></div>
+        <p>Della potenza di calcolo del portatile usato per le prove, includendo anche la localizzazione del robot.
+          Il rilevatore da solo è leggero.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Il percorso dei dati</h2>
+    <p class="sub">Ogni scansione del LiDAR attraversa questi passi, da sinistra a destra. YOLO lavora in parallelo
+      sulle immagini delle camere.</p>
+    <div class="diagram">
+<pre class="mermaid">
+flowchart LR
+    S["Sensori<br/>LiDAR + camere"] --> P["Pulizia<br/>toglie pavimento e muri"]
+    P --> G["Raggruppamento<br/>punti vicini = un oggetto"]
+    Y["YOLO<br/>riconosce le persone<br/>nelle immagini"] --> G
+    G --> T["Tracker<br/>segue gli oggetti nel tempo<br/>e decide se si muovono"]
+    T --> O["Uscita<br/>ostacoli in movimento<br/>o potenzialmente in movimento"]
+</pre>
+    </div>
+    <ol class="steps">
+      <li><div><h3>Allineare LiDAR e camere</h3>
+        <p>All'avvio, una sola volta, il sistema confronta quello che vedono il LiDAR e ogni camera e corregge la loro
+          posizione relativa. Prima di questa correzione l'errore era di circa 42 cm.</p></div></li>
+      <li><div><h3>Togliere pavimento e muri</h3>
+        <p>I punti del pavimento e dei muri non sono ostacoli: vengono riconosciuti come piani e tolti, così resta
+          solo ciò che sta sopra il pavimento e lontano dai muri.</p></div></li>
+      <li><div><h3>Raggruppare i punti in oggetti</h3>
+        <p>I punti vicini tra loro diventano un oggetto con il suo box. Lo stesso oggetto visto dal LiDAR e da una
+          camera viene unito in uno solo.</p></div></li>
+      <li><div><h3>Riconoscere le persone</h3>
+        <p>YOLO trova le persone nelle immagini delle camere. Quando un box 3D corrisponde a una persona trovata da
+          YOLO, riceve l'etichetta "persona".</p></div></li>
+      <li><div><h3>Seguire gli oggetti nel tempo</h3>
+        <p>Il tracker riconosce lo stesso oggetto da una scansione all'altra, gli dà un numero (la sua identità) e ne
+          stima la velocità.</p></div></li>
+      <li><div><h3>Decidere lo stato</h3>
+        <p>Ogni oggetto seguito diventa <b>in movimento</b> (D), <b>fermo ma può muoversi</b> (PD, per esempio una
+          persona ferma) oppure <b>statico</b> (S). Il robot riceve solo i primi due.</p></div></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Il sistema al lavoro</h2>
+    <figure>
+      <video controls muted loop playsinline preload="metadata" poster="/_blob/f1fbb9ef51b105ac3c3f787cc23acfb0"><source src="/_blob/e4ba77665d90c9752ac28b2b968b9e28" type="video/mp4"></video>
+      <figcaption>Registrazione in laboratorio riprodotta con il sistema acceso. Nella vista 3D: i box degli oggetti seguiti
+        con la loro etichetta e velocità, il pavimento e i muri trovati, i punti del LiDAR. Nei pannelli a sinistra le
+        due camere, con le persone riconosciute da YOLO.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Pavimento e muri</h2>
+    <p class="sub">Il pavimento si trova cercando, per ogni camera, il piano più grande e quasi orizzontale tra i punti,
+      e mediandolo nel tempo perché resti stabile. I muri si trovano allo stesso modo dal LiDAR, visti dall'alto. Non
+      serve addestramento e costa pochissimo calcolo.</p>
+    <figure>
+      <video controls muted loop playsinline preload="metadata" poster="/_blob/dc631b768ecd47c2fe931529b420dcfc"><source src="/_blob/3904616ce149a5d257521909dacc2183" type="video/mp4"></video>
+      <figcaption>Quanto è preciso il pavimento trovato. In verticale la distanza di ogni punto dal piano stimato, in
+        orizzontale la sua distanza dal robot. I punti colorati sono quelli che due controlli indipendenti riconoscono
+        come pavimento, quelli grigi sono il resto (mobili, muri, persone). Fino a circa 4 m i punti di pavimento stanno
+        attaccati allo zero, cioè il piano è giusto; più lontano si allargano perché i sensori diventano meno precisi.</figcaption>
+    </figure>
+    <p class="note">Sono stati provati anche due metodi alternativi (una libreria che divide il terreno in celle e una
+      rete neurale che riconosce strada e marciapiede nelle immagini). Per ora sono spenti: non sono stati validati su
+      questo robot e non servono per le prove attuali.</p>
+  </section>
+
+  <section>
+    <h2>Cosa cambia rispetto a v1</h2>
+    <div class="tablewrap"><table>
+      <tr><th>Aspetto</th><th>v1</th><th>v2</th></tr>
+      <tr><td>Struttura</td><td class="old">un unico programma che fa tutto</td>
+        <td>sei parti separate, ognuna provabile e sostituibile da sola</td></tr>
+      <tr><td>Pavimento</td><td class="old">un'altezza fissa uguale ovunque</td>
+        <td>un piano vero per ogni camera, che segue anche un pavimento inclinato</td></tr>
+      <tr><td>Camere</td><td class="old">una calibrazione condivisa</td>
+        <td>una calibrazione per ogni camera</td></tr>
+      <tr><td>Oggetti</td><td class="old">box di YOLO uniti al LiDAR</td>
+        <td>oggetti cercati in ogni sensore e poi uniti; YOLO dà l'etichetta</td></tr>
+      <tr><td>Tracking</td><td class="old">solo in pianta (x, y), con un passo di tempo fisso</td>
+        <td>in 3D (x, y, z), con il tempo vero tra una scansione e l'altra</td></tr>
+      <tr><td>Stato</td><td class="old">una soglia di velocità</td>
+        <td>due soglie e una conferma su più scansioni, per non cambiare stato a ogni scossone</td></tr>
+      <tr><td>Identità della persona</td><td class="old">si perde spesso (circa 26 cambi per giro di prove)</td>
+        <td>tenuta quasi sempre (99% del tempo), anche quando la persona esce dal campo della camera</td></tr>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Quanto è veloce</h2>
+    <p class="sub">Il LiDAR manda una scansione ogni 100 ms. Ecco dove va il tempo di un ciclo, misurato durante il
+      funzionamento:</p>
+    <div class="time">
+      <div class="trow"><span class="lab">Raggruppamento LiDAR</span><span class="track"><span class="fill" style="width:10.3%"></span></span><span class="val">10 ms</span></div>
+      <div class="trow"><span class="lab">Raggruppamento camere</span><span class="track"><span class="fill" style="width:2.2%"></span></span><span class="val">2 ms</span></div>
+      <div class="trow"><span class="lab">YOLO, per immagine</span><span class="track"><span class="fill" style="width:20%"></span></span><span class="val">9–20 ms</span></div>
+      <div class="trow"><span class="lab">Attesa delle camere</span><span class="track"><span class="fill wait" style="width:33%"></span></span><span class="val">33 ms</span></div>
+    </div>
+    <p class="note">La barra intera è il ciclo di 100 ms. YOLO gira in parallelo, su processi separati. L'attesa delle
+      camere non è calcolo: è il tempo per ricevere i risultati di tutte le camere della stessa scansione. Anche
+      sommando tutto resta più di metà ciclo libera. Misure dell'8 ottobre su un portatile con GPU da 8 GB; la memoria
+      della GPU usata è circa 900 MB su 8192.</p>
+  </section>
+
+  <section>
+    <h2>Limiti noti, oggi</h2>
+    <ul>
+      <li><b>Dietro al robot.</b> Senza una camera posteriore, una persona ferma dietro al robot che la camera non ha
+        mai visto e che non ha camminato abbastanza resta "statica" e non viene segnalata.</li>
+      <li><b>Accanto agli oggetti fermi.</b> Quando una persona passa molto vicina a un oggetto fermo, per un istante
+        (un decimo di secondo) può comparire un secondo box. Non le fa perdere l'identità.</li>
+      <li><b>Prove ancora poche.</b> I numeri vengono da 6 prove brevi in laboratorio con una persona, usate anche per
+        sviluppare v2. Servono registrazioni nuove, con più persone.</li>
+      <li><b>Registrazioni di maggio.</b> La camera di profondità ha buchi fino a 0,6 s: da controllare nelle prossime
+        registrazioni.</li>
+      <li><b>Terreni irregolari.</b> La localizzazione del robot ignora il beccheggio: su terreno accidentato, come
+        una spiaggia di sassi, può pesare.</li>
+    </ul>
+  </section>
+
+  <footer>Aggiornato il 15/10/2026 · v2 4a41b17 · risultati dalla campagna r9 · tempi misurati l'8/10 sulla registrazione 20260910_124939_validation_lab</footer>
+</main>
