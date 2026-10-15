@@ -423,3 +423,19 @@ v1 identico a r8 perché i run sono gli stessi).
 - Gli IDSW rimasti (0 / 6 / 2 per ripetizione) sono tutti lampi di andata e ritorno di un tick, a IDF1 99%:
   1950 (b, c) e 1949 (b, 4 IDSW). Per la regola sulle 6 sequenze non si correggono qui; nel paper riportare IDF1
   insieme agli IDSW, perché gli IDSW contano i lampi come scambi.
+
+### Label S sulle sequenze di laboratorio (2026-10-15, `eval/static_eval.py`)
+
+Assunzione: nell'area del mocap tutto ciò che non è la persona è statico; dal lato dei metodi è S tutto ciò che non è
+pubblicato come D/PD (v2 non pubblica i track statici). S→D/PD = track D/PD a più di 1 m dalla persona e non abbinati
+(esatti); persona→S = i "mancati"; S→S stimato con i cluster del detector nell'area del mocap (circa 5 per frame,
+stesso numero per tutti i metodi). Tabelle `tables/own_{r8,r9}_static.csv`, dati `results/own_{r8,r9}_static.json`.
+
+| | Precision S | Recall S | Falsi dinamici/min | Precision D con la riga S |
+|---|---|---|---|---|
+| v2 r9 | 99,72% | 99,94% | **1,8** | 95,7% |
+| v2 r8 | 99,57% | 99,81% | 6,2 | 94,5% |
+| v1 | 98,50% | 99,10% | 28,7 | 83,5% |
+
+Precision e recall di S sono schiacciate verso il 100% (circa 5 oggetti statici per frame contro una persona): nel paper
+riportare i falsi dinamici al minuto, non l'F1 di S.

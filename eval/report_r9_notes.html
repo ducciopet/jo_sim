@@ -3,14 +3,18 @@
   <li><b>Le correzioni reggono a pipeline completa.</b> v2 passa da MOTA 96,5 ± 0,3% (r8) a 98,1 ± 0,1% e da IDF1
     80,7 ± 6,7% a 99,05 ± 0,05%. La variabilità tra run dell'IDF1, che in r8 dipendeva dal fatto che uno scambio
     avvenisse o no, è sparita: in nessun run c'è una perdita d'identità persistente (IDF1 per sequenza tra 96 e 100%).</li>
-  <li><b>Score per label.</b> F1 di D da 95,1 ± 0,5 a 96,2 ± 0,2%, di PD da 96,3 ± 0,1 a 96,4 ± 0,0%. Il guadagno su D
-    viene dalla recall (94,1 → 96,1%): i frame in cui la persona che si muove resta senza track scendono da 38,7 a 15
-    per ripetizione, perché non perde più il track all'uscita laterale dal FOV nella 1947. La precision non cambia
-    (96,2 → 96,3% su D, 97,5 → 97,7% su PD): le confusioni D↔PD rimaste sono soprattutto ritardi nelle
-    transizioni (circa 49 frame PD dati come D e 36 D dati come PD per ripetizione). v1 resta indietro soprattutto su
-    PD: recall 83,6 ± 3,2%, con circa 159 frame per ripetizione di persona ferma non abbinata e 100 data come D.</li>
-  <li><b>Label S.</b> La GT di queste sequenze è solo la persona, quindi non ci sono frame GT S: per S si misura solo
-    l'errore opposto (persona etichettata S), che è zero per tutti i metodi.</li>
+  <li><b>Score per label</b> (con la riga S, vedi sotto). F1 di D da 94,3 ± 0,3 a 95,9 ± 0,2%, di PD da 96,1 ± 0,2 a
+    96,4 ± 0,1%. Su D migliorano sia la recall (94,1 → 96,1%: i frame in cui la persona che si muove resta senza
+    track scendono da 38,7 a 15 per ripetizione, perché nella 1947 non perde più il track all'uscita laterale dal FOV)
+    sia la precision (94,5 → 95,7%: meno oggetti statici dati come D). Le confusioni D↔PD rimaste sono soprattutto
+    ritardi nelle transizioni (circa 49 frame PD dati come D e 36 D dati come PD per ripetizione). v1 è indietro su
+    tutte e due: F1 D 87,6% (precision 83,5%, per i falsi dinamici) e F1 PD 90,1% (recall 83,6%: circa 159 frame per
+    ripetizione di persona ferma non riportata e 100 data come D).</li>
+  <li><b>Label S.</b> Assumendo statico tutto ciò che non è la persona (e S tutto ciò che un metodo non pubblica come
+    D/PD), v2 r9 fa precision S 99,72% e recall 99,94%, v1 98,50% e 99,10%. Sono numeri schiacciati verso il 100% perché
+    ci sono circa 5 oggetti statici per frame contro una persona. Quello che conta sono i <b>falsi dinamici</b>: oggetti
+    statici etichettati D o PD, 1,8 al minuto per v2 r9 (6,2 in r8) contro 28,7 per v1. Con questi nel conto la
+    precision di D scende a 95,7% per v2 r9 e a 83,5% per v1.</li>
   <li><b>Scambi di ID rimasti</b> (2,7 in media): sono tutti lampi di un tick, andata e ritorno (1950 nelle
     ripetizioni b e c, 1949 nella b), con IDF1 al 99%. Un track statico, trascinato dai box fusi persona+oggetto e per
     un attimo pubblicato "dynamic", passa a pochi cm dalla persona. Per questo nel paper va riportato l'IDF1 accanto

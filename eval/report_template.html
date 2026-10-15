@@ -88,6 +88,7 @@ video { width: 100%; max-width: 100%; border-radius: 8px; border: 1px solid var(
 .conf table td { color: var(--ink-2); }
 .conf table th:first-child, .conf table td:first-child { font-family: var(--f-body); }
 .note { color: var(--ink-2); font-size: 14px; max-width: 72ch; }
+#c-fdm { max-width: 460px; }
 @media (prefers-reduced-motion: no-preference) { .progress > div { transition: width .4s ease; } }
 </style>
 
@@ -152,20 +153,23 @@ video { width: 100%; max-width: 100%; border-radius: 8px; border: 1px solid var(
 
   <section id="labels">
     <h2>Score per label D/PD/S</h2>
-    <p class="note">Sui frame in cui la persona è abbinata a un track (gate 1 m), con lo stato D/PD/S del livello
-      completo, qualunque sia la scheda selezionata sopra. Precision di una label = quota dei frame a cui il metodo dà
-      quella label in cui la GT ha davvero quella label; recall = quota dei frame GT con quella label che il metodo
-      etichetta così (una persona non abbinata conta come mancata). Media ± std sulle ripetizioni.</p>
+    <p class="note">Stato D/PD/S del livello completo, qualunque sia la scheda selezionata sopra. Precision di una
+      label = quota delle volte in cui il metodo dà quella label e la GT ha davvero quella label; recall = quota dei
+      casi GT con quella label che il metodo etichetta così. La persona viene dal mocap; per S si assume che tutto il
+      resto sia statico (dettagli sotto la tabella). Media ± std sulle ripetizioni.</p>
     <div class="legend" id="legend2"></div>
     <div class="grid2">
       <div class="card"><h3>F1 per label</h3><div id="c-f1"></div></div>
       <div class="card"><h3>Precision e recall per label</h3><div id="c-pr"></div></div>
     </div>
+    <div class="card" id="fdm-card"><h3>Falsi dinamici su oggetti statici</h3><div class="sub">track D o PD lontani più
+      di 1 m dalla persona (S→D + S→PD), al minuto: il numero che distingue davvero i metodi sulla label S</div><div id="c-fdm"></div></div>
     <div class="tablewrap"><table id="tbl-labels"></table></div>
     <p class="note" id="snote"></p>
     <h3>Matrici di confusione</h3>
     <p class="note">Righe = stato GT, colonne = stato dato dal metodo; frame per ripetizione (media sulle ripetizioni) e,
-      tra parentesi, la quota della riga. "Mancato" = persona non abbinata a nessun track.</p>
+      tra parentesi, la quota della riga. La persona non abbinata a nessun track D/PD è contata come S (non riportata).
+      La riga S è in oggetti × frame, con il numero di oggetti stimato (vedi sopra).</p>
     <div class="conf" id="confs"></div>
   </section>
 
@@ -296,10 +300,12 @@ function strip(id, rows, { fmt, scale = 1, lo, hi, unit = '', header = false }) 
 
 /* horizontal bars of the mean, one per method, with the per-rep range as a thin whisker */
 function bars(id, key, { fmt, scale = 1, unit = '' }) {
-  const host = document.getElementById(id); host.replaceChildren();
   const L = D.levels[level], ms = ORDER.filter(m => L[m]);
+  barsData(id, ms, ms.map(m => L[m].reps.map(r => L[m].per_rep[r][key] * scale)), ms.map(m => L[m].reps), { fmt, scale, unit });
+}
+function barsData(id, ms, vals, repNames, { fmt, scale = 1, unit = '' }) {
+  const host = document.getElementById(id); host.replaceChildren();
   if (!ms.length) return;
-  const vals = ms.map(m => L[m].reps.map(r => L[m].per_rep[r][key] * scale));
   const max = Math.max(...vals.flat(), 1e-9), ticks = niceTicks(0, max * 1.1, 4), top = ticks[ticks.length - 1];
   const W = 340, Lp = 112, R = 62, bh = 20, gap = 12, H = 20 + ms.length * (bh + gap);
   const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img' }, host);
@@ -313,7 +319,7 @@ function bars(id, key, { fmt, scale = 1, unit = '' }) {
     if (v.length > 1) el('line', { x1: x(Math.min(...v)), x2: x(Math.max(...v)), y1: y + bh / 2, y2: y + bh / 2, stroke: 'var(--ink)', 'stroke-width': 1.5, opacity: .55 }, g);
     txt(g, x(Math.max(mu, ...v)) + 6, y + bh / 2 + 4, fmt(mu / scale) + unit, { fill: 'var(--ink)' });
     el('rect', { x: 0, y: y - 4, width: W, height: bh + 8, class: 'hit' }, g);
-    hover(g, [[fmt(mu / scale) + unit, M[m] + ' (media)'], ...v.map((x_, k) => ['', 'rep ' + L[m].reps[k] + ': ' + fmt(x_ / scale) + unit])]);
+    hover(g, [[fmt(mu / scale) + unit, M[m] + ' (media)'], ...v.map((x_, k) => ['', 'rep ' + repNames[i][k] + ': ' + fmt(x_ / scale) + unit])]);
   });
 }
 
@@ -369,39 +375,60 @@ function render() {
   table(L, ms); tableSeq(L, sm);
 }
 
-/* per-label scores: always the D/PD/S (full) level, whatever tab is selected */
+/* per-label scores: always the D/PD/S (full) level, whatever tab is selected. With D.static (eval/static_eval.py)
+   the GT S row is added: everything that is not the person is static, everything not published as D/PD is S. */
 function labels() {
   const L = D.levels.full || {}, ms = ORDER.filter(m => L[m] && m !== 'v2g');
   if (!ms.length || L[ms[0]].per_rep[L[ms[0]].reps[0]].f1_D === undefined) { document.getElementById('labels').hidden = true; return; }
+  const ST = D.static || {}, hasS = ms.every(m => ST[m]);
   legend('legend2', ms);
-  const vals = (m, k) => L[m].reps.map(r => L[m].per_rep[r][k]);
-  const LB = [['D', 'dynamic'], ['PD', 'potentially dynamic']];
+  // per-rep scores, with the S row when available
+  const sc = (m, r) => {
+    const p = L[m].per_rep[r], s = hasS ? ST[m][r] : null, o = {};
+    const colD = p.conf_D_D + p.conf_PD_D + (s ? s.S_D : 0), colPD = p.conf_D_PD + p.conf_PD_PD + (s ? s.S_PD : 0);
+    o.prec_D = colD ? p.conf_D_D / colD : NaN; o.prec_PD = colPD ? p.conf_PD_PD / colPD : NaN;
+    o.recall_D = p.recall_D; o.recall_PD = p.recall_PD;
+    if (s) { o.prec_S = s.prec_S; o.recall_S = s.recall_S; o.fdm = s.false_dyn_per_min; }
+    for (const k of ['D', 'PD', 'S']) { const P = o['prec_' + k], R = o['recall_' + k]; o['f1_' + k] = P + R > 0 ? 2 * P * R / (P + R) : NaN; }
+    return o;
+  };
+  const vals = (m, k) => L[m].reps.map(r => sc(m, r)[k]);
+  const LB = [['D', 'dynamic'], ['PD', 'potentially dynamic']].concat(hasS ? [['S', 'static']] : []);
   strip('c-f1', LB.map(([k, sub]) => ({ label: k, sub, items: ms.map(m => ({ m, vals: vals(m, 'f1_' + k) })) })), { fmt: v => f1(100 * v), unit: '%', header: true });
   strip('c-pr', LB.flatMap(([k]) => [['prec_', 'precision'], ['recall_', 'recall']].map(([p, n]) => ({ label: `${k} ${n}`, items: ms.map(m => ({ m, vals: vals(m, p + k) })) }))), { fmt: v => f1(100 * v), unit: '%', header: true });
+  document.getElementById('fdm-card').hidden = !hasS;
+  if (hasS) barsData('c-fdm', ms, ms.map(m => vals(m, 'fdm')), ms.map(m => L[m].reps), { fmt: f1, unit: '/min' });
   const t = document.getElementById('tbl-labels'); t.replaceChildren();
-  const hd = document.createElement('tr'); ['Metodo', 'Precision D', 'Recall D', 'F1 D', 'Precision PD', 'Recall PD', 'F1 PD', 'Frame persona → S'].forEach(h => cell(hd, h, 'th')); t.appendChild(hd);
-  const pm = (m, k) => { const v = vals(m, k); return pct(mean(v)) + ' ± ' + f1(100 * std(v)); };
+  const keys = LB.flatMap(([k]) => ['prec_' + k, 'recall_' + k, 'f1_' + k]);
+  const hd = document.createElement('tr');
+  ['Metodo', ...LB.flatMap(([k]) => [`Precision ${k}`, `Recall ${k}`, `F1 ${k}`]), ...(hasS ? ['Falsi dinamici/min'] : [])].forEach(h => cell(hd, h, 'th')); t.appendChild(hd);
+  const pm = (m, k, d = 1) => { const v = vals(m, k); return (100 * mean(v)).toFixed(d).replace('.', ',') + '% ± ' + (100 * std(v)).toFixed(d).replace('.', ','); };
   ms.forEach(m => {
     const tr = document.createElement('tr'), c0 = cell(tr, ''), k = document.createElement('span'); k.className = 'key'; k.style.background = MCOL[m]; c0.append(k, M[m]);
-    ['prec_D', 'recall_D', 'f1_D', 'prec_PD', 'recall_PD', 'f1_PD'].forEach(key => cell(tr, pm(m, key)));
-    cell(tr, f1(mean(L[m].reps.map(r => L[m].per_rep[r].conf_D_S + L[m].per_rep[r].conf_PD_S))));
+    keys.forEach(key => cell(tr, pm(m, key, key.endsWith('_S') ? 2 : 1)));
+    if (hasS) { const v = vals(m, 'fdm'); cell(tr, f1(mean(v)) + ' ± ' + f1(std(v))); }
     t.appendChild(tr);
   });
-  const nS = ms.reduce((s, m) => s + L[m].reps.reduce((a, r) => a + L[m].per_rep[r].conf_S_S + L[m].per_rep[r].conf_S_D + L[m].per_rep[r].conf_S_PD + L[m].per_rep[r].conf_S_miss, 0), 0);
-  document.getElementById('snote').textContent = 'Label S: in queste sequenze la ground truth è solo la persona, che è sempre D (si muove) o PD (ferma, ma di una classe che può muoversi); ' +
-    (nS ? `${nS} frame GT S.` : 'nessun frame GT è S, quindi precision, recall e F1 di S non sono definiti. ') +
-    "Si può misurare solo l'errore opposto, la persona etichettata S: l'ultima colonna, che è 0 per tutti i metodi. Gli oggetti statici veri si valutano con altri dati (scene con oggetti annotati, JRDB/CODa).";
+  document.getElementById('snote').textContent = hasS
+    ? "Label S. La ground truth del mocap contiene solo la persona; tutto il resto nell'area del mocap è considerato statico (nel laboratorio nient'altro si muove). Dal lato dei metodi è S tutto ciò che non viene pubblicato come D o PD (v2 non pubblica affatto i track statici, quelli di v1 il protocollo li ignora). S→D e S→PD sono i track D/PD a più di 1 m dalla persona e non abbinati a lei: conteggi esatti, cioè i falsi dinamici. Persona→S è la persona non pubblicata (i \"mancati\"). S→S = oggetti statici presenti meno quelli etichettati D/PD; il numero di oggetti non è nella GT ed è stimato, uguale per tutti i metodi, con i cluster del detector nell'area del mocap (un oggetto spezzato in due cluster conta due volte, quindi S→S è un ordine di grandezza). Con circa 5 oggetti statici per frame contro una persona, precision e recall di S stanno tutte sopra il 98% e dicono poco: il numero che distingue i metodi è quello dei falsi dinamici al minuto. Con la riga S la precision di D e PD conta anche gli oggetti statici scambiati per dinamici."
+    : 'Label S: in queste sequenze la ground truth è solo la persona; la statistica di S richiede eval/static_eval.py.';
   const host = document.getElementById('confs'); host.replaceChildren();
   ms.forEach(m => {
     const card = document.createElement('div'); card.className = 'card';
     const h = document.createElement('h3'); const k = document.createElement('span'); k.className = 'key'; k.style.background = MCOL[m]; h.append(k, M[m]); card.appendChild(h);
     const w = document.createElement('div'); w.className = 'tablewrap'; const tb = document.createElement('table'); w.appendChild(tb); card.appendChild(w);
-    const hr = document.createElement('tr'); ['GT \\ metodo', 'D', 'PD', 'S', 'mancato'].forEach(x => cell(hr, x, 'th')); tb.appendChild(hr);
-    [['D', 'D'], ['PD', 'PD']].forEach(([g, gl]) => {
-      const tr = document.createElement('tr'); cell(tr, gl);
-      const cnt = ['D', 'PD', 'S', 'miss'].map(p => mean(L[m].reps.map(r => L[m].per_rep[r][p === 'miss' ? `conf_${g}_miss` : `conf_${g}_${p}`])));
+    const hr = document.createElement('tr'); ['GT \\ metodo', 'D', 'PD', hasS ? 'S (non riportato)' : 'S', ...(hasS ? [] : ['mancato'])].forEach(x => cell(hr, x, 'th')); tb.appendChild(hr);
+    const P = L[m], avg = f => mean(P.reps.map(f));
+    const rows = [['D', [avg(r => P.per_rep[r].conf_D_D), avg(r => P.per_rep[r].conf_D_PD), avg(r => P.per_rep[r].conf_D_S), avg(r => P.per_rep[r].conf_D_miss)]],
+                  ['PD', [avg(r => P.per_rep[r].conf_PD_D), avg(r => P.per_rep[r].conf_PD_PD), avg(r => P.per_rep[r].conf_PD_S), avg(r => P.per_rep[r].conf_PD_miss)]]];
+    if (hasS) {
+      rows.forEach(rw => { rw[1] = [rw[1][0], rw[1][1], rw[1][2] + rw[1][3]]; });
+      rows.push(['S (stima)', [avg(r => ST[m][r].S_D), avg(r => ST[m][r].S_PD), avg(r => ST[m][r].S_S)]]);
+    }
+    rows.forEach(([g, cnt], gi) => {
+      const tr = document.createElement('tr'); cell(tr, g);
       const tot = cnt.reduce((a, b) => a + b, 0);
-      ['D', 'PD', 'S', 'miss'].forEach((p, i) => { const c = cell(tr, `${Math.round(cnt[i])} (${tot ? (100 * cnt[i] / tot).toFixed(1).replace('.', ',') : '–'}%)`); if (p === g) c.className = 'diag'; });
+      cnt.forEach((v, i) => { const pc = tot ? 100 * v / tot : NaN; const c = cell(tr, `${Math.round(v)} (${isNaN(pc) ? '–' : pc.toFixed(pc > 0 && pc < 0.1 ? 2 : 1).replace('.', ',')}%)`); if (i === gi) c.className = 'diag'; });
       tb.appendChild(tr);
     });
     host.appendChild(card);

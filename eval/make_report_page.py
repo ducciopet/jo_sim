@@ -54,6 +54,14 @@ def main():
                 reps[lvl]['v2r8'] = ms['v2']
             if 'v2g' in ms and 'v2g' not in reps[lvl]:
                 reps[lvl]['v2g'] = ms['v2g']
+    # label S (eval/static_eval.py): everything that is not the person is static
+    static = {}
+    for camp, src, dst in ((c, 'v1', 'v1'), (c, 'v2', 'v2'), (args.compare, 'v2', 'v2r8' if args.compare else None)):
+        f = REPO / 'eval' / 'results' / f'own_{camp}_static.json'
+        if camp and dst and f.exists():
+            js = json.loads(f.read_text())
+            if src in js:
+                static[dst] = js[src]
     out = REPO / 'eval' / f'report_{c}'
     (out / 'videos').mkdir(parents=True, exist_ok=True)
     vids = []
@@ -70,7 +78,7 @@ def main():
         'commits': {'v2': git(REPO / 'jo_detector_v2', 'rev-parse', '--short', 'HEAD'),
                     'v1': git(REPO / 'jo_detector', 'rev-parse', '--short', 'HEAD'),
                     'repo': git(REPO, 'rev-parse', '--short', 'HEAD')},
-        'jobs_done': done_jobs, 'jobs_total': args.jobs_total, 'compare': args.compare,
+        'jobs_done': done_jobs, 'jobs_total': args.jobs_total, 'compare': args.compare, 'static': static,
         # hand-written findings (HTML), kept next to the results so a regenerated page keeps them
         'notes': (REPO / 'eval' / f'report_{c}_notes.html').read_text()
         if (REPO / 'eval' / f'report_{c}_notes.html').exists() else '',
