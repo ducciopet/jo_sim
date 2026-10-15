@@ -439,3 +439,26 @@ stesso numero per tutti i metodi). Tabelle `tables/own_{r8,r9}_static.csv`, dati
 
 Precision e recall di S sono schiacciate verso il 100% (circa 5 oggetti statici per frame contro una persona): nel paper
 riportare i falsi dinamici al minuto, non l'F1 di S.
+
+---
+
+## Fase 3: baseline esterni sulle bag di laboratorio (avviata il 2026-10-15)
+
+**LV-DOT** (Xu et al. 2025, github.com/Zhefan-Xu/LV-DOT commit `449bf2c`), ROS1 Noetic in Docker
+(`eval/baselines/lvdot/Dockerfile`, immagine `lvdot-noetic:upstream`). Logica originale, solo I/O adattato:
+- `eval/baselines/lvdot/detector_param_jo.yaml`: topic, intrinseci dalle `camera_info` delle bag, estrinseci URDF
+  (base_link → camera depth/colore, → velodyne), `ground_height`/`roof_height` spostati di −0,373 m perché l'origine
+  dell'odometria è base_link (stessi 0,2 m / 2,0 m dal pavimento dei default). Tutti gli altri parametri ai default.
+- stessa odometria condivisa di v1/v2 (`bags/replay/odom_<seq>`), detector avviato 12 s prima della bag, play 1×.
+- le bag ROS2 vengono convertite in ROS1 al volo (`rosbags-convert`, ~30 s, 6,6 GB, cancellate dopo l'uso).
+- uscita: `/onboard_detector/dynamic_bboxes` (MarkerArray) → `eval/adapters/lvdot_adapter.py`. LV-DOT non ha ID
+  persistenti né lo stato PD: si confrontano solo metriche di rilevamento (MODA, recall, falsi allarmi/min) ai livelli
+  "solo movimento" e "D e PD insieme" (`eval/baseline_eval.py`).
+- campagna: `bash eval/baselines/lvdot/run_lvdot_campaign.sh` (3 ripetizioni × 6 sequenze, ~3 min l'una, riprendibile:
+  `bags/lvdot_out/lvdot<rep>_<seq>.done`; fermarla con `touch bags/lvdot_out/STOP`; log `bags/lvdot_out/campaign.log`).
+- valutazione: `python3 eval/baseline_eval.py --campaign r9 --reps a b c` → `results/baselines_r9.json`,
+  `tables/baselines_r9.csv`.
+- prova sulla 1950: al livello "D e PD insieme" LV-DOT trova la persona il 94,8% del tempo (v2 99,6%), ma la tiene
+  "dinamica" anche da ferma: al livello "solo movimento" 427 falsi allarmi contro 13 di v2.
+
+Prossimi: Dynablox e M-detector (solo LiDAR, punti dinamici → box con lo stesso clustering per entrambi).
