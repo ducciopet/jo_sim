@@ -1,0 +1,12 @@
+--- /tmp/claude-1000/-home-duccio-Desktop-jo-sim-lv-dot/392f9d5f-4f35-44a2-b855-2097631c810e/scratchpad/mv_orig.cpp	2026-10-15 18:35:04.713087717 +0200
++++ dynablox_src/dynablox_ros/src/visualization/motion_visualizer.cpp	2026-10-15 18:35:04.747265503 +0200
+@@ -158,7 +158,8 @@
+     if (cluster.points.size() > 1u) {
+       visualization_msgs::Marker msg;
+       msg.action = visualization_msgs::Marker::ADD;
+-      msg.id = id++;
++      msg.id = cluster.id;  // BENCHMARK PATCH (output only): export the tracked cluster id, upstream used a running index
++      id++;
+       msg.ns = ns;
+       msg.header.stamp = getStamp();
+       msg.header.frame_id = config_.global_frame_name;

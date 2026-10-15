@@ -8,10 +8,11 @@ the PD state, which only v1 and v2 have.
 
 Detection metrics are compared for every method: MODA = 1 - (FN + FP) / GT (MOTA without identity switches), recall,
 false alarms per minute. Identity metrics (IDF1, ID switches) only for methods with persistent track ids: LV-DOT
-publishes none (eval/adapters/lvdot_adapter.py).
+publishes none; Dynablox does (cluster tracking, exported by an output-only patch).
 
-Inputs: v1/v2 = eval/results/own_<campaign><rep>/<seq>/<m>/tracks.csv (already in the mocap frame); LV-DOT =
-bags/lvdot_out/lvdot<rep>_<seq>.bag, mapped to the mocap frame with the same alignment as v2 (same shared odometry).
+Inputs: v1/v2 = eval/results/own_<campaign><rep>/<seq>/<m>/tracks.csv (already in the mocap frame); baselines =
+bags/<method>_out/<method><rep>_<seq>.bag (eval/adapters/marker_adapter.py), mapped to the mocap frame with the same
+alignment as v2 (same shared odometry).
 Writes eval/results/baselines_<campaign>.json and eval/tables/baselines_<campaign>.csv.
 
 Usage
@@ -30,28 +31,33 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / 'adapters'))
 from harness.gt_mocap import tracks_to_mocap  # noqa: E402
 from harness.metrics import EvalConfig, evaluate  # noqa: E402
 from harness.tracks import read_tracks  # noqa: E402
-from lvdot_adapter import load_lvdot  # noqa: E402
+from marker_adapter import load_marker_boxes  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
 SEQS = ['20260519_1942', '20260519_1945', '20260519_1947', '20260519_1949', '20260519_1950', '20260519_1952']
 LEVELS = ('dynamic_only', 'merged')
-IDENTITY = {'v1': True, 'v2': True, 'lvdot': False}
+IDENTITY = {'v1': True, 'v2': True, 'lvdot': False, 'dynablox': True}
+# baseline -> (output dir under bags/, run prefix, marker topic, persistent ids)
+BASELINES = {'lvdot': ('lvdot_out', 'lvdot', '/onboard_detector/dynamic_bboxes', False),
+             'dynablox': ('dynablox_out', 'dynablox', '/motion_detector/visualization/clusters', True)}
 
 
 def predictions(method, campaign, rep, seq, res, align):
     if method in ('v1', 'v2'):
         return read_tracks(res / seq / method / 'tracks.csv')
-    bag = REPO / 'bags' / 'lvdot_out' / f'lvdot{rep}_{seq}.bag'
-    if not (REPO / 'bags' / 'lvdot_out' / f'lvdot{rep}_{seq}.done').exists():
+    d, prefix, topic, ids = BASELINES[method]
+    out = REPO / 'bags' / d
+    if not (out / f'{prefix}{rep}_{seq}.done').exists():
         return None
-    return tracks_to_mocap(load_lvdot(bag), align['T_mocap_odom'][seq], align['delta'][seq])
+    boxes = load_marker_boxes(out / f'{prefix}{rep}_{seq}.bag', topic, persistent_ids=ids)
+    return tracks_to_mocap(boxes, align['T_mocap_odom'][seq], align['delta'][seq])
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--campaign', default='r9')
     ap.add_argument('--reps', nargs='+', default=['a', 'b', 'c'])
-    ap.add_argument('--methods', nargs='+', default=['v2', 'v1', 'lvdot'])
+    ap.add_argument('--methods', nargs='+', default=['v2', 'v1', 'lvdot', 'dynablox'])
     args = ap.parse_args()
     out = {}
     for r in args.reps:

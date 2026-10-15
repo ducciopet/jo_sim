@@ -1,0 +1,10 @@
+<launch>
+  <!-- Dynablox motion_detector with the JO parameter file, no rviz. Static TF base_link -> velodyne from the URDF. -->
+  <param name="use_sim_time" value="true"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_velodyne" args="0.03 0.029 0.6 0 0 0 base_link velodyne"/>
+  <node name="motion_detector" pkg="dynablox_ros" type="motion_detector" output="screen" args="--alsologtostderr">
+    <remap from="pointcloud" to="/velodyne_points"/>
+    <rosparam command="load" file="/jo/motion_detector_jo.yaml"/>
+    <param name="evaluate" value="false"/>
+  </node>
+</launch>
