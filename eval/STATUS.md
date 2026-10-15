@@ -325,3 +325,33 @@ Solo moto: v1 73,3 ± 2,1%, v2 88,3 ± 0,7% di MOTA (IDF1 48,6 / 81,1%).
 **Prossimi passi**: correzione della 1947 (associazione sulla parte LiDAR del track quando la camera sparisce);
 diagnosi dello scambio deterministico della 1950 a 38 s; poi stop alla messa a punto su queste 6 sequenze e
 campagna sul campo (`FIELD_PROTOCOL.md`) con più persone.
+
+---
+
+## Correzione della 1947 (2026-10-15, `jo_detector_v2` `df56a77`)
+
+**Causa** (replay solo tracker con `track_debug_lifecycle`, GT riportata nel frame odom): a 28,85 s la persona che
+esce di lato dal FOV viene spezzata dalla fusione in due box, uno solo-LiDAR su di lei (`L`, 0,1 m dalla GT) e uno
+solo-camera a 0,4 m sullo sfondo (`F`, profondità della maschera YOLO sull'armadio dietro) che porta la classe
+`person`. Il track #20 prende il frammento `F` (bonus di classe +0,25; il box `L` paga la penalità di continuità di
+classe e una velErr di 4,1 perché il centro precedente era quello del box fuso, spostato verso lo sfondo), al tick
+dopo scivola sull'armadio e la persona rinasce come track nuovo senza classe. Non era quindi un problema di
+centro LiDAR/fuso nel gating, come ipotizzato, ma un frammento solo-camera che vince l'associazione.
+
+**Correzione**: `track_camera_fragment_dist` (0,6 m, 0 la disattiva): un candidato senza punti LiDAR viene scartato
+per un track che nello stesso tick ha un candidato con punti LiDAR entro quella distanza. Una persona nel raggio
+del LiDAR è sempre vista dal LiDAR, quindi il box solo-camera accanto è un frammento.
+
+**Verifica**: A/B col solo tracker sugli input registrati dei 18 run v2 di r8 (`bags/replay/f{x,0}{a,b,c}_v2_*`,
+`results/fix1947_{a,b,c}`); il run col parametro a 0 riproduce r8 esattamente.
+
+| D/PD/S, 3 ripetizioni | MOTA | IDF1 | IDSW | FP | FN |
+|---|---|---|---|---|---|
+| senza (0) | 96,40 ± 0,27% | 80,7 ± 6,6% | 3,0 | 34,3 | 66,7 |
+| **con (0,6 m)** | **97,17 ± 0,32%** | **90,8 ± 6,6%** | **2,0** | **22,0** | **57,7** |
+
+1947: IDF1 57–58% → 99,6–100% e IDSW 1 → 0 in 3 run su 3; nessun'altra sequenza cambia. Gli scambi rimasti sono
+1945 a 18,7 s (2 su 3) e 1950 a circa 38 s (3 su 3). I numeri r8 a pipeline completa restano quelli della campagna;
+la correzione entrerà nella prossima campagna a pipeline completa.
+
+**Prossimi passi**: diagnosi dello scambio della 1950 a 38 s, poi campagna sul campo.
