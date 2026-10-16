@@ -9,7 +9,7 @@ for s in 1942 1945 1947 1949 1950 1952; do
     [ -e $B/dynablox_out/$out.done ] && continue
     [ -e $B/dynablox_out/STOP ] && { echo "$(date +%T) STOP"; exit 0; }
     echo "$(date +%T) start $out"
-    bash $D/run_dynablox.sh $seq $out --keep-input > $B/dynablox_out/${out}_run.log 2>&1 && touch $B/dynablox_out/$out.done
+    bash $D/run_dynablox.sh $seq $out --keep-input > $B/dynablox_out/${out}_run.log 2>&1 && python3 $D/../check_run.py $B/dynablox_out/$out.bag $seq >> $B/dynablox_out/${out}_run.log 2>&1 && touch $B/dynablox_out/$out.done
     echo "$(date +%T) done  $out"
   done
   rm -f $B/dynablox_tmp/in_$seq.bag

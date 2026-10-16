@@ -102,6 +102,11 @@ python3 eval/baseline_eval.py --campaign r9 --reps a b c --methods <metodo>
   messaggi SPENCER, pesi F-PointNet su JRDB. Alternativa sui dataset: EagerMOT o SPENCER.
 
 ## Trappole incontrate
+- **Mai due campagne insieme.** Condividono il disco: la conversione di un input da 5 GB fa rimanere indietro la
+  riproduzione dell'altra (messaggi a raffica, sequenza "compressa"). Le campagne vanno in coda con
+  `bash eval/baselines/run_queue.sh <cartella>/run_<metodo>_campaign.sh ...`, e ogni run passa da `check_run.py`
+  (la bag registrata deve coprire ≥97% della durata e dei messaggi dell'odometria condivisa), altrimenti niente
+  `.done`. Il 16/10 due run di Xu+YOLO e una di UniMT sono state scartate così; le 76 run precedenti sono valide.
 - Docker: `python3.10` della venv va chiamato con un wrapper, non un symlink (il symlink salta la venv →
   "externally-managed-environment"); il nodo YOLO di Xu ha shebang `python`: symlink a python3 nel container.
 - `pkill -f <pattern>` uccide anche la shell che lo lancia se il pattern compare nel comando: usare `'[p]attern'`.
