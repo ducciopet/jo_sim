@@ -70,6 +70,40 @@ def num(v):
     return '–' if v is None else f'{v:.1f}'.replace('.', ',')
 
 
+def label_tables(campaign):
+    # three small tables from eval/results/labels_<C>.json (eval/label_eval.py): person moving (D), person stopped (PD),
+    # everything else (S)
+    f = REPO / 'eval' / 'results' / f'labels_{campaign}.json'
+    if not f.exists():
+        return ''
+    per = json.loads(f.read_text())
+
+    def mean(m, k):
+        xs = [v[k] for v in per.get(m, {}).values() if v[k] is not None and v[k] == v[k]]
+        return sum(xs) / len(xs) if xs else None
+
+    names = [(k, n) for k, n, *_ in METHODS if k in per]
+
+    def table(head, cols):
+        h = '<tr><th>Metodo</th>' + ''.join(f'<th class="n">{c}</th>' for c, _, _ in cols) + '</tr>'
+        body = ''
+        for k, n in names:
+            strong = ' class="me"' if k == 'v2' else ''
+            body += f'<tr{strong}><td>{html.escape(n)}</td>' + ''.join(
+                f'<td class="n">{fmt(mean(k, key))}</td>' for _, key, fmt in cols) + '</tr>'
+        return f'<h3>{head}</h3><div class="tablewrap"><table>{h}{body}</table></div>'
+
+    d = table('D · persona che cammina', [('Precisione', 'prec_D', pct), ('Recall', 'recall_D', pct),
+                                          ('F1', 'f1_D', pct), ('Detta PD', 'D_as_PD', pct),
+                                          ('Persa', 'D_as_miss', pct)])
+    pd_ = table('PD · persona ferma che può ripartire', [('Precisione', 'prec_PD', pct), ('Recall', 'recall_PD', pct),
+                                                        ('F1', 'f1_PD', pct), ('Detta D', 'PD_as_D', pct),
+                                                        ('Persa', 'PD_as_miss', pct)])
+    st = table('S · tutto il resto (oggetti fermi)', [('Precisione', 'prec_S', pct), ('Recall', 'recall_S', pct),
+                                                     ('F1', 'f1_S', pct), ('Falsi dinamici/min', 'false_dyn_per_min', num)])
+    return d + pd_ + st
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--campaign', default='r9')
@@ -99,7 +133,8 @@ def main():
                  if folder != '–' else '')
         cards += (f'<article class="card"><header><h3>{html.escape(name)}</h3><span class="badge {badge}">{state}</span></header>'
                   f'<p class="meta">{html.escape(paper)} · {sensors}</p><ul>{li}</ul>{where}</article>')
-    page = TEMPLATE.format(rows=rows, cards=cards, campaign=args.campaign,
+    labels = label_tables(args.campaign)
+    page = TEMPLATE.format(rows=rows, cards=cards, labels=labels, campaign=args.campaign,
                            generated=datetime.date.today().strftime('%d/%m/%Y'))
     out = REPO / 'eval' / 'report_baselines'
     out.mkdir(parents=True, exist_ok=True)
@@ -145,6 +180,7 @@ tr:last-child td {{ border-bottom: 0; }}
 th {{ font-size: 12.5px; font-weight: 500; color: var(--ink-3); }}
 td.n, th.n {{ text-align: right; font-family: var(--f-num); white-space: nowrap; }}
 tr.me td {{ font-weight: 600; }}
+h3 + .tablewrap {{ margin-top: -4px; }}
 .paper {{ display: block; font-size: 13px; color: var(--ink-3); font-weight: 400; }}
 .cards {{ display: grid; gap: 12px; }}
 .card {{ background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; display: grid; gap: 8px; }}
@@ -187,6 +223,20 @@ footer {{ font: 13px var(--f-num); color: var(--ink-3); }}
     <p class="sub"><b>Davanti o dietro.</b> I metodi con la sola camera frontale (Xu) o con un modello che guarda solo
       avanti (UniMT) non possono vedere la persona quando è dietro al robot: in 1945 e 1952 lo è sempre, in 1947 e 1950
       per circa il 40% del tempo. LiDAR a 360° (v2, Dynablox, M-detector) e LV-DOT la vedono ovunque.</p>
+  </section>
+
+  <section>
+    <h2>Label per label: D, PD, S</h2>
+    <p class="sub">Media di 3 giri. <b>Precisione</b>: delle volte che il metodo dà quella label alla persona, quante
+      sono giuste. <b>Recall</b>: dei momenti in cui la label vera è quella, quanti il metodo li indovina. <b>Detta
+      PD / Detta D</b>: label sbagliata ma persona trovata. <b>Persa</b>: persona non trovata. Per S, "falsi
+      dinamici" sono oggetti fermi segnalati come in movimento. I metodi esterni danno solo "in movimento": per loro
+      PD è sempre 0 per costruzione (–: non danno mai PD).</p>
+    {labels}
+    <p class="sub">Per S la ground truth non elenca gli oggetti fermi: si assume che tutto ciò che non è la persona sia
+      fermo (vero nel laboratorio) e il loro numero si stima dalle rilevazioni di v2, uguale per tutti i metodi. I
+      falsi dinamici sono esatti; precisione e recall di S sono un ordine di grandezza. La precisione di S scende quando
+      un metodo perde la persona (la persona persa conta come "detta S").</p>
   </section>
 
   <section>
