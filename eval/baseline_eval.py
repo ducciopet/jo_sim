@@ -37,11 +37,14 @@ from points_adapter import load_dynamic_points  # noqa: E402
 REPO = Path(__file__).resolve().parents[1]
 SEQS = ['20260519_1942', '20260519_1945', '20260519_1947', '20260519_1949', '20260519_1950', '20260519_1952']
 LEVELS = ('dynamic_only', 'merged')
-IDENTITY = {'v1': True, 'v2': True, 'lvdot': False, 'dynablox': True, 'mdetector': False, 'xurgbd': False}
+IDENTITY = {'v1': True, 'v2': True, 'lvdot': False, 'dynablox': True, 'mdetector': False, 'xurgbd': False,
+            'xuyolo': False, 'unimt': True}
 # baseline -> (output dir under bags/, run prefix, marker topic, persistent ids)
 BASELINES = {'lvdot': ('lvdot_out', 'lvdot', '/onboard_detector/dynamic_bboxes', False),
              'dynablox': ('dynablox_out', 'dynablox', '/motion_detector/visualization/clusters', True),
              'xurgbd': ('xu_rgbd_out', 'xurgbd', '/onboard_detector/dynamic_bboxes', False),
+             'xuyolo': ('xu_rgbd_out', 'xuyolo', '/onboard_detector/dynamic_bboxes', False),
+             'unimt': ('unimt_out', 'unimt', '/unimt/tracks', True),
              'mdetector': ('mdetector_out', 'mdetector', '/m_detector/point_out', None)}  # None = dynamic points
 
 
@@ -61,7 +64,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--campaign', default='r9')
     ap.add_argument('--reps', nargs='+', default=['a', 'b', 'c'])
-    ap.add_argument('--methods', nargs='+', default=['v2', 'v1', 'lvdot', 'dynablox', 'mdetector', 'xurgbd'])
+    ap.add_argument('--methods', nargs='+', default=['v2', 'v1', 'lvdot', 'dynablox', 'mdetector', 'xurgbd', 'xuyolo', 'unimt'])
     args = ap.parse_args()
     out = {}
     for r in args.reps:

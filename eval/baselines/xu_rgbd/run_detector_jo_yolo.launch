@@ -1,0 +1,10 @@
+<launch>
+  <!-- upstream detector_with_learning_module.launch (run_detector + yolo_detector_node) with the JO parameter file,
+       without rviz; YOLO reads the color resized to 848x480 by make_input_yolo.py -->
+  <param name="use_sim_time" value="true"/>
+  <rosparam file="/jo/detector_param_jo_yolo.yaml" ns="/onboard_detector" />
+  <node pkg="onboard_detector" type="detector_node" name="detector_node" output="screen" />
+  <node pkg="onboard_detector" type="yolo_detector_node.py" name="yolo_detector_node" output="screen">
+    <remap from="/camera/color/image_raw" to="/front_camera/camera/color/image_raw"/>
+  </node>
+</launch>

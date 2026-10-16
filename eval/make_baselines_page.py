@@ -33,17 +33,22 @@ METHODS = [
         'Vuole un\'odometria per ogni scansione nel frame del LiDAR: l\'adattatore la ricampiona (senza, i muri '
         'sembravano muoversi).',
         'Dà punti, non oggetti: un unico raggruppamento comune (DBSCAN 0,5 m) li trasforma in box, senza identità.']),
-    ('xurgbd', 'Xu et al. (RGB-D)', 'Xu et al., RA-L 2023', 'RGB-D', 'pronto', 'xu_rgbd/', 'xu-rgbd-noetic:upstream', [
-        'Codice originale (commit 4b4be99), variante di default senza YOLO: il modulo YOLO vuole la depth allineata '
-        'al colore, che le bag non hanno.',
-        'Stessi adattamenti di LV-DOT. Nessun numero d\'identità stabile.',
-        'Risultato da verificare: traccia la persona fusa con gli oggetti vicini (box larghi quasi 3 m) e quasi mai la '
-        'dichiara in movimento, probabilmente per il vincolo di forma "persona" del metodo. Va riprovato con il '
-        'modulo YOLO, che richiede di generare la depth allineata al colore.']),
-    ('unimt', 'UniMT + SimpleTrack', 'He et al., 2025', 'LiDAR, camera', 'da fare', '–', '–', [
-        'Nodo ROS che legge LiDAR, camera e odometria come sul nostro robot; pesi su Google Drive.',
-        'Dipendenze pesanti (mmdet3d, spconv, flash-attn). Addestrato su CODa (LiDAR a 128 linee): un calo sul VLP-16 '
-        'va letto come salto di dominio.']),
+    ('xurgbd', 'Xu et al. (solo depth)', 'Xu et al., RA-L 2023', 'RGB-D', 'pronto', 'xu_rgbd/', 'xu-rgbd-noetic:upstream', [
+        'Codice originale (commit 4b4be99), variante di default senza YOLO. Stessi adattamenti di LV-DOT.',
+        'Traccia la persona fusa con gli oggetti vicini (box larghi quasi 3 m) e quasi mai la dichiara in '
+        'movimento: per questo esiste anche la variante con YOLO qui sotto.']),
+    ('xuyolo', 'Xu et al. (con YOLO)', 'Xu et al., RA-L 2023', 'RGB-D, colore', 'pronto', 'xu_rgbd/', 'xu-rgbd-noetic:upstream', [
+        'Stesso codice, con il modulo YOLO degli autori (launch detector_with_learning_module).',
+        'YOLO vuole la depth allineata al colore, che le bag non registrano: un adattatore la ricostruisce come fa '
+        'la RealSense (riproiezione della depth nella camera colore) e porta il colore a 848×480.',
+        'YOLO gira su CPU, come nel codice originale. Nessun numero d\'identità stabile.']),
+    ('unimt', 'UniMT + SimpleTrack', 'He et al., 2025', 'LiDAR, camera', 'pronto', 'unimt/', 'unimt-noetic:upstream', [
+        'Codice e pesi originali: rilevatore appreso LiDAR+camera e tracker SimpleTrack; pesi "wheelchair", '
+        'addestrati con un LiDAR a 16 linee come il nostro.',
+        'Adattati solo topic, camera e posizione dei sensori. Lavora su una scansione ogni due (5 al secondo), come '
+        'il nodo originale.',
+        'Guarda solo in avanti (fino a 14 m davanti al LiDAR): la persona di lato o dietro non la vede. '
+        'Riconosce persone, non il movimento: ogni box conta come "in movimento".']),
     ('jrmot', 'JRMOT', 'Shenoi et al., IROS 2020', 'LiDAR, camera', 'bloccato', '–', '–', [
         'Manca il rilevatore 2D, serve Gurobi (licenza legata alla macchina) e i messaggi SPENCER.',
         'Sui dataset ufficiali conviene EagerMOT o SPENCER al suo posto.']),
