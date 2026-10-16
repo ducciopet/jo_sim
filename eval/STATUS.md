@@ -509,7 +509,7 @@ al suo timestamp, nel frame velodyne. Prima della correzione i muri risultavano 
 solo movimento recall 89,5%, 32 falsi allarmi. Uscita usata: `/m_detector/point_out` (punti), raggruppati con il
 DBSCAN comune di `points_adapter.py` (eps 0,5 m, 5 punti), senza ID.
 
-### Confronto completo con 4 metodi della letteratura (2026-10-15 sera, 3 ripetizioni ciascuno)
+### Confronto completo con 5 metodi della letteratura (2026-10-15/16, 3 ripetizioni ciascuno)
 
 `results/baselines_r9.json`, `tables/baselines_r9.csv`; pagina: https://claude.ai/artifact/XGLMmauGC6XHbai8ygpQaz.
 
@@ -521,10 +521,21 @@ DBSCAN comune di `points_adapter.py` (eps 0,5 m, 5 punti), senza ID.
 | Dynablox | LiDAR | 52,7% | 96,6% | 68,1 | 51,1% |
 | M-detector | LiDAR | 48,6% | **97,9%** | 44,4 | – |
 | Xu et al. 2023 | RGB-D | 5,9% | 3,1% | 37,6 | – |
+| Xu et al. 2023 + YOLO | RGB-D + colore | 4,9% | 2,9% | 33,1 | – |
+| UniMT + SimpleTrack | LiDAR + camera (appreso) | 47,9% | 14,5% | 248 | 54,7% |
 
 - I due metodi solo LiDAR trovano la persona che cammina quanto o più di v2, ma con 4–6 volte i falsi allarmi, e la
   perdono quando si ferma. LV-DOT la tiene "in movimento" da ferma. Nessuno ha lo stato PD.
 - Xu et al. (variante di default, senza YOLO) traccia la persona fusa con gli oggetti vicini (box larghi 2,9 m in
   media) e quasi mai la dichiara dinamica: probabilmente il vincolo di forma `target_object_size` scarta i box fusi.
   Da verificare con il modulo YOLO (serve la depth allineata al colore) prima di usarlo nel paper.
-- UniMT da fare; JRMOT bloccato (vedi `eval/baselines/README_baselines.md`).
+- (16/10) Xu con modulo YOLO (depth allineata ricostruita da `make_input_yolo.py`): YOLO vede la persona (1950: tra i
+  box tracciati 308/555 frame), ma il metodo quasi mai la classifica dinamica → nessun miglioramento. Il limite è la
+  classificazione del moto, non l'adattamento.
+- (16/10) UniMT + SimpleTrack (pesi wheelchair, LiDAR 16 linee): 0 falsi allarmi a livello "D e PD insieme", e trova
+  quasi tutte le persone nel suo campo (solo avanti, x 0–14,4 m): 1942 98%, 1949 100%, 1947 60% (persona davanti
+  63%), 1950 58% (61%); 1945 e 1952 la persona è sempre dietro al robot → 0. Non classifica il moto: ogni box è
+  "dinamico", da qui 248 allarmi/min sul livello solo movimento.
+- (16/10) Due campagne in parallelo falsano la riproduzione (disco): ora `run_queue.sh` + `check_run.py` su ogni run;
+  scartate e rifatte 2 run Xu+YOLO e 1 UniMT, le 76 precedenti sono valide.
+- JRMOT bloccato (vedi `eval/baselines/README_baselines.md`).

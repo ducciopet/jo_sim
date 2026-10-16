@@ -41,14 +41,21 @@ METHODS = [
         'Stesso codice, con il modulo YOLO degli autori (launch detector_with_learning_module).',
         'YOLO vuole la depth allineata al colore, che le bag non registrano: un adattatore la ricostruisce come fa '
         'la RealSense (riproiezione della depth nella camera colore) e porta il colore a 848×480.',
-        'YOLO gira su CPU, come nel codice originale. Nessun numero d\'identità stabile.']),
+        'YOLO gira su CPU, come nel codice originale. Nessun numero d\'identità stabile.',
+        'Risultato: YOLO vede la persona (in 1950 la trova in più di metà dei frame tra i box tracciati), ma il '
+        'metodo quasi mai la dichiara in movimento, quindi tra i box "dinamici" resta sotto il 5%. Il limite è nella '
+        'classificazione del moto, non nell\'adattamento. Come tutti i metodi solo-camera, non vede dietro al robot '
+        '(1945 e 1952).']),
     ('unimt', 'UniMT + SimpleTrack', 'He et al., 2025', 'LiDAR, camera', 'pronto', 'unimt/', 'unimt-noetic:upstream', [
         'Codice e pesi originali: rilevatore appreso LiDAR+camera e tracker SimpleTrack; pesi "wheelchair", '
         'addestrati con un LiDAR a 16 linee come il nostro.',
         'Adattati solo topic, camera e posizione dei sensori. Lavora su una scansione ogni due (5 al secondo), come '
         'il nodo originale.',
         'Guarda solo in avanti (fino a 14 m davanti al LiDAR): la persona di lato o dietro non la vede. '
-        'Riconosce persone, non il movimento: ogni box conta come "in movimento".']),
+        'Riconosce persone, non il movimento: ogni box conta come "in movimento".',
+        'Risultato: zero falsi allarmi e quasi tutte le persone che può vedere (1942: 98%, 1949: 100%; 1947 e 1950: '
+        '60% e 58%, con la persona davanti il 63% e il 61% del tempo). In 1945 e 1952 la persona resta sempre dietro '
+        'al robot: zero. Da qui il 48% complessivo.']),
     ('jrmot', 'JRMOT', 'Shenoi et al., IROS 2020', 'LiDAR, camera', 'bloccato', '–', '–', [
         'Manca il rilevatore 2D, serve Gurobi (licenza legata alla macchina) e i messaggi SPENCER.',
         'Sui dataset ufficiali conviene EagerMOT o SPENCER al suo posto.']),
@@ -158,8 +165,8 @@ footer {{ font: 13px var(--f-num); color: var(--ink-3); }}
   <header style="display:grid;gap:14px">
     <div class="eyebrow">jo_detector · metodi di confronto</div>
     <h1>I metodi della letteratura, pronti per il confronto</h1>
-    <p class="lede">Quattro metodi pubblicati girano sulle nostre registrazioni di laboratorio con il loro codice originale,
-      cambiando solo come ricevono i dati. Qui sotto: come vanno, come sono stati preparati e come rifarli in poche ore,
+    <p class="lede">Cinque metodi pubblicati (sei configurazioni) girano sulle nostre registrazioni di laboratorio con il
+      loro codice originale, cambiando solo come ricevono i dati. Qui sotto: come vanno, come sono stati preparati e come rifarli in poche ore,
       per esempio su un dataset ufficiale come JRDB.</p>
   </header>
 
@@ -177,6 +184,9 @@ footer {{ font: 13px var(--f-num); color: var(--ink-3); }}
     <p class="sub">Nessun metodo esterno distingue una persona ferma che può ripartire (PD) da un oggetto statico: i
       metodi solo LiDAR la perdono quando si ferma, LV-DOT la tiene "in movimento" e accumula falsi allarmi. Sono numeri
       sulle prove usate per sviluppare v2: il confronto da pubblicare va rifatto su dati nuovi.</p>
+    <p class="sub"><b>Davanti o dietro.</b> I metodi con la sola camera frontale (Xu) o con un modello che guarda solo
+      avanti (UniMT) non possono vedere la persona quando è dietro al robot: in 1945 e 1952 lo è sempre, in 1947 e 1950
+      per circa il 40% del tempo. LiDAR a 360° (v2, Dynablox, M-detector) e LV-DOT la vedono ovunque.</p>
   </section>
 
   <section>
@@ -192,6 +202,9 @@ footer {{ font: 13px var(--f-num); color: var(--ink-3); }}
         ogni altra modifica è una patch documentata in <code>patches/</code>.</li>
       <li><b>Stesse condizioni di v1 e v2.</b> Stessa odometria, metodo avviato 12 s prima della registrazione,
         riproduzione a velocità reale.</li>
+      <li><b>Una campagna alla volta, ogni run controllata.</b> Due campagne insieme si contendono il disco e la
+        riproduzione rallenta; una run vale solo se la registrazione copre tutta la sequenza
+        (<code>check_run.py</code>), altrimenti si rifà.</li>
       <li><b>Un container ROS1 per metodo.</b> Le registrazioni ROS2 vengono convertite al volo e cancellate dopo l'uso.</li>
       <li><b>Stessa valutazione.</b> L'uscita di ogni metodo diventa lo stesso formato di tracce; i metodi che danno
         punti invece di oggetti passano da un unico raggruppamento comune.</li>
@@ -204,8 +217,8 @@ footer {{ font: 13px var(--f-num); color: var(--ink-3); }}
       parametro, sono in <code>eval/baselines/README_baselines.md</code>.</p>
     <pre>docker build -t &lt;immagine&gt; eval/baselines/&lt;cartella&gt;
 bash eval/baselines/&lt;cartella&gt;/run_&lt;metodo&gt;.sh 20260519_1950 prova --keep-input
-setsid nohup bash eval/baselines/&lt;cartella&gt;/run_&lt;metodo&gt;_campaign.sh \\
-     &gt; bags/&lt;metodo&gt;_out/campaign.log 2&gt;&amp;1 &lt; /dev/null &amp;
+setsid nohup bash eval/baselines/run_queue.sh &lt;cartella&gt;/run_&lt;metodo&gt;_campaign.sh [...] \\
+     &gt; bags/queue.log 2&gt;&amp;1 &lt; /dev/null &amp;
 python3 eval/baseline_eval.py --campaign r9 --reps a b c</pre>
     <p class="sub">Per un dataset ufficiale cambia solo l'ingresso: topic e parametri dei sensori nei file
       <code># JO</code>, una conversione della bag e la ground truth del dataset al posto del motion capture.</p>
@@ -219,6 +232,12 @@ python3 eval/baseline_eval.py --campaign r9 --reps a b c</pre>
       <li><b>Uscite vuote.</b> Dynablox non pubblica nulla quando non vede moto: un topic assente non è un errore.</li>
       <li><b>Compilazioni silenziose.</b> Un errore nascosto da un filtro sull'output: ogni Dockerfile controlla che
         l'eseguibile esista.</li>
+      <li><b>Due campagne insieme.</b> La conversione di una bag da 5 GB fa rimanere indietro la riproduzione
+        dell'altra: sequenze "compresse", risultati falsati. Ora c'è la coda e il controllo automatico.</li>
+      <li><b>rospy e messaggi grandi.</b> Con <code>queue_size=1</code> nuvole e immagini venivano perse (UniMT a
+        1,8 Hz invece di 5): serve <code>buff_size</code> grande.</li>
+      <li><b>Python 3.10 su Ubuntu 20.04.</b> Il PPA deadsnakes non lo fornisce più: Python standalone con
+        <code>uv</code>, chiamato tramite un piccolo script (un link simbolico salta l'ambiente virtuale).</li>
       <li><b>Spazio su disco.</b> Le build lasciano decine di GB di cache: <code>docker builder prune -f</code>.</li>
       <li><b>Fermare i processi.</b> <code>pkill -f</code> con un pattern presente nel comando stesso chiude anche la
         shell: usare la forma <code>'[p]attern'</code>.</li>
