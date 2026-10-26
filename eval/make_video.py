@@ -6,9 +6,15 @@ Each panel: robot (mocap pose, front camera FOV wedge), GT person (ring + 3 s tr
 published tracks (oriented boxes coloured by state, track id). Header: time, GT state, per-method running
 MOTA-style counts are left to the tables -- this is for looking at behaviour, not for scoring.
 
+Methods without a tracks.csv in --results (the literature baselines) are read from their recorded runs
+(baseline_eval.predictions, rep = the last letter of --results). --map draws the static map (the no-rejection GLIM
+map of eval/map_eval.py at body height, minus the person's own trail) as grey background.
+
 Usage
   python3 eval/make_video.py --results eval/results/own_r8a --seq 20260519_1947 --methods v1 v2 \
       --out eval/videos/r8a_1947.mp4 [--speed 2]
+  python3 eval/make_video.py --results eval/results/own_r9a --seq 20260519_1950 --methods v2 lvdot dynablox mdetector \
+      --map --out eval/videos/compare_1950.mp4
 """
 
 import argparse
@@ -31,7 +37,8 @@ from harness.ros_io import load_mocap  # noqa: E402
 REPO = Path(__file__).resolve().parents[1]
 COL = {'dynamic': '#d62728', 'potentially_dynamic': '#ff9f1c', 'static': '#8a8a8a'}
 SHORT = {'dynamic': 'D', 'potentially_dynamic': 'PD', 'static': 'S'}
-NAME = {'v1': 'v1', 'v2': 'v2 (Hungarian)', 'v2g': 'v2 (greedy-Kuhn)'}
+NAME = {'v1': 'v1', 'v2': 'v2 (Hungarian)', 'v2g': 'v2 (greedy-Kuhn)', 'lvdot': 'LV-DOT', 'dynablox': 'Dynablox',
+        'mdetector': 'M-detector', 'xurgbd': 'Xu et al.', 'xuyolo': 'Xu et al. + YOLO', 'unimt': 'UniMT + SimpleTrack'}
 HFOV = np.deg2rad(87)
 
 
@@ -50,15 +57,35 @@ def main():
     ap.add_argument('--speed', type=float, default=2.0, help='playback speed factor')
     ap.add_argument('--dpi', type=int, default=90)
     ap.add_argument('--names', nargs='+', default=None, help='panel titles, one per method (default: built-in names)')
+    ap.add_argument('--map', action='store_true', help='static map background (bags/replay/map_none_<seq>)')
     args = ap.parse_args()
 
     res = Path(args.results)
     gt = pd.read_csv(res / args.seq / 'gt' / 'tracks.csv')
     names = dict(zip(args.methods, args.names)) if args.names else NAME
-    preds = {m: pd.read_csv(res / args.seq / m / 'tracks.csv') for m in args.methods}
+    al_pred = json.loads((res / 'alignment_v2.json').read_text())
+
+    def load(m):
+        f = res / args.seq / m / 'tracks.csv'
+        if f.exists():
+            return pd.read_csv(f)
+        import baseline_eval as be
+        return be.predictions(m, res.name[4:-1], res.name[-1], args.seq, res, al_pred)
+    preds = {m: load(m) for m in args.methods}
+    walls = None
+    if args.map:
+        import map_eval as me
+        maps, _, _, _ = me.aligned_maps(args.seq, [f"none={REPO / 'bags' / 'replay' / f'map_none_{args.seq}'}"],
+                                        gt_campaign=res.name)
+        pm = maps['none']
+        pm = pm[(pm[:, 2] > 0.2) & (pm[:, 2] < 1.8)]
+        walls = np.unique(np.floor(pm[:, :2] / 0.05).astype(np.int64), axis=0) * 0.05 + 0.025
+        from scipy.spatial import cKDTree  # the person's own trail is not structure: drop it (map_eval's ghost region)
+        d, _ = cKDTree(gt[gt['track_id'] >= 0][['x', 'y']].to_numpy()).query(walls)
+        walls = walls[d > 0.8]
     bodies = load_mocap(glob.glob(str(REPO / 'bags' / 'qualysis' / f'*{args.seq}_0'))[0])
     jo = bodies['JO']
-    al = json.loads((res / f'alignment_{args.methods[-1]}.json').read_text())
+    al = json.loads((res / f'alignment_{args.methods[-1] if args.methods[-1] in ("v1", "v2") else "v2"}.json').read_text())
     jo_yaw_off = al['T_base_JO'][2]
 
     times = np.sort(gt['t_ns'].unique())
@@ -85,6 +112,8 @@ def main():
                 ax.set_xlim(lo[0], hi[0]); ax.set_ylim(lo[1], hi[1]); ax.set_aspect('equal')
                 ax.set_xticks([]); ax.set_yticks([])
                 ax.set_title(names.get(m, m), fontsize=12)
+                if walls is not None:
+                    ax.scatter(walls[:, 0], walls[:, 1], s=0.6, c='#8f98a3', lw=0)
                 ax.add_patch(Wedge((rx, ry), 6.0, np.rad2deg(ryaw - HFOV / 2), np.rad2deg(ryaw + HFOV / 2),
                                    color='#4c78a8', alpha=0.08, lw=0))
                 ax.add_patch(Polygon(box(rx, ry, 0.55, 0.45, ryaw), closed=True, fc='#4c78a8', ec='#1f3b5c'))

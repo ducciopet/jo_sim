@@ -76,6 +76,17 @@ a un costo computazionale compatibile con l'onboard.
 Se i numeri non sostengono il punto 1, il paper diventa un system paper (punti 2–4) e il titolo va
 cambiato di conseguenza. La decisione si prende a fine gennaio, guardando le ablation.
 
+**Riposizionamento proposto (26/10, dopo il confronto con 5 metodi e l'esperimento mappa).** Il filo del paper
+diventa "fermo non è statico" (hook possibile: *Still, Not Static*): un unico stato semantico D/PD/S, prodotto
+dal tracker e usato in modo coerente da tracking, SLAM e navigazione. Le prove che oggi lo sostengono
+(dettagli in `eval/STATUS.md`, figure in `eval/figures/en/`):
+- tracking: F1 di PD 96,4%, nessun metodo pubblicato ha questo stato; la persona ferma resta seguita il 93% del
+  tempo e tiene lo stesso ID in 15 eventi di sosta/ripartenza su 16 (`eval/stopgo_eval.py`);
+- SLAM: con la rimozione D+PD in GLIM la persona sparisce dalla mappa anche quando resta ferma (1942, 1949:
+  99,4% rimossa), mentre con il solo D o con Dynablox resta tutta; costo ~1,6% di struttura statica;
+- navigazione: il layer della costmap già disegna D e PD (`jo_navigation`); manca l'esperimento.
+I contributi 1, 3 e 4 qui sopra restano come parte del metodo, non come titolo.
+
 ---
 
 ## 3. Esperimenti, in ordine di priorità
@@ -116,8 +127,16 @@ misurabile con una persona; va ripetuta sulle sequenze con più persone.
 **E5. Runtime** su hardware onboard (il PC del robot, non il portatile con la RTX 4060):
 latenza per nodo, CPU/GPU, frequenza effettiva, con un grafico a barre impilate.
 
-**E6 (opzionale). Mappa GLIM con e senza rimozione dei dinamici**, con una metrica di "ghost
-points" rispetto alla mappa statica.
+**E6. Mappa GLIM con e senza rimozione dei dinamici**, con una metrica di "ghost
+points" rispetto alla mappa statica. **Fatto il 26/10** sulle 6 prove (`eval/map_eval.py`, `map_table.py`):
+v2 D+PD toglie il 91,4% della persona (solo D 80,3%, Dynablox 86,1%, LV-DOT 90,5%) ed è l'unico che la toglie
+da ferma. Da promuovere a esperimento principale insieme a E1. Da rifare sulle sequenze con più persone.
+
+**E7. Navigazione**: robot in simulazione (Gazebo, attori che si fermano e ripartono), costmap con e senza PD:
+distanza minima dalle persone, frenate, tempo di arrivo. Non ancora fatto.
+
+Figure e video per il paper: `eval/make_figures.py --lang en` (timeline delle label, barre D/PD/S, sosta e
+ripartenza, mappa vista dall'alto, ablazione) e `eval/make_video.py --map` (confronto dall'alto con i baseline).
 
 ---
 

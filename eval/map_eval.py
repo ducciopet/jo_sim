@@ -112,27 +112,17 @@ def voxels(p, size):
     return set(map(tuple, np.floor(p / size).astype(np.int64)))
 
 
-def main():
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--seq', required=True)
-    ap.add_argument('--runs', nargs='+', required=True, help='name=bag')
-    ap.add_argument('--ref', default='none', help='run name of the no-rejection map (static reference)')
-    ap.add_argument('--voxel', type=float, default=0.1)
-    ap.add_argument('--radius', type=float, default=0.8)
-    ap.add_argument('--static-dist', type=float, default=1.5)
-    ap.add_argument('--floor', type=float, help='floor height in the map frame (default: estimated on the reference)')
-    ap.add_argument('--gt', default='own_r9a')
-    ap.add_argument('--out')
-    args = ap.parse_args()
-    res = REPO / 'eval' / 'results' / args.gt
+def aligned_maps(seq, runs, ref='none', gt_campaign='own_r9a', floor=None):
+    """runs: ['name=bag', ...] -> ({name: Nx3 points, mocap x/y, z above the floor}, {name: info}, person xy, floor)."""
+    res = REPO / 'eval' / 'results' / gt_campaign
     al = json.loads((res / 'alignment_v2.json').read_text())
-    T_mo = np.array(al['T_mocap_odom'][args.seq])
-    gt = read_tracks(res / args.seq / 'gt' / 'tracks.csv')
+    T_mo = np.array(al['T_mocap_odom'][seq])
+    gt = read_tracks(res / seq / 'gt' / 'tracks.csv')
     person = gt[gt['track_id'] >= 0][['x', 'y']].to_numpy()
-    sh, Tbi = shared_odom(args.seq), base_to_imu(args.seq)
+    sh, Tbi = shared_odom(seq), base_to_imu(seq)
 
     maps, info = {}, {}
-    for spec in args.runs:
+    for spec in runs:
         name, bag = spec.split('=', 1)
         pts, og = load_run(bag)
         (x, y, yaw), z_off, spread = T_odom_world(og, sh, Tbi)
@@ -145,13 +135,30 @@ def main():
     # floor: the densest height of the reference map BELOW base_link (z = 0 in the shared odometry, which is planar;
     # the floor is under the robot's base), one value for every variant (they share the alignment to the mm). The
     # unconstrained densest height jumps between near-equal levels, floor vs a dense shelf ~1 m up, between maps.
-    zr = maps[args.ref][:, 2] if args.ref in maps else next(iter(maps.values()))[:, 2]
+    zr = maps[ref][:, 2] if ref in maps else next(iter(maps.values()))[:, 2]
     zr = zr[zr < 0.0]
     hist, edges = np.histogram(zr, bins=np.arange(zr.min(), zr.max() + 0.05, 0.05))
-    floor = edges[np.argmax(hist)] + 0.025 if args.floor is None else args.floor
-    print(f"{args.seq} floor {floor:.2f} m (map frame)")
+    if floor is None:
+        floor = edges[np.argmax(hist)] + 0.025
     for pm in maps.values():
         pm[:, 2] -= floor
+    return maps, info, person, floor
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument('--seq', required=True)
+    ap.add_argument('--runs', nargs='+', required=True, help='name=bag')
+    ap.add_argument('--ref', default='none', help='run name of the no-rejection map (static reference)')
+    ap.add_argument('--voxel', type=float, default=0.1)
+    ap.add_argument('--radius', type=float, default=0.8)
+    ap.add_argument('--static-dist', type=float, default=1.5)
+    ap.add_argument('--floor', type=float, help='floor height in the map frame (default: estimated on the reference)')
+    ap.add_argument('--gt', default='own_r9a')
+    ap.add_argument('--out')
+    args = ap.parse_args()
+    maps, info, person, floor = aligned_maps(args.seq, args.runs, args.ref, args.gt, args.floor)
+    print(f"{args.seq} floor {floor:.2f} m (map frame)")
 
     # person region: voxel columns within --radius of the person's track, body heights only
     vs = args.voxel

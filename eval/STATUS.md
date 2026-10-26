@@ -572,3 +572,39 @@ che ogni metodo ha davvero pubblicato (run r9a; per Dynablox e LV-DOT i loro box
   si ferma. Dynablox fa meglio di v2 su 1945 e 1952.
 - Costo: v2 D+PD conserva in media l'1,6% di struttura statica in meno rispetto al rumore di GLIM (box gonfiati e
   tracce PD su oggetti statici). Piccolo, ma è un costo da dichiarare nel paper.
+
+## Sosta e ripartenza, ablazione della semantica, figure (2026-10-26)
+
+**Identità nelle soste** (`stopgo_eval.py`, `results/stopgo_r9.json`): 16 eventi sulle 6 prove (8 soste D→PD, 8
+ripartenze PD→D, fasi di almeno 1 s). "Stesso ID" = l'ultimo ID dato alla persona nel secondo prima coincide con il
+primo dei 2 s dopo; "seguita da ferma" = quota dei frame PD in cui la persona è trovata (qualsiasi label).
+
+| Metodo | Stesso ID | Seguita da ferma |
+|---|---|---|
+| **v2** | **93,8%** (15/16) | **93,1%** |
+| v1 | 87,5% | 85,4% |
+| Dynablox | 62,5% (ottimista: numera i cluster da 0, con una persona l'ID coincide quasi sempre) | 15,1% |
+| UniMT + SimpleTrack | 37,5% | 72,0% |
+| LV-DOT / M-detector / Xu+YOLO | n/d (nessun ID stabile) | 93,1% / 6,8% / 6,2% |
+
+L'unico evento perso da v2: la partenza di 1952 a 1,8 s, persona dietro al robot e ancora senza traccia.
+
+**Ablazione "semantica spenta"** (`ablation_semantics.py`, solo tracker sugli input r9a, deterministico;
+`results/ablation_semantics_r9a.json`, `stopgo_ablation_r9a.json`). `nosem`: whitelist delle classi dinamiche
+vuota (`track_semantic_dynamic_classes:=['__none__']`), quindi nessuna traccia ha mai una classe; `nosem_nopd`:
+anche il PD da solo movimento spento (`track_motion_pd_min_dynamic_ticks:=0`). Il rilevatore resta identico.
+
+| Variante | F1 D | F1 PD | Trovata, ferma o no | IDF1 | Stesso ID nelle soste | Falsi dinamici S/min |
+|---|---|---|---|---|---|---|
+| v2 (solo tracker) | 96,2% | 96,4% | 98,5% | 99,1% | 93,8% | 1,25 |
+| senza semantica | 93,9% | 2,5% | 44,3% | 58,8% | 50,0% | 1,25 |
+| senza semantica né PD | 93,9% | 0 | 42,8% | 57,2% | 43,8% | 1,25 |
+
+Senza semantica la persona ferma viene trattata come oggetto fermo e eliminata: è la semantica, non il movimento
+passato, a tenere in piedi lo stato PD. Il replay solo-tracker di v2 riproduce i numeri della pipeline completa.
+
+**Figure e video**: `make_figures.py --lang it|en` → `eval/figures/<lang>/` (PNG + PDF): timeline delle label
+(1947, 1950, 1952), foto della camera con le label di ogni metodo, barre D/PD/S, sosta e ripartenza, mappa vista
+dall'alto e barre della mappa, ablazione. `make_video.py --map` ora accetta i baseline e disegna la mappa statica:
+`eval/videos/compare_r9a_1950.mp4`, `compare_r9a_1947.mp4`. Pagina: https://claude.ai/artifact/2GJ3QbsawkCTCjpxh4bP46.
+Nelle foto si vede il volto della persona: per il paper serve il consenso o una sfocatura.
