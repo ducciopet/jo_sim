@@ -50,7 +50,8 @@ T = {
                noise='GLIM noise', found='Person found, moving or not', abl_full='SINS full', abl_nosem='no semantics', abl_nosem_nopd='no semantics, no PD'),
 }
 NAMES = {'v2': 'SINS', 'v1': 'jo_detector v1', 'lvdot': 'LV-DOT', 'dynablox': 'Dynablox',
-         'mdetector': 'M-detector', 'xurgbd': 'Xu et al.', 'xuyolo': 'Xu et al. + YOLO', 'unimt': 'UniMT + SimpleTrack'}
+         'mdetector': 'M-detector', 'xurgbd': 'Xu et al.', 'xuyolo': 'Xu et al. + YOLO', 'unimt': 'UniMT + SimpleTrack',
+         'eagermot': 'EagerMOT'}
 
 
 def style():
@@ -153,7 +154,7 @@ def mean_over_reps(per, k):
 def fig_labels(lang, out):
     t = T[lang]
     L = json.loads((RES / 'labels_r9.json').read_text())
-    ms = ['v2', 'v1', 'lvdot', 'dynablox', 'mdetector', 'xurgbd', 'xuyolo', 'unimt']
+    ms = [m for m in ['v2', 'v1', 'lvdot', 'dynablox', 'mdetector', 'xurgbd', 'xuyolo', 'unimt', 'eagermot'] if m in L]
     fig, axs = plt.subplots(1, 3, figsize=(10.5, 3.0), sharey=True)
     names = [NAMES[m] for m in ms]
     cols = [colour(m) for m in ms]
@@ -171,7 +172,7 @@ def fig_labels(lang, out):
 def fig_stopgo(lang, out):
     t = T[lang]
     D = json.loads((RES / 'stopgo_r9.json').read_text())
-    ms = [m for m in ['v2', 'v1', 'lvdot', 'dynablox', 'mdetector', 'xuyolo', 'unimt'] if m in D]
+    ms = [m for m in ['v2', 'v1', 'lvdot', 'dynablox', 'mdetector', 'xuyolo', 'unimt', 'eagermot'] if m in D]
     avg = lambda m, k: None if D[m]['a'][k] is None else statistics.fmean(D[m][r][k] for r in D[m])
     fig, axs = plt.subplots(1, 2, figsize=(8.0, 2.8), sharey=True)
     names, cols = [NAMES[m] for m in ms], [colour(m) for m in ms]
@@ -353,7 +354,7 @@ def main():
     out = REPO / 'eval' / 'figures' / args.lang
     if 'timeline' in args.only:
         for seq in ('20260519_1950', '20260519_1947', '20260519_1952'):
-            fig_timeline(args.lang, out, seq, ['v2', 'v1', 'lvdot', 'dynablox', 'mdetector', 'unimt', 'xuyolo'])
+            fig_timeline(args.lang, out, seq, ['v2', 'v1', 'lvdot', 'dynablox', 'mdetector', 'unimt', 'eagermot', 'xuyolo'])
     if 'labels' in args.only:
         fig_labels(args.lang, out)
     if 'stopgo' in args.only:

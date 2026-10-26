@@ -45,7 +45,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--campaign', default='r9')
     ap.add_argument('--reps', nargs='+', default=['a', 'b', 'c'])
-    ap.add_argument('--methods', nargs='+', default=['v2', 'v1', 'lvdot', 'dynablox', 'mdetector', 'unimt', 'xuyolo'])
+    ap.add_argument('--methods', nargs='+', default=['v2', 'v1', 'lvdot', 'dynablox', 'mdetector', 'unimt', 'eagermot', 'xuyolo'])
     ap.add_argument('--max-range', type=float, default=6.0, help='[m] beyond this the camera does not count as seeing')
     args = ap.parse_args()
     out = {}

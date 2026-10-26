@@ -32,7 +32,7 @@ from harness.metrics import EvalConfig, evaluate  # noqa: E402
 from harness.tracks import read_tracks  # noqa: E402
 
 LABELS = {'dynamic': 'D', 'potentially_dynamic': 'PD'}
-METHODS = ['v2', 'v1', 'lvdot', 'dynablox', 'mdetector', 'xurgbd', 'xuyolo', 'unimt']
+METHODS = ['v2', 'v1', 'lvdot', 'dynablox', 'mdetector', 'xurgbd', 'xuyolo', 'unimt', 'eagermot']
 
 
 def person_scores(conf):

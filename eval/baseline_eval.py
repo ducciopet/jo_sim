@@ -38,7 +38,7 @@ REPO = Path(__file__).resolve().parents[1]
 SEQS = ['20260519_1942', '20260519_1945', '20260519_1947', '20260519_1949', '20260519_1950', '20260519_1952']
 LEVELS = ('dynamic_only', 'merged')
 IDENTITY = {'v1': True, 'v2': True, 'lvdot': False, 'dynablox': True, 'mdetector': False, 'xurgbd': False,
-            'xuyolo': False, 'unimt': True}
+            'xuyolo': False, 'unimt': True, 'eagermot': True}
 # baseline -> (output dir under bags/, run prefix, marker topic, persistent ids)
 BASELINES = {'lvdot': ('lvdot_out', 'lvdot', '/onboard_detector/dynamic_bboxes', False),
              'dynablox': ('dynablox_out', 'dynablox', '/motion_detector/visualization/clusters', True),
@@ -51,6 +51,11 @@ BASELINES = {'lvdot': ('lvdot_out', 'lvdot', '/onboard_detector/dynamic_bboxes',
 def predictions(method, campaign, rep, seq, res, align):
     if method in ('v1', 'v2'):
         return read_tracks(res / seq / method / 'tracks.csv')
+    if method == 'eagermot':  # offline tracker: unified tracks CSV, odom frame (eval/baselines/eagermot/)
+        f = REPO / 'bags' / 'eagermot_out' / f'eagermot{rep}_{seq}.csv'
+        if not Path(str(f) + '.done').exists():
+            return None
+        return tracks_to_mocap(read_tracks(f), align['T_mocap_odom'][seq], align['delta'][seq])
     d, prefix, topic, ids = BASELINES[method]
     out = REPO / 'bags' / d
     if not (out / f'{prefix}{rep}_{seq}.done').exists():
@@ -64,7 +69,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--campaign', default='r9')
     ap.add_argument('--reps', nargs='+', default=['a', 'b', 'c'])
-    ap.add_argument('--methods', nargs='+', default=['v2', 'v1', 'lvdot', 'dynablox', 'mdetector', 'xurgbd', 'xuyolo', 'unimt'])
+    ap.add_argument('--methods', nargs='+', default=['v2', 'v1', 'lvdot', 'dynablox', 'mdetector', 'xurgbd', 'xuyolo', 'unimt', 'eagermot'])
     args = ap.parse_args()
     out = {}
     for r in args.reps:

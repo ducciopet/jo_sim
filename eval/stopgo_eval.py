@@ -106,7 +106,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--campaign', default='r9')
     ap.add_argument('--reps', nargs='*', default=['a', 'b', 'c'])
-    ap.add_argument('--methods', nargs='*', default=['v2', 'v1', 'dynablox', 'unimt', 'lvdot', 'mdetector'])
+    ap.add_argument('--methods', nargs='*', default=['v2', 'v1', 'dynablox', 'unimt', 'eagermot', 'lvdot', 'mdetector', 'xuyolo'])
     ap.add_argument('--bags', nargs='*', default=[], help='name=<bags/replay prefix>, e.g. nosem=semab_r9a_nosem_v2_')
     ap.add_argument('--merge-gap', type=float, default=2.0)
     ap.add_argument('--min-phase', type=float, default=1.0)
