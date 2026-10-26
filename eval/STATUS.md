@@ -539,3 +539,36 @@ DBSCAN comune di `points_adapter.py` (eps 0,5 m, 5 punti), senza ID.
 - (16/10) Due campagne in parallelo falsano la riproduzione (disco): ora `run_queue.sh` + `check_run.py` su ogni run;
   scartate e rifatte 2 run Xu+YOLO e 1 UniMT, le 76 precedenti sono valide.
 - JRMOT bloccato (vedi `eval/baselines/README_baselines.md`).
+
+## Esperimento mappa (2026-10-26): quanto della persona finisce nella mappa SLAM
+
+GLIM da solo su ogni sequenza (`scripts/run_glim_map.sh`), con la rimozione dinamica BBOX alimentata dagli ostacoli
+che ogni metodo ha davvero pubblicato (run r9a; per Dynablox e LV-DOT i loro box, tutti DYNAMIC, convertiti da
+`map_obstacles_from_baseline.py`). Campagne `scripts/run_map_campaign.sh` e `run_map_campaign2.sh`, valutazione
+`map_eval.py` (per sequenza, `results/map_r9a_<seq>.json`) e `map_table.py` (`tables/map_r9a.csv`).
+
+- **Voxel fantasma**: voxel da 10 cm occupati entro 0,8 m dalla traiettoria mocap della persona, 0,2–1,8 m dal
+  pavimento. 0,8 m perché `T_mocap_odom` non osserva l'offset base_link → marker del robot: a robot fermo il corpo
+  della persona sta fino a ~0,6 m dalla posizione mocap (1942). Entro 0,8 m ci finisce anche un po' di struttura
+  statica, quindi la quota rimossa è una stima per difetto.
+- **Statico conservato**: quota dei voxel a più di 1,5 m dalla persona, nella mappa senza rimozione, che restano.
+- Pavimento: livello più denso sotto base_link nella mappa di riferimento, lo stesso per tutte le varianti (la stima
+  per singola mappa saltava tra pavimento e un ripiano ~1 m più su, e falsava 1945 e 1952 nella prima valutazione).
+
+| Variante | 1942 (ferma) | 1945 | 1947 | 1949 (ferma) | 1950 | 1952 | Persona rimossa | Statico conservato (media / min) |
+|---|---|---|---|---|---|---|---|---|
+| nessuna rimozione | 140 | 7633 | 3153 | 185 | 4028 | 8083 | – | 100% |
+| nessuna rimozione, ripetuta (rumore) | 140 | 7627 | 3152 | 184 | 4023 | 8079 | 0,1% | 98,7% / 97,3% |
+| v2 solo D | 140 | 1097 | 766 | 185 | 1070 | 1315 | 80,3% | 97,8% / 95,0% |
+| **v2 D+PD** | **0** | 689 | 196 | **2** | 303 | 808 | **91,4%** | 97,1% / 94,5% |
+| v1 D+PD | 105 | 761 | 291 | 124 | 666 | 1967 | 83,1% | 97,3% / 94,3% |
+| Dynablox | 141 | 525 | 707 | 184 | 960 | 705 | 86,1% | 98,6% / 97,0% |
+| LV-DOT | 102 | 754 | 198 | 4 | 337 | 801 | 90,5% | 97,8% / 95,8% |
+
+- Con la persona ferma (1942, 1949) solo PD la toglie dalla mappa: v2 solo D e Dynablox la lasciano tutta. LV-DOT la
+  toglie in 1949 perché la tiene "in movimento" anche da ferma, lo stesso comportamento che gli costa 402 falsi
+  allarmi/min nel benchmark.
+- Con la persona che cammina v2 D+PD toglie più di v2 solo D in ogni sequenza: PD copre gli istanti in cui rallenta o
+  si ferma. Dynablox fa meglio di v2 su 1945 e 1952.
+- Costo: v2 D+PD conserva in media l'1,6% di struttura statica in meno rispetto al rumore di GLIM (box gonfiati e
+  tracce PD su oggetti statici). Piccolo, ma è un costo da dichiarare nel paper.
