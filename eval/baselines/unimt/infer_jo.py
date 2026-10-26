@@ -132,6 +132,7 @@ if __name__ == '__main__':
     rospy.Subscriber("/front_camera/camera/color/image_raw", Image, image_callback, queue_size=1, buff_size=2**24)  # JO
     rospy.Subscriber("/odometry/filtered", Odometry, pose_callback, queue_size=1)  # JO
     pub = rospy.Publisher('/unimt/tracks', MarkerArray, queue_size=10)  # JO
+    pub_det = rospy.Publisher('/unimt/detections', MarkerArray, queue_size=10)  # JO: CMDT detections before tracking (EagerMOT input)
 
     # load detection model
     cfg = Config.fromfile('./src/detection/scripts/configs/cmdt_wheelchair.py')
@@ -191,11 +192,16 @@ if __name__ == '__main__':
 
             # tracking
             ma = MarkerArray()
+            ma_det = MarkerArray()  # JO
             for i, label in enumerate(class_labels):
                 mask = labels_3d == label
                 dets = np.concatenate([bboxes_3d[mask], scores_3d[mask][:, None]], axis=1).tolist()
                 frame_data = FrameData(dets=dets, ego=ego2global, pc=None, det_types=labels_3d[mask], time_stamp=float(timestamp))
                 frame_data.dets = [BBox.bbox2world(ego2global, det) for det in frame_data.dets]
+                for j, (d, sc) in enumerate(zip(frame_data.dets, scores_3d[mask])):  # JO: world-frame detections, score in color.g
+                    md = box_marker(BBox.bbox2array(d), len(ma_det.markers), 'det_' + class_names[label], data_dict['pc_timestamp'])
+                    md.color.g = float(sc)
+                    ma_det.markers.append(md)
                 results = trackers[i].frame_mot(frame_data)
                 for trk in results:
                     if trk[2].split('_')[0] == 'alive':  # as upstream: only alive tracks are published
@@ -206,6 +212,10 @@ if __name__ == '__main__':
                 m = Marker(); m.header.frame_id = 'odom'; m.header.stamp = data_dict['pc_timestamp']
                 m.action = Marker.DELETEALL; ma.markers.append(m)
             pub.publish(ma)
+            if not ma_det.markers:  # JO
+                m = Marker(); m.header.frame_id = 'odom'; m.header.stamp = data_dict['pc_timestamp']
+                m.action = Marker.DELETEALL; ma_det.markers.append(m)
+            pub_det.publish(ma_det)  # JO
 
             print("infer time: %.3f n=%d" % (rospy.get_time() - time, len(ma.markers)), flush=True)
             data_dict['ready'] = False

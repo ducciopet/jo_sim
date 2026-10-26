@@ -17,7 +17,7 @@ REPO = Path(__file__).resolve().parents[1]
 
 METHODS = [
     # key, name, paper, sensors, state, folder, image, notes (list of short sentences)
-    ('v2', 'jo_detector v2', 'questo lavoro', 'LiDAR, RGB-D', 'pronto', '–', '–', []),
+    ('v2', 'SINS', 'questo lavoro', 'LiDAR, RGB-D', 'pronto', '–', '–', []),
     ('v1', 'jo_detector v1', 'predecessore, deriva da LV-DOT', 'LiDAR, RGB-D', 'pronto', '–', '–', []),
     ('lvdot', 'LV-DOT', 'Xu et al., 2025', 'LiDAR, RGB-D', 'pronto', 'lvdot/', 'lvdot-noetic:upstream', [
         'Codice originale (commit 449bf2c), ROS1 Noetic con GPU.',

@@ -40,16 +40,16 @@ T = {
                f1D='F1 di D (persona che cammina)', f1PD='F1 di PD (persona ferma)', fdyn='Oggetti fermi presi per dinamici [al min]',
                idkept='Stesso ID quando si ferma e riparte', tracked='Persona seguita mentre è ferma',
                removed='Persona tolta dalla mappa', removed_static='Persona ferma tolta (1942, 1949)', kept='Struttura statica conservata',
-               none='Nessuna rimozione', v2d='v2, solo D', v2dpd='v2, D+PD', v1dpd='v1, D+PD', na='n/d (nessun ID)',
-               noise='rumore di GLIM', found='Persona trovata, ferma o no', abl_full='v2 completo', abl_nosem='senza semantica', abl_nosem_nopd='senza semantica né PD'),
+               none='Nessuna rimozione', v2d='SINS, solo D', v2dpd='SINS, D+PD', v1dpd='v1, D+PD', na='n/d (nessun ID)',
+               noise='rumore di GLIM', found='Persona trovata, ferma o no', abl_full='SINS completo', abl_nosem='senza semantica', abl_nosem_nopd='senza semantica né PD'),
     'en': dict(gt='Ground truth (mocap)', time='time [s]', D='D: moving', PD='PD: standing, may move', miss='missed',
                f1D='D F1 (walking person)', f1PD='PD F1 (standing person)', fdyn='Static objects flagged dynamic [per min]',
                idkept='Same ID across stop and restart', tracked='Person tracked while standing',
                removed='Person removed from the map', removed_static='Standing person removed (1942, 1949)', kept='Static structure kept',
-               none='No rejection', v2d='v2, D only', v2dpd='v2, D+PD', v1dpd='v1, D+PD', na='n/a (no ID)',
-               noise='GLIM noise', found='Person found, moving or not', abl_full='v2 full', abl_nosem='no semantics', abl_nosem_nopd='no semantics, no PD'),
+               none='No rejection', v2d='SINS, D only', v2dpd='SINS, D+PD', v1dpd='v1, D+PD', na='n/a (no ID)',
+               noise='GLIM noise', found='Person found, moving or not', abl_full='SINS full', abl_nosem='no semantics', abl_nosem_nopd='no semantics, no PD'),
 }
-NAMES = {'v2': 'jo_detector v2', 'v1': 'jo_detector v1', 'lvdot': 'LV-DOT', 'dynablox': 'Dynablox',
+NAMES = {'v2': 'SINS', 'v1': 'jo_detector v1', 'lvdot': 'LV-DOT', 'dynablox': 'Dynablox',
          'mdetector': 'M-detector', 'xurgbd': 'Xu et al.', 'xuyolo': 'Xu et al. + YOLO', 'unimt': 'UniMT + SimpleTrack'}
 
 

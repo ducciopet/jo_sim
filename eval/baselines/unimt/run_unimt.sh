@@ -19,7 +19,7 @@ docker run --rm --gpus all --name unimt_run -v $B:/bags -v $D:/jo \
   sleep 4; rosparam set use_sim_time true
   cd /ws && python3.10 -u /jo/infer_jo.py > /bags/unimt_out/${OUT}_logs/detector.log 2>&1 &
   for i in \$(seq 300); do grep -q 'finish init' /bags/unimt_out/${OUT}_logs/detector.log && break; sleep 1; done; sleep 12  # JO: model load, then as v1/v2
-  rosbag record -O /bags/unimt_out/$OUT.bag /unimt/tracks /odometry/filtered __name:=rec > /bags/unimt_out/${OUT}_logs/rec.log 2>&1 &
+  rosbag record -O /bags/unimt_out/$OUT.bag /unimt/tracks /unimt/detections /odometry/filtered __name:=rec > /bags/unimt_out/${OUT}_logs/rec.log 2>&1 &
   sleep 2
   rosbag play --clock -q /bags/unimt_tmp/in_$SEQ.bag > /bags/unimt_out/${OUT}_logs/play.log 2>&1
   sleep 2; rosnode kill /rec; sleep 2

@@ -608,3 +608,27 @@ passato, a tenere in piedi lo stato PD. Il replay solo-tracker di v2 riproduce i
 dall'alto e barre della mappa, ablazione. `make_video.py --map` ora accetta i baseline e disegna la mappa statica:
 `eval/videos/compare_r9a_1950.mp4`, `compare_r9a_1947.mp4`. Pagina: https://claude.ai/artifact/2GJ3QbsawkCTCjpxh4bP46.
 Nelle foto si vede il volto della persona: per il paper serve il consenso o una sfocatura.
+
+## Nome del metodo e prova fuori dal campo visivo (2026-10-26)
+
+**Nome**: da oggi il metodo si chiama **SINS (Still Is Not Static)**. Nelle figure, nei video e nelle pagine compare
+come SINS; nel codice restano il pacchetto `jo_detector_v2`, i topic `/jo_detector_v2/...` e le chiavi `v2` dei
+risultati (le bag registrate li contengono: un cambio va fatto su un branch dedicato, con remap).
+
+**Dentro e fuori dal campo della camera** (`fov_eval.py`, `results/fov_r9.json`, 3 ripetizioni). Camera colore
+frontale 89,6° (da camera_info), entro 6 m; posizione della persona nel frame del robot dal mocap. Fuori dal
+campo: 1945 e 1952 sempre, 1947 e 1950 il 44–45% del tempo, 1942 e 1949 mai; in tutto 1550 frame su 2890.
+Mentre cammina fuori dal campo la persona gira in mediana di 35–56°/s (percorsi curvi; uno zig-zag vero e proprio
+non è mai stato registrato: va nella nuova campagna).
+
+| Metodo | Dove | Cammina: trovata / come D | Ferma: trovata / come PD | Cambi di ID per ripetizione |
+|---|---|---|---|---|
+| SINS | nel campo | 98,6% / 91,7% | 99,6% / 98,7% | 2,7 (lampi di un tick) |
+| SINS | fuori | 98,9% / 96,6% | 93,7% / 83,5% | 0 |
+| v1 | nel campo | 97,0% / 75,8% | 91,7% / 87,6% | 21,7 |
+| v1 | fuori | 94,2% / 93,8% | 84,0% / 70,4% | 4,3 |
+| Dynablox | nel campo | 91,7% / 91,7% | 9,8% / – | 4,0 |
+| Dynablox | fuori | 97,0% / 97,0% | 39,3% / – | 40,0 |
+
+Fuori dal campo SINS segue chi cammina come dentro; il punto debole è la persona che si ferma fuori dal campo
+(PD 83,5% contro 98,7%), perché lì nessuna classe YOLO la sostiene: regge solo se la classe era già stata vista.

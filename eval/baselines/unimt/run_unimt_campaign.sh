@@ -1,11 +1,11 @@
 #!/bin/bash
 # UniMT on every benchmark sequence, REPS repetitions, resumable (<out>.done in bags/unimt_out/).
-# Stop between runs: touch bags/unimt_out/STOP. Resume: run again.
+# Stop between runs: touch bags/unimt_out/STOP. Resume: run again. PREFIX=<name>: output prefix (default unimt).
 D=$(cd $(dirname $0) && pwd); B=$D/../../../bags; REPS=${REPS:-a b c}
 for s in 1942 1945 1947 1949 1950 1952; do
   seq=20260519_$s
   for r in $REPS; do
-    out=unimt${r}_$seq
+    out=${PREFIX:-unimt}${r}_$seq
     [ -e $B/unimt_out/$out.done ] && continue
     [ -e $B/unimt_out/STOP ] && { echo "$(date +%T) STOP"; exit 0; }
     echo "$(date +%T) start $out"

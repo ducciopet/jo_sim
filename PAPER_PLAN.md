@@ -1,4 +1,7 @@
-# Piano per la pubblicazione di jo_detector_v2
+# Piano per la pubblicazione di SINS (Still Is Not Static)
+
+> Dal 26/10/2026 il metodo si chiama **SINS: Still Is Not Static**. Il codice resta nel pacchetto ROS
+> `jo_detector_v2` (topic e bag registrate usano quel nome); nei testi, nelle figure e nelle pagine il nome è SINS.
 
 Documento di lavoro. Si appoggia a `BENCHMARK_PLAN.md`, che contiene il protocollo sperimentale
 nel dettaglio; qui ci sono il posizionamento, la venue, le scadenze e la struttura dell'articolo.
@@ -66,8 +69,9 @@ Il paper deve quindi delimitare onestamente la novità. Candidati, dal più fort
    basata sui track). È opzionale, ma un esperimento "mappa con e senza rimozione" rende il
    paper molto più interessante per un pubblico SLAM.
 
-**Titolo di lavoro**: *Occlusion-Aware Dynamic and Potentially-Dynamic Obstacle Tracking with
-Multi-Camera RGB-D and LiDAR Fusion for Ground Robots*.
+**Titolo di lavoro**: *SINS: Still Is Not Static. Tracking Dynamic and Potentially-Dynamic People with
+LiDAR and RGB-D for Mapping and Navigation* (prima: *Occlusion-Aware Dynamic and Potentially-Dynamic Obstacle
+Tracking with Multi-Camera RGB-D and LiDAR Fusion for Ground Robots*).
 
 **Claim principale (da confermare con i numeri, non prima)**: a parità di detector, v2 riduce i
 falsi dinamici e gli ID switch rispetto a LV-DOT e v1, soprattutto in scene affollate e con occlusioni,
@@ -77,7 +81,7 @@ Se i numeri non sostengono il punto 1, il paper diventa un system paper (punti 2
 cambiato di conseguenza. La decisione si prende a fine gennaio, guardando le ablation.
 
 **Riposizionamento proposto (26/10, dopo il confronto con 5 metodi e l'esperimento mappa).** Il filo del paper
-diventa "fermo non è statico" (hook possibile: *Still, Not Static*): un unico stato semantico D/PD/S, prodotto
+diventa "fermo non è statico" (nome del metodo: **SINS, Still Is Not Static**): un unico stato semantico D/PD/S, prodotto
 dal tracker e usato in modo coerente da tracking, SLAM e navigazione. Le prove che oggi lo sostengono
 (dettagli in `eval/STATUS.md`, figure in `eval/figures/en/`):
 - tracking: F1 di PD 96,4%, nessun metodo pubblicato ha questo stato; la persona ferma resta seguita il 93% del

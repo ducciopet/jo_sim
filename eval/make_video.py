@@ -37,7 +37,7 @@ from harness.ros_io import load_mocap  # noqa: E402
 REPO = Path(__file__).resolve().parents[1]
 COL = {'dynamic': '#d62728', 'potentially_dynamic': '#ff9f1c', 'static': '#8a8a8a'}
 SHORT = {'dynamic': 'D', 'potentially_dynamic': 'PD', 'static': 'S'}
-NAME = {'v1': 'v1', 'v2': 'v2 (Hungarian)', 'v2g': 'v2 (greedy-Kuhn)', 'lvdot': 'LV-DOT', 'dynablox': 'Dynablox',
+NAME = {'v1': 'v1', 'v2': 'SINS', 'v2g': 'v2 (greedy-Kuhn)', 'lvdot': 'LV-DOT', 'dynablox': 'Dynablox',
         'mdetector': 'M-detector', 'xurgbd': 'Xu et al.', 'xuyolo': 'Xu et al. + YOLO', 'unimt': 'UniMT + SimpleTrack'}
 HFOV = np.deg2rad(87)
 
