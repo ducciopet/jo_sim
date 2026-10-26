@@ -632,3 +632,18 @@ non è mai stato registrato: va nella nuova campagna).
 
 Fuori dal campo SINS segue chi cammina come dentro; il punto debole è la persona che si ferma fuori dal campo
 (PD 83,5% contro 98,7%), perché lì nessuna classe YOLO la sostiene: regge solo se la classe era già stata vista.
+
+## EagerMOT (2026-10-26)
+
+`eval/baselines/eagermot/`: codice originale (commit 2792a76, in `eagermot_src/`, ignorato da git), fusione 3D-2D e
+tracking invariati, parametri pedoni di nuScenes (`NUSCENES_BEST_PARAMS`). Box 3D: CMDT, il rilevatore di UniMT,
+pubblicato prima del suo tracker (`/unimt/detections`, campagna `PREFIX=unimtdet`); box 2D: lo YOLO della replay SINS
+della stessa ripetizione. `export_inputs.py` (python di sistema) → `run_eagermot_jo.py` (venv `.venv`) →
+`bags/eagermot_out/eagermot<rep>_<seq>.csv`. Nessuno stato di moto: ogni traccia conta come "dinamica", come UniMT.
+
+| | Ferma o no: recall | Solo movimento: recall | Allarmi/min (movimento) | IDF1 | Stesso ID nelle soste | Nel campo / fuori |
+|---|---|---|---|---|---|---|
+| EagerMOT | 47,6% | 13,9% | 248 | 53,9% | 37,5% | trovata 97,9% / 4,1% |
+| UniMT + SimpleTrack | 47,9% | 14,5% | 248 | 54,7% | 37,5% | 97,4% / 5,1% |
+
+Stesso rilevatore, due tracker diversi, stesso risultato: il limite è CMDT, che guarda solo avanti (x 0–14,4 m).

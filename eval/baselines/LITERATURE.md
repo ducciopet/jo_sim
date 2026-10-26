@@ -30,7 +30,7 @@ addestramento) o *appreso* (rete addestrata su un dataset). **Stati**: che cosa 
 | *Ibridi LiDAR + camera* | | | | | | | |
 | LV-DOT (Xu et al., 2025) | LiDAR + RGB-D | geometrico + YOLO | box dinamici | in moto | no | sì | fatto |
 | UniMT + SimpleTrack (He et al., 2025) | LiDAR + camera | appreso (rilevatore CMDT) | tracce di persone | persona | sì | sì | fatto |
-| EagerMOT (Kim et al., ICRA 2021) | box 3D da LiDAR + box 2D da camera | tracker geometrico su rilevatori appresi | tracce 3D | persona | sì | sì (aleksandrkim61/EagerMOT) | **in corso** |
+| EagerMOT (Kim et al., ICRA 2021) | box 3D da LiDAR + box 2D da camera | tracker geometrico su rilevatori appresi | tracce 3D | persona | sì | sì (aleksandrkim61/EagerMOT) | fatto |
 | DeepFusionMOT (Wang et al., RA-L 2022) | LiDAR + camera | associazione appresa | tracce 3D | persona | sì | sì (wangxiyang2022/DeepFusionMOT) | candidato |
 | JRMOT (Shenoi et al., IROS 2020) | LiDAR + camera | appreso | tracce di persone | persona | sì | sì, ma serve Gurobi | bloccato |
 | SPENCER (Linder et al., ICRA 2016) | laser 2D + RGB-D | rilevatori + tracker IMM | tracce di persone | persona | sì | sì (spencer-project, ROS 1) | candidato (fetta 2D del LiDAR) |
@@ -48,7 +48,7 @@ addestramento) o *appreso* (rete addestrata su un dataset). **Stati**: che cosa 
 
 ## Ordine consigliato
 
-1. **EagerMOT** (in corso): ibrido, il più citato tra i tracker LiDAR + camera con codice.
+1. ~~EagerMOT~~ fatto (26/10): uguale a UniMT, perché usa lo stesso rilevatore 3D.
 2. **4DMOS o MapMOS**: il MOS LiDAR appreso di riferimento; stesso trattamento di M-detector (punti → DBSCAN comune).
 3. **DUFOMap** nell'esperimento mappa, accanto a Dynablox.
 4. **YOLO + ByteTrack + depth**: il baseline "solo camera appreso" che un revisore chiede per primo; facile.
