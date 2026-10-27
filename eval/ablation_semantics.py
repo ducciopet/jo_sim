@@ -35,7 +35,7 @@ from label_eval import person_scores  # noqa: E402
 REPO = Path(__file__).resolve().parents[1]
 REPLAY = REPO / 'bags' / 'replay'
 CONT = '/home/ros/bags/replay'
-CONTAINER = 'jo_sim_lv-dot-jo-sim_lv-dot-1'
+CONTAINER = 'jo_sim_sins'
 SEQS = ['20260519_1942', '20260519_1945', '20260519_1947', '20260519_1949', '20260519_1950', '20260519_1952']
 NOSEM = ['-p', '"track_semantic_dynamic_classes:=[\'__none__\']"']
 CONFIGS = {

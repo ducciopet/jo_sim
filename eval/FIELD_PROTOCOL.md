@@ -48,7 +48,7 @@ rispetto alla partenza del robot → classe **S**, e prova per lo "scivolamento"
 1. **RTK sulle persone, se disponibile** (anche uno solo): negli esperimenti da 1 persona su di lei, negli altri a turno
    su una persona diversa. Posizione ~2 cm, nello stesso riferimento del GNSS del robot.
 2. **Annotazione offline** dalle bag: posizioni a waypoint + istanti di partenza/sosta per ogni persona
-   (formato `jo_detector_v2/eval/GT_SCHEMA.md`), guardando LiDAR grezzo e video, **senza** l'output di nessun metodo.
+   (formato `sins/eval/GT_SCHEMA.md`), guardando LiDAR grezzo e video, **senza** l'output di nessun metodo.
 3. **Camera esterna su treppiede** (anche un telefono) che inquadra tutta l'area: riferimento per identità e istanti.
 4. **Pettorine numerate** di colori diversi (P1…P5).
 

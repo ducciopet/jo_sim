@@ -1,6 +1,6 @@
-# v2 (jo_detector_v2) on `own` (lab sequences, bags/bags_benchmark, Qualisys GT)
+# v2 = SINS (package sins, formerly jo_detector_v2) on `own` (lab sequences, bags/bags_benchmark, Qualisys GT)
 
-Launch: `ros2 launch jo_detector_v2 run_detector.launch.py rviz:=false camera_names:=front_camera raw_depth_transport:=raw`
+Launch: `ros2 launch sins run_detector.launch.py rviz:=false camera_names:=front_camera raw_depth_transport:=raw`
 (env `indoor`, default), plus `eval/adapters/realsense_bag_adapter.py` running alongside.
 
 Only sensor-I/O settings differ from the robot's defaults (BENCHMARK_PLAN.md, rule 3):
@@ -20,4 +20,4 @@ Input adapter (`eval/adapters/realsense_bag_adapter.py`), because these bags lac
 
 v1 reads the raw depth image directly and needs none of these; the adapter adds no information.
 
-Code change needed (I/O only; jo_detector_v2 `ba0353a`): `camera_names` launch override.
+Code change needed (I/O only; sins `ba0353a`): `camera_names` launch override.

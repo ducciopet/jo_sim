@@ -17,7 +17,7 @@ fi
 # start the detector BEFORE the bag and give it time to load (YOLO model, ~4-6 s), so no method loses
 # the first seconds of the sequence to start-up
 if [ "$METHOD" = v2 ]; then
-  ros2 launch jo_detector_v2 run_detector.launch.py rviz:=false $V2_ARGS > $LOG/det.log 2>&1 &
+  ros2 launch sins run_detector.launch.py rviz:=false $V2_ARGS > $LOG/det.log 2>&1 &
 else
   ros2 launch jo_detector run_detector.launch.py use_sim_time:=true rviz:=false $V1_ARGS > $LOG/det.log 2>&1 &
 fi

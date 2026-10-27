@@ -3,7 +3,7 @@
 realsense_bag_adapter.py
 ─────────────────────────────────────────────────────────────────────────────
 Input adapter for bags recorded with fewer RealSense streams than
-jo_detector_v2 expects (e.g. bags/bags_benchmark, 2026-05-19: raw color,
+sins expects (e.g. bags/bags_benchmark, 2026-05-19: raw color,
 raw unaligned depth, no extrinsics topic). Publishes, per camera, the two
 streams that can be derived exactly from what the bag already contains:
 

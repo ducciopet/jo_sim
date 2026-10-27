@@ -3,8 +3,8 @@
 Why does a v2 run miss the person (FN) or report things that aren't there (FP)?
 
 Needs a run recorded with the tracker's full output and its input detections
-(eval/scripts/run_method.sh with EXTRA_TOPICS="/jo_detector_v2/tracker/tracks
-/jo_detector_v2/dbscan_detector/fused/detections3d ..."), plus the GT and the
+(eval/scripts/run_method.sh with EXTRA_TOPICS="/sins/tracker/tracks
+/sins/dbscan_detector/fused/detections3d ..."), plus the GT and the
 alignment written by run_own_eval.py.
 
 FN causes, per grid frame where the GT person is not matched:
@@ -39,7 +39,8 @@ from harness.tracks import read_tracks  # noqa: E402
 def frames_by_time(bag, topic, parse):
     out = {}
     with AnyReader([Path(bag)], default_typestore=typestore()) as r:
-        cs = [c for c in r.connections if c.topic == topic]
+        # runs recorded before the package rename (2026-10-26) carry the old /jo_detector_v2 prefix
+        cs = [c for c in r.connections if c.topic in (topic, topic.replace('/sins/', '/jo_detector_v2/', 1))]
         for c, _, raw in r.messages(cs):
             m = r.deserialize(raw, c.msgtype)
             out[stamp_ns(m.header)] = parse(m)
@@ -81,10 +82,10 @@ def main():
             return p[0], p[1]
 
         det_run = Path(args.runs) / f'{args.inputs_prefix}_v2_{s}' if args.inputs_prefix else run
-        det_t, dets = frames_by_time(det_run, '/jo_detector_v2/dbscan_detector/fused/detections3d',
+        det_t, dets = frames_by_time(det_run, '/sins/dbscan_detector/fused/detections3d',
                                      lambda m: [to_mocap(x.bbox.center.position.x, x.bbox.center.position.y)
                                                 for x in m.detections])
-        trk_t, trks = frames_by_time(run, '/jo_detector_v2/tracker/tracks',
+        trk_t, trks = frames_by_time(run, '/sins/tracker/tracks',
                                      lambda m: [(int(x.id.split('_')[1]),
                                                  *to_mocap(x.bbox.center.position.x, x.bbox.center.position.y),
                                                  x.results[0].hypothesis.class_id,

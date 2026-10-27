@@ -34,7 +34,7 @@ from harness.ros_io import load_mocap, load_obstacles, load_odometry
 from harness.tracks import write_tracks
 
 REPO = Path(__file__).resolve().parents[1]
-METHOD_REPO = {'v1': 'jo_detector', 'v2': 'jo_detector_v2'}
+METHOD_REPO = {'v1': 'jo_detector', 'v2': 'sins'}
 
 
 def git_state(path):

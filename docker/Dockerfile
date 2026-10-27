@@ -148,7 +148,7 @@ RUN (for i in 1 2 3 4 5; do apt-get update && break || sleep 10; done) \
     && rm -rf /var/lib/apt/lists/*
 
 # lap ("lap>=0.5.12"): linear-assignment solver ultralytics' built-in
-# trackers (ByteTrack/BoT-SORT, used by jo_detector_v2's
+# trackers (ByteTrack/BoT-SORT, used by sins's
 # yolo_seg_track_detector.py) need for frame-to-frame box matching.
 # Ultralytics normally auto-installs it on first model.track() call, but
 # that AutoUpdate path pip-installs at RUNTIME into this

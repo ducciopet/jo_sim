@@ -1,7 +1,7 @@
 # Piano per la pubblicazione di SINS (Still Is Not Static)
 
-> Dal 26/10/2026 il metodo si chiama **SINS: Still Is Not Static**. Il codice resta nel pacchetto ROS
-> `jo_detector_v2` (topic e bag registrate usano quel nome); nei testi, nelle figure e nelle pagine il nome è SINS.
+> Dal 26/10/2026 il metodo si chiama **SINS: Still Is Not Static**, anche nel codice (pacchetto ROS `sins`,
+> repo `github.com/ducciopet/sins`, topic `/sins/...`; fino al 26/10 `jo_detector_v2`).
 
 Documento di lavoro. Si appoggia a `BENCHMARK_PLAN.md`, che contiene il protocollo sperimentale
 nel dettaglio; qui ci sono il posizionamento, la venue, le scadenze e la struttura dell'articolo.
@@ -193,7 +193,7 @@ Materiale aggiuntivo: un video di 2–3 minuti (molto utile per RA-L/IROS) e il 
 
 ## 6. Rilascio di codice e dati
 
-- Il codice è oggi su `github.com/ducciopet/jo_detector_v2`. Prima della submission servono:
+- Il codice è oggi su `github.com/ducciopet/sins` (già `jo_detector_v2`). Prima della submission servono:
   licenza (BSD-3 o Apache-2, compatibile con le dipendenze; il segmentatore del terreno ha già
   `LICENSE-ground_segmentation.txt`, da verificare), un README "quick start" su bag di esempio
   e il tag della versione usata nel paper.

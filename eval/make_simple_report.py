@@ -143,7 +143,7 @@ def main():
         al2=num(v2['alarms']), al1=num(v1['alarms']), ratio=f'{ratio:.0f}', reps=v2['reps'],
         percent=percent, lower=lower, seq_rows=seq_rows, hist_rows=hist_rows, options=options,
         first_src=first[3] if first else '', first_note=html.escape(VIDEO_NOTE.get(first[0], '')) if first else '',
-        commit_v2=git(REPO / 'jo_detector_v2', 'rev-parse', '--short', 'HEAD'),
+        commit_v2=git(REPO / 'sins', 'rev-parse', '--short', 'HEAD'),
         commit_v1=git(REPO / 'jo_detector', 'rev-parse', '--short', 'HEAD'), campaign=c,
         generated=datetime.date.today().strftime('%d/%m/%Y'))
     (out / 'index.html').write_text(page)

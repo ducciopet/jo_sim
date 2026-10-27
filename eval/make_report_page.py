@@ -75,7 +75,7 @@ def main():
     data = {
         'campaign': c, 'levels': reps, 'seq_info': SEQ_INFO, 'videos': vids,
         'history': [{'commit': h, 'label': l, 'mota': m} for h, l, m in HISTORY],
-        'commits': {'v2': git(REPO / 'jo_detector_v2', 'rev-parse', '--short', 'HEAD'),
+        'commits': {'v2': git(REPO / 'sins', 'rev-parse', '--short', 'HEAD'),
                     'v1': git(REPO / 'jo_detector', 'rev-parse', '--short', 'HEAD'),
                     'repo': git(REPO, 'rev-parse', '--short', 'HEAD')},
         'jobs_done': done_jobs, 'jobs_total': args.jobs_total, 'compare': args.compare, 'static': static,

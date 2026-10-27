@@ -9,7 +9,7 @@ D=$(cd $(dirname $0) && pwd)
 C=${CAMPAIGN:-r8}; REPS=${REPS:-a b c}; V1=${V1:-1}; GREEDY=${GREEDY:-1}
 SEQS=${SEQS:-20260519_1942 20260519_1945 20260519_1947 20260519_1949 20260519_1950 20260519_1952}
 STATE=$D/${C}_state.log
-V2_TOPICS="/jo_detector_v2/tracker/tracks /jo_detector_v2/dbscan_detector/fused/detections3d /jo_detector_v2/dbscan_detector/fused/clusters /yolo_semantic_seg/front_camera/detections /front_camera/camera/color/camera_info /tf /tf_static"
+V2_TOPICS="/sins/tracker/tracks /sins/dbscan_detector/fused/detections3d /sins/dbscan_detector/fused/clusters /yolo_semantic_seg/front_camera/detections /front_camera/camera/color/camera_info /tf /tf_static"
 
 job() {  # job <name> <out> <command...>
   local name=$1 out=$2; shift 2

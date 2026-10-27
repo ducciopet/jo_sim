@@ -42,14 +42,15 @@ from harness.ros_io import stamp_ns  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
 SEQS = ['20260519_1942', '20260519_1945', '20260519_1947', '20260519_1949', '20260519_1950', '20260519_1952']
-FUSED = '/jo_detector_v2/dbscan_detector/fused/detections3d'
+# SINS fused detections; runs recorded before the package rename (2026-10-26) carry the old jo_detector_v2 prefix
+FUSED = ('/sins/dbscan_detector/fused/detections3d', '/jo_detector_v2/dbscan_detector/fused/detections3d')
 
 
 def load_fused(run):
     """fused detections of a v2 run -> unified-track-like frame (t_ns, x, y) in odom, one row per detection."""
     rows = []
     with AnyReader([run]) as r:
-        for c, _, raw in r.messages([c for c in r.connections if c.topic == FUSED]):
+        for c, _, raw in r.messages([c for c in r.connections if c.topic in FUSED]):
             m = r.deserialize(raw, c.msgtype)
             t = stamp_ns(m.header)
             for d in m.detections:

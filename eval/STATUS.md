@@ -13,7 +13,7 @@ Vedi `../BENCHMARK_PLAN.md` per il protocollo, `../PAPER_PLAN.md` per il piano d
 | GPU | NVIDIA GeForce RTX 4060 Laptop, 8 GB |
 | Driver / CUDA | 580.178.04 / CUDA 13.0; torch 2.14.0+cu130 nel container, `cuda.is_available() = True` |
 | CPU / RAM | 20 thread / 31 GB |
-| ROS | ROS 2 Jazzy (container `jo-sim_lv_dot:latest`) |
+| ROS | ROS 2 Jazzy (container `jo_sim_sins`, immagine `jo-sim_sins:latest`) |
 | Docker | 29.8.0, nvidia-container-toolkit installato |
 | Disco libero su `/` | **62 GB** su 503 GB |
 
@@ -27,7 +27,7 @@ Vedi `../BENCHMARK_PLAN.md` per il protocollo, `../PAPER_PLAN.md` per il piano d
 | `numpy>=2` contro `cv_bridge` per numpy 1.x, quindi il YOLO di v1 andava in crash | `cv_bridge` rimosso dal nodo YOLO di v1 (jo_detector `e09610a`); nessun nodo usa scipy |
 | v1 non produceva output su bag: transport `compressedDepth`/`compressed` scritte nel codice | rese parametri (default invariati), con argomenti di launch |
 | la calibrazione ICP di v1 usava gli intrinseci colore sulla depth raw, quindi 0,5–1,1 m di errore | argomento `calibration_camera_info_topic` (jo_detector `ee170f3`) |
-| v2 non girava sulle bag con una sola camera | argomento `camera_names` (jo_detector_v2 `ba0353a`) |
+| v2 non girava sulle bag con una sola camera | argomento `camera_names` (`sins` `ba0353a`) |
 | alle bag di maggio mancano estrinseco, immagine compressa e nuvola di depth che v2 si aspetta | `adapters/realsense_bag_adapter.py`; estrinseco verificato identico al driver |
 | GLIM non è deterministico, quindi ogni run avrebbe un'odometria diversa | odometria generata **una volta** per sequenza (`scripts/make_odom.sh`) e riprodotta a tutti i metodi |
 | `motmetrics` non funziona nel container (scipy di sistema per numpy 1.x) | harness eseguito sull'host; nostre metriche verificate identiche a motmetrics |
@@ -109,7 +109,7 @@ singoli track; parametri confrontati con il replay solo-tracker sugli stessi inp
 
 Il decadimento a 5 tick invece di 3 dà risultati identici su questi dati.
 
-Variante successiva (`jo_detector_v2`, commit dopo `7a91090`): il debounce lungo vale solo per i track senza classe
+Variante successiva (`sins` (allora `sins`), commit dopo `7a91090`): il debounce lungo vale solo per i track senza classe
 **dentro il FOV**; fuori FOV tornano 3 tick, per non ritardare chi si muove dietro il robot. Replay solo-tracker sugli
 stessi input del run finale: latenza →D 0,42 → 0,33 s, recall D 92,2% → 93,6%, FN 331 → 312, FP 35 → 62 (tutti senza
 classe e fuori FOV), MOTA 87,2% → 86,9%. La tabella sopra è ancora quella del run completo precedente a questa variante.
@@ -172,7 +172,7 @@ anche i punti sul prolungamento di un muro lontano; una persona ferma sulla line
 punti e la detection, e la "fetta" spezzava le persone in frammenti che diventavano track duplicati. Ora la rimozione
 è limitata all'estensione del muro (+0,2 m). Pipeline completa: MOTA 91,5 → 93,1%, IDF1 79,2 → 87,3%.
 
-**Altezza nell'associazione** (jo_detector_v2, commit dopo `52a5573`): il track tiene una media mobile della **cima**
+**Altezza nell'associazione** (`sins`, commit dopo `52a5573`): il track tiene una media mobile della **cima**
 delle box associate; i candidati pagano 0,5 per metro di differenza (rifiuto oltre 1 m). Replay solo-tracker sugli input
 r6, 2 ripetizioni: FP 34/32 → 15/11, IDF1 74,4 → 80,8%, MOTA 93,2/93,3 → 93,8/93,9%, FN invariati. Lo scambio d'ID della
 1950 sparisce; quello della 1945 resta (l'ingombro ha una cima simile).
@@ -236,7 +236,7 @@ Differenze di MOTA dentro il rumore del replay (~0,6), ma `hungarian` ha sempre 
 lo sceglie in 5 sequenze su 6. Con una sola persona per sequenza l'associazione ha pochi casi ambigui: il confronto
 vero va fatto su scene con più persone.
 
-**Pipeline completa, r7** (`jo_detector_v2` con le tre correzioni, `greedy_kuhn`; v1 corretto, config indoor;
+**Pipeline completa, r7** (`sins` con le tre correzioni, `greedy_kuhn`; v1 corretto, config indoor;
 `tables/own_r7_{full,dynamic_only,merged}.csv`):
 
 | Livello | MOTA v1 | MOTA v2 | IDF1 v1 | IDF1 v2 | FP v1 / v2 | FN v1 / v2 |
@@ -259,7 +259,7 @@ usato**.
   controllare il frame rate della depth nella bag (`ros2 bag info`), non solo che il topic ci sia.
 
 **Aggiornamento (2026-10-14, sera):** `track_assignment_method` ha ora default `hungarian` (codice e
-`cfg/{indoor,outdoor}/tracker.yaml`, `jo_detector_v2` `6ff364b`); `greedy_kuhn` resta per l'ablation. I numeri r7
+`cfg/{indoor,outdoor}/tracker.yaml`, `sins` `6ff364b`); `greedy_kuhn` resta per l'ablation. I numeri r7
 sopra sono stati misurati con `greedy_kuhn`; con `hungarian` sugli stessi input: MOTA 97,44, IDF1 88,92, IDSW 4.
 
 ---
@@ -269,16 +269,16 @@ sopra sono stati misurati con `greedy_kuhn`; con `hungarian` sugli stessi input:
 Obiettivo: numeri da paper con media ± deviazione standard (l'IDF1 cambia di vari punti tra run) e l'ablation
 dell'associazione a parità di input.
 
-- Codice: `jo_detector_v2` `6ff364b` (default `hungarian`), `jo_detector` `e2bd34a` (config indoor).
+- Codice: `sins` `6ff364b` (default `hungarian`), `jo_detector` `e2bd34a` (config indoor).
 - `scripts/run_campaign.sh` (copia in `bags/replay/`): per ripetizione a, b, c e per sequenza, v2 e v1 a pipeline
   completa (`r8<rep>_{v2,v1}_<seq>`, v2 registra anche gli input del tracker), poi `greedy_kuhn` col solo tracker
   sugli input di ciascun run v2 (`r8<rep>g_v2_<seq>`). 54 job, circa 1,5 min l'uno.
 - **Ripresa**: ogni job finito lascia `<out>.done`; rilanciare lo script salta i job finiti e rifà da capo quello
   interrotto. Stato e orari in `bags/replay/r8_state.log`.
-  - interrompere: `docker exec jo_sim_lv-dot-jo-sim_lv-dot-1 bash -c "pkill -f '[r]un_campaign.sh'; pkill -f '[r]un_tracker_only.sh'; pkill -f '[r]un_method.sh'; bash /home/ros/bags/replay/cleanup.sh"`
+  - interrompere: `docker exec jo_sim_sins bash -c "pkill -f '[r]un_campaign.sh'; pkill -f '[r]un_tracker_only.sh'; pkill -f '[r]un_method.sh'; bash /home/ros/bags/replay/cleanup.sh"`
     (le parentesi quadre servono: senza, `pkill -f` uccide anche la shell che lo esegue e il resto non parte)
     (oppure `touch bags/replay/r8.stop` per fermarsi alla fine del job corrente)
-  - riprendere: `rm -f bags/replay/r8.stop; docker exec jo_sim_lv-dot-jo-sim_lv-dot-1 bash -c "CAMPAIGN=r8 bash /home/ros/bags/replay/run_campaign.sh"`
+  - riprendere: `rm -f bags/replay/r8.stop; docker exec jo_sim_sins bash -c "CAMPAIGN=r8 bash /home/ros/bags/replay/run_campaign.sh"`
 - Valutazione (sull'host, anche su campagna parziale: aggrega solo le ripetizioni complete per metodo):
   `python3 eval/campaign_report.py --campaign r8 --reps a b c` → `results/own_r8<rep>/`,
   `tables/own_r8<rep>_<livello>.*`, `tables/own_r8_<livello>_reps{,_perseq}.csv`, `.tex`.
@@ -328,7 +328,7 @@ campagna sul campo (`FIELD_PROTOCOL.md`) con più persone.
 
 ---
 
-## Correzione della 1947 (2026-10-15, `jo_detector_v2` `df56a77`)
+## Correzione della 1947 (2026-10-15, `sins` `df56a77`)
 
 **Causa** (replay solo tracker con `track_debug_lifecycle`, GT riportata nel frame odom): a 28,85 s la persona che
 esce di lato dal FOV viene spezzata dalla fusione in due box, uno solo-LiDAR su di lei (`L`, 0,1 m dalla GT) e uno
@@ -356,7 +356,7 @@ la correzione entrerà nella prossima campagna a pipeline completa.
 
 **Prossimi passi**: ~~diagnosi dello scambio della 1950 a 38 s~~ (fatto, sotto), poi campagna sul campo.
 
-## Correzione della 1950 (2026-10-15, `jo_detector_v2` `4a41b17`)
+## Correzione della 1950 (2026-10-15, `sins` `4a41b17`)
 
 **Causa** (stesso metodo, log dei candidati esteso per un momento anche ai track non classificati): #594 è un track
 non classificato e "statico" di un oggetto alto vicino a (2,9, 1,0) in odom. Quando la persona (#22, `person`) gli
@@ -396,14 +396,14 @@ si guardano sui dati nuovi, non qui.
 
 ## Campagna r9 (avviata il 2026-10-15): le due correzioni a pipeline completa
 
-- Codice: `jo_detector_v2` `4a41b17` (frammenti + classe). v1 non è cambiato: i run v1 sono quelli di r8, collegati
+- Codice: `sins` `4a41b17` (frammenti + classe). v1 non è cambiato: i run v1 sono quelli di r8, collegati
   come `r9<rep>_v1_*`. Niente ablation greedy (`V1=0 GREEDY=0`, nuove opzioni di `scripts/run_campaign.sh`).
 - 18 job v2 (3 ripetizioni × 6 sequenze), stato in `bags/replay/r9_state.log`.
 - Interrompere: `touch bags/replay/r9.stop` (alla fine del job in corso) oppure il `pkill` della sezione r8.
-- Riprendere: `rm -f bags/replay/r9.stop; docker exec -d jo_sim_lv-dot-jo-sim_lv-dot-1 bash -c "cd /home/ros/bags/replay && CAMPAIGN=r9 V1=0 GREEDY=0 bash run_campaign.sh > r9_campaign.log 2>&1"`
+- Riprendere: `rm -f bags/replay/r9.stop; docker exec -d jo_sim_sins bash -c "cd /home/ros/bags/replay && CAMPAIGN=r9 V1=0 GREEDY=0 bash run_campaign.sh > r9_campaign.log 2>&1"`
 - Valutazione: `python3 eval/campaign_report.py --campaign r9 --reps a b c`.
 - Istruzioni complete per chi riprende (anche da un altro account Claude):
-  `~/Desktop/claude_account_backup/jo_detector_v2_handoff/LEGGIMI_PRIMA.md`.
+  `~/Desktop/claude_account_backup/sins_handoff/LEGGIMI_PRIMA.md`.
 
 ### Risultati r9 (completata il 2026-10-15, 18 job, nessun run troncato)
 
@@ -611,9 +611,10 @@ Nelle foto si vede il volto della persona: per il paper serve il consenso o una 
 
 ## Nome del metodo e prova fuori dal campo visivo (2026-10-26)
 
-**Nome**: da oggi il metodo si chiama **SINS (Still Is Not Static)**. Nelle figure, nei video e nelle pagine compare
-come SINS; nel codice restano il pacchetto `jo_detector_v2`, i topic `/jo_detector_v2/...` e le chiavi `v2` dei
-risultati (le bag registrate li contengono: un cambio va fatto su un branch dedicato, con remap).
+**Nome**: da oggi il metodo si chiama **SINS (Still Is Not Static)**, ovunque. Dal 27/10 anche nel codice: pacchetto
+ROS `sins` (cartella `sins/`, repo `github.com/ducciopet/sins`, già `sins`), topic `/sins/...`. Le bag
+registrate prima hanno i topic `/jo_detector_v2/...`: `run_tracker_only.sh` li rimappa e i lettori (`static_eval.py`,
+`analyze_errors.py`) accettano entrambi i nomi. Le chiavi `v2` dei risultati restano (sono nomi di colonne e file).
 
 **Dentro e fuori dal campo della camera** (`fov_eval.py`, `results/fov_r9.json`, 3 ripetizioni). Camera colore
 frontale 89,6° (da camera_info), entro 6 m; posizione della persona nel frame del robot dal mocap. Fuori dal

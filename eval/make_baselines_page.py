@@ -263,7 +263,7 @@ footer {{ font: 13px var(--f-num); color: var(--ink-3); }}
 
   <section>
     <h2>Rifarli da capo</h2>
-    <p class="sub">Dalla cartella del repository <code>jo_sim_lv-dot</code>. Le istruzioni complete, con i valori di ogni
+    <p class="sub">Dalla cartella del repository <code>jo_sim_sins</code>. Le istruzioni complete, con i valori di ogni
       parametro, sono in <code>eval/baselines/README_baselines.md</code>.</p>
     <pre>docker build -t &lt;immagine&gt; eval/baselines/&lt;cartella&gt;
 bash eval/baselines/&lt;cartella&gt;/run_&lt;metodo&gt;.sh 20260519_1950 prova --keep-input

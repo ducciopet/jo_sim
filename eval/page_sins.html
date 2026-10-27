@@ -1,4 +1,4 @@
-<title>jo_detector_v2</title>
+<title>Come funziona SINS</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -73,20 +73,24 @@ footer { font: 13px var(--f-num); color: var(--ink-3); }
 
 <main>
   <header style="display:grid;gap:14px">
-    <div class="eyebrow">jo_detector · come funziona</div>
-    <h1>Come funziona jo_detector_v2</h1>
-    <p class="lede">È il sistema che permette al robot di vedere le persone e gli oggetti intorno a sé, capire se si
-      stanno muovendo e seguirli nel tempo. Mette insieme il LiDAR (un sensore laser che vede a 360°) e le camere di
-      profondità, e usa una rete neurale (YOLO) per riconoscere le persone nelle immagini. È la nuova versione di
-      <code>jo_detector</code> (v1), riscritta da zero.</p>
+    <div class="eyebrow">SINS · Still Is Not Static · come funziona</div>
+    <h1>Come funziona SINS</h1>
+    <p class="lede">SINS (Still Is Not Static) è il sistema che permette al robot di vedere le persone e gli oggetti
+      intorno a sé, capire se si stanno muovendo e seguirli nel tempo. Il nome dice l'idea: una persona ferma non è
+      un oggetto statico, perché può ripartire. Mette insieme il LiDAR (un sensore laser che vede a 360°) e le camere
+      di profondità, e usa una rete neurale (YOLO) per riconoscere le persone nelle immagini. È la riscrittura da zero
+      di <code>jo_detector</code> (v1); fino al 26/10/2026 si chiamava jo_detector v2.</p>
   </header>
 
   <section>
     <h2>In breve</h2>
     <div class="facts">
       <div class="fact"><div class="big">98,1<small> %</small></div>
-        <p>Punteggio complessivo nelle prove in laboratorio con motion capture, contro l'81,1% di v1. Dettagli nella
-          pagina <a href="https://claude.ai/artifact/XvJ67raKwMDW5NQ4qMcnx3" target="_blank" rel="noopener">Benchmark jo_detector</a>.</p></div>
+        <p>Punteggio complessivo (MOTA) nelle prove in laboratorio con motion capture, contro l'81,1% di v1. Confronto
+          con sei metodi pubblicati nella pagina <a href="https://claude.ai/artifact/2GJ3QbsawkCTCjpxh4bP46" target="_blank" rel="noopener">SINS a confronto</a>.</p></div>
+      <div class="fact"><div class="big">96,4<small> %</small></div>
+        <p>F1 dello stato PD: la persona ferma viene riconosciuta come "ferma ma può ripartire". Nessun metodo
+          pubblicato con codice ha questo stato.</p></div>
       <div class="fact"><div class="big">10<small> Hz</small></div>
         <p>Tiene il passo del LiDAR: elabora tutte le scansioni che arrivano (circa 10 al secondo) senza perderne
           nessuna e senza accumulare ritardo.</p></div>
@@ -128,7 +132,8 @@ flowchart LR
           stima la velocità.</p></div></li>
       <li><div><h3>Decidere lo stato</h3>
         <p>Ogni oggetto seguito diventa <b>in movimento</b> (D), <b>fermo ma può muoversi</b> (PD, per esempio una
-          persona ferma) oppure <b>statico</b> (S). Il robot riceve solo i primi due.</p></div></li>
+          persona ferma) oppure <b>statico</b> (S). Il robot riceve solo i primi due: li usano la mappa SLAM (che li
+          toglie) e la navigazione (che li evita).</p></div></li>
     </ol>
   </section>
 
@@ -162,7 +167,7 @@ flowchart LR
   <section>
     <h2>Cosa cambia rispetto a v1</h2>
     <div class="tablewrap"><table>
-      <tr><th>Aspetto</th><th>v1</th><th>v2</th></tr>
+      <tr><th>Aspetto</th><th>v1</th><th>SINS</th></tr>
       <tr><td>Struttura</td><td class="old">un unico programma che fa tutto</td>
         <td>sei parti separate, ognuna provabile e sostituibile da sola</td></tr>
       <tr><td>Pavimento</td><td class="old">un'altezza fissa uguale ovunque</td>
@@ -199,12 +204,13 @@ flowchart LR
   <section>
     <h2>Limiti noti, oggi</h2>
     <ul>
-      <li><b>Dietro al robot.</b> Senza una camera posteriore, una persona ferma dietro al robot che la camera non ha
-        mai visto e che non ha camminato abbastanza resta "statica" e non viene segnalata.</li>
+      <li><b>Ferma fuori dal campo della camera.</b> Fuori dal campo SINS segue chi cammina come dentro (98,9%), ma
+        una persona che si ferma lì è riconosciuta come PD l'83,5% delle volte invece del 98,7%: senza YOLO regge solo
+        se la classe era già stata vista prima. Il caso peggiore è una persona mai entrata nel campo.</li>
       <li><b>Accanto agli oggetti fermi.</b> Quando una persona passa molto vicina a un oggetto fermo, per un istante
         (un decimo di secondo) può comparire un secondo box. Non le fa perdere l'identità.</li>
       <li><b>Prove ancora poche.</b> I numeri vengono da 6 prove brevi in laboratorio con una persona, usate anche per
-        sviluppare v2. Servono registrazioni nuove, con più persone.</li>
+        sviluppare il metodo. Servono registrazioni nuove con più persone e i dataset pubblici (JRDB, CODa).</li>
       <li><b>Registrazioni di maggio.</b> La camera di profondità ha buchi fino a 0,6 s: da controllare nelle prossime
         registrazioni.</li>
       <li><b>Terreni irregolari.</b> La localizzazione del robot ignora il beccheggio: su terreno accidentato, come
@@ -212,5 +218,5 @@ flowchart LR
     </ul>
   </section>
 
-  <footer>Aggiornato il 15/10/2026 · v2 4a41b17 · risultati dalla campagna r9 · tempi misurati l'8/10 sulla registrazione 20260910_124939_validation_lab</footer>
+  <footer>Aggiornato il 27/10/2026 · SINS (pacchetto ROS sins, già jo_detector_v2) · risultati dalla campagna r9 · tempi misurati l'8/10 sulla registrazione 20260910_124939_validation_lab</footer>
 </main>

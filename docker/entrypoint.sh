@@ -28,8 +28,8 @@ source /opt/ros/jazzy/setup.bash
 
 # Force clean rebuild of packages whose generated files or installed resources
 # must reflect host-side edits immediately.
-rm -rf /home/ros/build/jo_msgs /home/ros/build/jo_navigation /home/ros/build/jo_sim /home/ros/build/jo_detector /home/ros/build/jo_detector_v2 \
-        /home/ros/local_install/jo_msgs /home/ros/local_install/jo_navigation /home/ros/local_install/jo_sim /home/ros/local_install/jo_detector /home/ros/local_install/jo_detector_v2
+rm -rf /home/ros/build/jo_msgs /home/ros/build/jo_navigation /home/ros/build/jo_sim /home/ros/build/jo_detector /home/ros/build/jo_detector_v2 /home/ros/build/sins \
+        /home/ros/local_install/jo_msgs /home/ros/local_install/jo_navigation /home/ros/local_install/jo_sim /home/ros/local_install/jo_detector /home/ros/local_install/jo_detector_v2 /home/ros/local_install/sins
 
 # Stale artifacts from before the onboard_detector -> jo_detector rename,
 # still present in ros_build/ros_install volumes created before it.
@@ -42,7 +42,7 @@ rm -rf /home/ros/build/onboard_detector /home/ros/build/onboard_detector_v2 \
 # CUDAToolkit_ROOT variable that FindCUDAToolkit.cmake's nvcc search reads —
 # passing it explicitly bypasses that policy gap (see docker/Dockerfile).
 colcon build \
-    --packages-select jo_msgs jo_description jo_navigation jo_sim turtlebot_description jo_detector jo_detector_v2 \
+    --packages-select jo_msgs jo_description jo_navigation jo_sim turtlebot_description jo_detector sins \
     --symlink-install \
     --install-base /home/ros/local_install \
     --cmake-args -DCUDAToolkit_ROOT=/usr/local/cuda

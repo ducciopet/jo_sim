@@ -4,7 +4,7 @@ from rosbags.highlevel import AnyReader
 from rosbags.typesys import Stores, get_typestore, get_types_from_msg
 ts=get_typestore(Stores.ROS2_JAZZY)
 add={}
-for f in Path('/home/duccio/Desktop/jo_sim_lv-dot/jo_msgs/msg').glob('*.msg'):
+for f in Path(__file__).resolve().parents[2] / 'jo_msgs' / 'msg'.glob('*.msg'):
     add.update(get_types_from_msg(f.read_text(), f'jo_msgs/msg/{f.stem}'))
 ts.register(add)
 for b in sys.argv[1:]:
