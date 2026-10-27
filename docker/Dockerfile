@@ -162,6 +162,10 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-insta
     ultralytics \
     "lap>=0.5.12"
 
+# Evaluation tools used inside the container (eval/, bags/replay/*.sh): rosbags, pandas, ... (docker/requirements_eval.txt)
+COPY docker/requirements_eval.txt /tmp/requirements_eval.txt
+RUN python3 -m pip install --no-cache-dir --break-system-packages -r /tmp/requirements_eval.txt
+
 
 # Create a non-root user
 ARG USERNAME=ros
