@@ -13,7 +13,8 @@ for s in $SEQS; do
     echo "$(date +%T) download $tag"
     python3 $(dirname $0)/pget.py $URL/$part/$s.zip $DEST/_zips/$tag.zip 16 || { echo "$(date +%T) FAILED download $tag"; exit 1; }
     echo "$(date +%T) unzip $tag"
-    unzip -q -o $DEST/_zips/$tag.zip -d $DEST || { echo "$(date +%T) FAILED unzip $tag"; exit 1; }
+    # the share can drop for a moment (Host is down): retry the whole archive, -o rewrites half-written files
+    for t in 1 2 3; do unzip -q -o $DEST/_zips/$tag.zip -d $DEST && break; [ $t = 3 ] && { echo "$(date +%T) FAILED unzip $tag"; exit 1; }; echo "$(date +%T) retry unzip $tag"; sleep 300; done
     rm -f $DEST/_zips/$tag.zip; touch $DEST/_zips/$tag.extracted
     echo "$(date +%T) done $tag ($(df -h $DEST | awk 'NR==2{print $4}') free)"
   done

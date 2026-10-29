@@ -30,7 +30,8 @@ def xyz_of(msg):
     return np.stack([buf[:, f[k].offset:f[k].offset + 4].copy().view(np.float32)[:, 0] for k in 'xyz'], axis=1)
 
 
-def load_dynamic_points(bag, topic='/m_detector/point_out'):
+def load_dynamic_points(bag, topic='/m_detector/point_out', min_points=None):
+    min_points = min_points or MIN_POINTS
     rows, nid = [], 0
     with AnyReader([Path(bag)]) as r:
         cs = [c for c in r.connections if c.topic == topic]
@@ -41,7 +42,7 @@ def load_dynamic_points(bag, topic='/m_detector/point_out'):
             ts = m.header.stamp.sec * 1_000_000_000 + m.header.stamp.nanosec or t
             p = xyz_of(m)
             p = p[np.isfinite(p).all(axis=1)]
-            labels = DBSCAN(eps=EPS, min_samples=MIN_POINTS).fit_predict(p[:, :2]) if len(p) >= MIN_POINTS else []
+            labels = DBSCAN(eps=EPS, min_samples=min_points).fit_predict(p[:, :2]) if len(p) >= min_points else []
             ks = [k for k in set(labels) if k >= 0]
             if not ks:
                 rows.append(dict(t_ns=ts, track_id=EMPTY_FRAME_ID))

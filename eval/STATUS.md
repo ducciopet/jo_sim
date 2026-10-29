@@ -648,3 +648,68 @@ della stessa ripetizione. `export_inputs.py` (python di sistema) → `run_eagerm
 | UniMT + SimpleTrack | 47,9% | 14,5% | 248 | 54,7% | 37,5% | 97,4% / 5,1% |
 
 Stesso rilevatore, due tracker diversi, stesso risultato: il limite è CMDT, che guarda solo avanti (x 0–14,4 m).
+
+## Fase 4: dataset pubblici, CODa outdoor con LiDAR a 128 linee (2026-10-29)
+
+Dati sul kloster (`/mnt/kloster-reichenau/datasets_SINS/`, va montato a mano dopo ogni riavvio): CODa seq 0 e 1,
+JRDB train (27 sequenze), SemanticKITTI (scansioni + etichette, senza immagini). Split: CODa seq 0 = tuning,
+seq 1 + JRDB = held-out (mai guardati durante il tuning).
+
+**Pipeline.** `eval/datasets/convert_coda0.sh` → `coda_to_bag.py`: 3 finestre annotate di seq 0 (w1 200–799,
+w2 4550–4999, w3 5400–5799, 20 s di rodaggio), bag sensori + bag odometria + GT (`<w>_gt.csv` con classe, punti LiDAR
+nel box `npts`, `in_fov` della camera). SINS: `eval/scripts/coda_ab.sh <TAG>` (rigenera `cfg/coda` con
+`eval/configs/sins/make_cfg.py coda` da `cfg/outdoor` + `eval/configs/sins/coda/overrides.yaml`, gira nel container,
+valuta). Valutazione `eval/coda_eval.py`, aggregato `coda_pool.py`, diagnosi `coda_diag.py`, confronto `coda_compare.py`.
+
+**Protocollo (fissato prima dei confronti, uguale per tutti i metodi).**
+- GT = tutti gli agenti mobili annotati (pedoni, bici, monopattini, veicoli di servizio, la statua "Horse"); box senza
+  punti LiDAR ignorati (criterio KITTI/nuScenes). Il flag `isOccluded` di CODa NON si usa: descrive la camera (gli
+  operatori a 1–2 m dal robot sono "Full" con migliaia di punti).
+- Oggetti fermi (PD) contano solo nel campo della camera (fuori, nessun metodo con una camera frontale può dire che
+  una bici parcheggiata non è un paletto); quelli in movimento contano ovunque.
+- Esclusi GT e predizioni entro 1,2 m dal LiDAR: l'operatore che tiene il robot cammina a 0,9 m dietro il sensore
+  (offset fisso, 6 cm di std), annotato come pedone in w1 e w3 ma non in w2, visto solo in una fascia di 0,7 m.
+- Predizioni con centro oltre 2,5 m sopra il suolo del robot scartate (chiome, tetti): aiuta i baseline, non SINS
+  (taglia già a 3 m).
+- Raggio 25 m (= `lidar_range` di cfg/coda). Match 1 m.
+
+**Errori trovati e corretti (miei, non del metodo).** TF camera color→depth nel convertitore in verso opposto a quello
+che SINS ripubblica (anello nel TF tree, w2/w3 senza camera): ora depth→color come il driver RealSense. SVD del fit del
+suolo a matrici piene (29 GB di RAM). Stampi GT via float (solo nella diagnosi).
+
+**Tuning outdoor (modifiche fisiche, A/B su seq 0, ripetizioni per il rumore: ±3 MOTA, ±6 IDF1 tra run identiche).**
+1. Nuovo parametro `yolo_leaf_lidar_beyond_depth` (preprocessing): i punti dell'ultima scansione LiDAR oltre
+   `depth_max_value` entrano nelle leaves YOLO. Motivo: la depth della ZED in CODa è affidabile solo fino a ~4 m
+   (misurato contro il LiDAR: errore mediano 0,13 m a 2–4 m, 0,48 a 4–6, 1,9 a 8–10), quindi le bici a 10–15 m che
+   YOLO vede non ricevevano mai la classe. `true` in `cfg/outdoor`, `false` in `cfg/indoor` (lab invariato).
+   Aggregato 3 finestre: recall 44,8→48,8%, IDF1 52,0→59,0%, MOTA 34,3→37,5%.
+2. `lidar_eps_vertical_angle_deg: 0.33` per CODa (spaziatura delle linee dell'OS1-128 misurata; base VLP-16 2,0):
+   media su 2 ripetizioni MOTA 35,5→37,8%, FP/min 135→113, IDF1 invariato.
+3. Preprocessing con 131 072 punti/scansione: dopo il voxel a due bande e il taglio suolo/tetto restano 24–32 mila
+   punti, il downsampling adattivo interviene di rado (foglia 0,10 m); 9–18 ms per scansione, DBSCAN 29–37 ms
+   (nuovo log `lidar point counts` del preprocessing). `depth_max_value` 4,5 m confermato dalla misura sopra.
+
+Limite noto: bici parcheggiate a 12–15 m nel campo della camera trovate poco (la leaf da box YOLO di un oggetto sottile
+prende il muro dietro, che ha più punti).
+
+**Baseline su CODa** (stesso container e logica originale del lab, solo il modello del sensore OS1-128):
+`eval/baselines/dynablox/run_dynablox_coda.sh` (+ `motion_detector_coda.yaml`), `mdetector/run_mdetector_coda.sh`
+(+ `coda.yaml`, `make_input_coda.py`; M-detector a 1x perde metà delle scansioni da 131k punti e accoppia nuvole e
+odometria sbagliate, quindi anche una run a 0,25x), `lvdot/run_lvdot_coda.sh` (+ `make_param_coda.py`). UniMT/EagerMOT
+non applicabili senza riaddestramento (rilevatore allenato sul VLP-16 del lab). Pose di CODa verificate (scarto mediano
+6–10 cm tra scansioni a 0,5 s, sfasamento migliore = 0). Il raggruppamento dei punti dinamici di M-detector usa
+min 20 punti (default Dynablox) invece dei 5 del lab, per la densità 8 volte maggiore.
+
+**Confronto su CODa seq 0** (3 finestre, 1 650 frame; SINS media di 3 run B1/B1r2/B1r3; `results/coda/compare.json`,
+`tables/coda_compare.csv`; pagina https://claude.ai/artifact/XGLMmauGC6XHbai8ygpQaz#coda):
+
+| Metodo | Trovati (D+PD) | In movimento: recall / precisione | FP/min | MOTA (movimento) | IDF1 |
+|---|---|---|---|---|---|
+| SINS | 47,5% | 82,8% / 86,3% | 96 | 69,4% | 55,4% |
+| Dynablox | 47,1% | 87,4% / 8,5% | 5 880 | −852% | 12,8% |
+| M-detector 1x | 5,6% | 10,3% / 29,5% | 155 | −24% | – |
+| M-detector 0,25x | 43,0% | 79,9% / 17,5% | 2 360 | −375% | – |
+| LV-DOT | 1,3% | 2,5% / 71,0% | 6 | −1% | – |
+
+ATTENZIONE: seq 0 = split di tuning di SINS. Prossimi: convertitore seq 1 (finestre sulle annotazioni) e JRDB
+(held-out), stesse regole; lì i numeri del paper.

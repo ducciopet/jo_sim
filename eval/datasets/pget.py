@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Parallel HTTP range download (the CODa server gives ~1 MB/s per connection; 16 connections give several times that).
-Resumable: finished blocks are listed in <out>.parts; rerun with the same arguments to continue.
+Resumable: data goes to <out>.part, finished blocks are listed in <out>.parts; rerun with the same arguments to continue.
+<out> appears (renamed from <out>.part) only once complete, so an existing <out> is never downloaded again.
 usage: pget.py <url> <out> [connections 16] [block MB 64]
 """
 import os
@@ -13,10 +14,12 @@ url, out = sys.argv[1], sys.argv[2]
 n = int(sys.argv[3]) if len(sys.argv) > 3 else 16
 block = (int(sys.argv[4]) if len(sys.argv) > 4 else 64) << 20
 size = int(urllib.request.urlopen(urllib.request.Request(url, method='HEAD'), timeout=60).headers['Content-Length'])
-parts_file = out + '.parts'
+if os.path.exists(out):
+    sys.exit(print(f'{out}: already complete'))
+tmp, parts_file = out + '.part', out + '.parts'
 done = set(int(x) for x in open(parts_file).read().split()) if os.path.exists(parts_file) else set()
-if not os.path.exists(out):
-    with open(out, 'wb') as f:
+if not os.path.exists(tmp):
+    with open(tmp, 'wb') as f:
         f.truncate(size)
 todo = [i for i in range((size + block - 1) // block) if i not in done]
 lock = threading.Lock()
@@ -37,7 +40,7 @@ def worker():
                 if len(data) != b - a + 1:
                     raise IOError(f'short read {len(data)}')
                 with lock:
-                    with open(out, 'r+b') as f:
+                    with open(tmp, 'r+b') as f:
                         f.seek(a)
                         f.write(data)
                     with open(parts_file, 'a') as pf:
@@ -57,5 +60,6 @@ for t in ts:
     t.join()
 if failed:
     sys.exit(f'{len(failed)} blocks failed, rerun to resume')
+os.rename(tmp, out)
 os.remove(parts_file)
 print(f'{out}: {size / 1e9:.1f} GB')

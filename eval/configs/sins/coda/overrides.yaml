@@ -1,0 +1,36 @@
+# CODa (UT Austin campus, outdoor): Ouster OS1-128 + ZED 2i left camera (cam3) with its depth; one camera.
+# Only sensor setup and range here; method parameters come from the base profile (cfg/outdoor).
+base: outdoor
+files:
+  # One camera in CODa's camera setup we use (ZED left + depth, front-facing).
+  preprocessing.yaml:
+    preprocessing_node:
+      camera_names: [front_camera]
+      # Range crop: 15 m in the base profile is set for a VLP-16 (2 deg between rings, a person at 15 m spans ~3
+      # rings). The OS1-128 has 0.35 deg spacing: at 25 m a person still spans ~10 rings. 25 m is fixed here
+      # from the sensor before looking at any result, and the evaluation uses the same radius.
+      lidar_range_x: 25.0
+      lidar_range_y: 25.0
+  static_structures.yaml:
+    static_structures_node:
+      camera_names: [front_camera]
+      lidar_range_x: 25.0
+      lidar_range_y: 25.0
+  semantic_segmentation.yaml:
+    yolo_semantic_seg_detector:
+      camera_names: [front_camera]
+      # YOLO classes: base list (person, bicycle, car, motorbike, bus, truck, dog, cat, horse) already covers
+      # CODa's movable classes (Pedestrian, Bike, Car, Motorcycle, Horse, ...): not overridden.
+  detection.yaml:
+    yolo_seg_track_detector:
+      camera_names: [front_camera]
+  detection_yolo26.yaml:
+    yolo_seg_track_detector:
+      camera_names: [front_camera]
+  tracker.yaml:
+    tracker_node:
+      camera_names: [front_camera]
+  dbscan_detector.yaml:
+    dbscan_detector_node:
+      # Ring spacing of the OS1-128, measured on CODa seq 0 (median elevation gap 0.33 deg; base profile: VLP-16, 2.0)
+      lidar_eps_vertical_angle_deg: 0.33
