@@ -749,3 +749,9 @@ ATTENZIONE: seq 0 = split di tuning di SINS. Prossimi: convertitore seq 1 (fines
   Risultati: PD 42,2% prec 68,5% falsi PD 97/min; moving 84,9/77,7; FP tot 231/min; IDF1 55,7%. Latenza attesa
   camere nel clustering 77 ms (45 con una). Bici 25-62% PD, monopattini 59-91%, furgone 58% PD / 5% D.
 - CROSSLAB: 2/5 zip sul NAS, verificati. NAS a 3 GB liberi: KITTI in pausa (SIGSTOP), servono ~90 GB (cestino NAS).
+- (30/10 notte) Limiti di G1 (oggetti fermi annotati): ~52% PD, 24% nessuna traccia (bici in rastrelliera), 14% traccia
+  senza classe (1/4 statua), 6% a 1-2 m, 4% D. FP: paletti PD (~60/min), non annotati D (~45), strutture D (~30),
+  centri a 1-2 m (~25). Scartati (3 rep): `track_class_anchor_min_votes 3` (PD 42 -> 39%, falsi PD invariati),
+  `yolo_refine_nested` (taglio di cluster che contengono la foglia: PD +1,6 pt, precisione PD 69 -> 60%). Entrambi
+  restano come opzione spenta. `yolo_leaf_method` ora nello YAML del profilo (outdoor mask, indoor box): il launch lo
+  legge se l'argomento è vuoto; coda_ab.sh non lo passa più.
