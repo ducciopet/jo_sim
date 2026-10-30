@@ -88,7 +88,8 @@ def read_odom(bag):
 def read_yolo(bag):
     out = {}
     with AnyReader([Path(bag)]) as r:
-        for c, _, raw in r.messages([c for c in r.connections if c.topic.endswith('/detections')
+        # the camera shown (front_camera), from whichever YOLO node ran (box detector or instance segmentation)
+        for c, _, raw in r.messages([c for c in r.connections if c.topic.endswith('front_camera/detections')
                                      and c.msgtype == 'vision_msgs/msg/Detection2DArray']):
             m = r.deserialize(raw, c.msgtype)
             out[stamp(m.header)] = [(d.bbox.center.position.x, d.bbox.center.position.y, d.bbox.size_x, d.bbox.size_y)
