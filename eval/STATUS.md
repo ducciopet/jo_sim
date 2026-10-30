@@ -729,3 +729,12 @@ ATTENZIONE: seq 0 = split di tuning di SINS. Prossimi: convertitore seq 1 (fines
   pubblicato; `unimt_coda`/`cmt_coda` richiedono codice non rilasciato. Pesi addestrati su CODa train: favoriti.
 - Valutazione: metriche per label (`fp_by_state` in harness/metrics.py, `per_label` in coda_pool.py). Video
   `eval/make_coda_video.py`. Risultati `eval/results/coda/compare.json`, `eval/tables/coda_compare.csv`.
+- (30/10 pomeriggio) Regola: ogni classe YOLO dello YAML -> D se si muove, PD se fermo. Su CODa falliva per oggetti
+  fermi lontani. Aggiunti (profilo outdoor, indoor invariato): `yolo_leaf_method:=mask` di default nei run CODa
+  (`coda_ab.sh`), cfg/outdoor/detection.yaml = yolo26s-seg, stesse classi del rilevatore a box, 1280 px; test di
+  copertura (>= 50% larghezza) anche sulle maschere; memoria di classe degli oggetti fermi nel tracker
+  (`track_class_anchor_ttl 5 s`, `_min_votes 2`, `_radius 0.6`, solo da tracce ferme); `max_box_extent [6,6,3.5]`,
+  `max_box_volume 40` (furgone 3,2 m scartato). Risultato E4 (3 rep): PD 28,0% prec 53,6% falsi PD 114/min; moving
+  83,3/80,3. Per oggetto: bici/monopattini 29-68% PD, furgone 55% PD (14% D: centro del cluster che si sposta), bici
+  coperte in fondo alla rastrelliera ~0.
+- NAS al 100% (9,8 GB liberi): download KITTI in pausa (kill -STOP sul python di remote_zip), CROSSLAB 2/5 zip.

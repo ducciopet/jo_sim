@@ -20,8 +20,8 @@ from coda_pool import pool  # noqa: E402
 
 # name -> (coda_eval --method, run path template ({w} = window), sensors, note)
 METHODS = {
-    'SINS': [('sins', f'bags/coda/runs/{t}_v2_coda0_{{w}}', 'LiDAR + RGB-D', 'outdoor profile after the CODa fixes')
-             for t in ('C7', 'C7r2', 'C7r3')],
+    'SINS': [('sins', f'bags/coda/runs/{t}_v2_coda0_{{w}}', 'LiDAR + RGB-D', 'outdoor profile after the CODa fixes, YOLO masks')
+             for t in ('E4', 'E4r2', 'E4r3')],
     'SINS (before)': [('sins', f'bags/coda/runs/{t}_v2_coda0_{{w}}', 'LiDAR + RGB-D', 'outdoor profile of 29/10')
                       for t in ('B1', 'B1r2', 'B1r3')],
     'Dynablox': [('dynablox', 'bags/dynablox_out/dynabloxa_coda0_{w}.bag', 'LiDAR', 'deterministic')],
