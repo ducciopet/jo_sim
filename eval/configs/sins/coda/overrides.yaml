@@ -11,6 +11,11 @@ files:
       # from the sensor before looking at any result, and the evaluation uses the same radius.
       lidar_range_x: 25.0
       lidar_range_y: 25.0
+      # Second camera for runs with STEREO=1 (camera_names:=front_camera,stereo_camera): CODa's cam0/cam1, one frame
+      # per scan, depth computed online by eval/adapters/stereo_depth_node.py. Its depth range from a measurement
+      # against the LiDAR (30 frames of seq 0): median error 2% up to 6 m (p90 0.24 m at 4-6 m), 3% beyond with p90
+      # 0.6-0.9 m; the ZED (front_camera) keeps the base 4.5 m (median error 0.48 m at 4-6 m).
+      stereo_camera: {aligned_depth_transport: zstd, aligned_depth_cloud_topic: /stereo_camera/camera/depth/color/points, depth_max_value: 6.0}
   static_structures.yaml:
     static_structures_node:
       camera_names: [front_camera]
@@ -37,3 +42,4 @@ files:
     dbscan_detector_node:
       # Ring spacing of the OS1-128, measured on CODa seq 0 (median elevation gap 0.33 deg; base profile: VLP-16, 2.0)
       lidar_eps_vertical_angle_deg: 0.33
+      stereo_camera: {eps_scale: 1.0}

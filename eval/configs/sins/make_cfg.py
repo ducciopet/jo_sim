@@ -25,7 +25,7 @@ REPO = Path(__file__).resolve().parents[3]
 
 
 def fmt(v):
-    return json.dumps(v) if isinstance(v, (list, str)) else ('true' if v is True else 'false' if v is False else str(v))
+    return json.dumps(v) if isinstance(v, (list, str, dict)) else ('true' if v is True else 'false' if v is False else str(v))
 
 
 def apply(text, node, overrides, tag):

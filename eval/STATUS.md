@@ -738,3 +738,14 @@ ATTENZIONE: seq 0 = split di tuning di SINS. Prossimi: convertitore seq 1 (fines
   83,3/80,3. Per oggetto: bici/monopattini 29-68% PD, furgone 55% PD (14% D: centro del cluster che si sposta), bici
   coperte in fondo alla rastrelliera ~0.
 - NAS al 100% (9,8 GB liberi): download KITTI in pausa (kill -STOP sul python di remote_zip), CROSSLAB 2/5 zip.
+- (30/10 sera) Configurazione CODa finale G1 (3 rep): seconda camera `stereo_camera` = CODa cam0/cam1 (un fotogramma per
+  scansione; `eval/datasets/coda_stereo_bag.py` -> bags/coda/coda0_<w>_stereo), depth online da
+  `eval/adapters/stereo_depth_node.py` (SGBM 3-way a mezza risoluzione, 28 ms/coppia; errore vs LiDAR 2% fino a 6 m,
+  ZED 10% a 4-6 m) -> `depth_max_value` per camera (nuovo `<cam>.depth_min_value/depth_max_value`, stereo 6 m, ZED 4,5).
+  `run_coda.sh`/`run_method.sh` (copie in eval/scripts/): STEREO=1, EXTRA_BAGS, ADAPTER_CAMS. Altri cambi outdoor:
+  altezza minima per classe veicolo 1,1 m (`yolo_class_min_height_*`, `track_class_min_height_*`; nessun limite per
+  persone/bici/animali), corroborazione del moto per tracce con classe >= 2 m (`track_classified_corroboration_min_size`).
+  Scartati (3 rep): voxel solo < 8 m (`lidar_processed_voxel_max_range`, PD prec 59 -> 48%), YOLO m/l (+4% bici, 2x tempo).
+  Risultati: PD 42,2% prec 68,5% falsi PD 97/min; moving 84,9/77,7; FP tot 231/min; IDF1 55,7%. Latenza attesa
+  camere nel clustering 77 ms (45 con una). Bici 25-62% PD, monopattini 59-91%, furgone 58% PD / 5% D.
+- CROSSLAB: 2/5 zip sul NAS, verificati. NAS a 3 GB liberi: KITTI in pausa (SIGSTOP), servono ~90 GB (cestino NAS).
