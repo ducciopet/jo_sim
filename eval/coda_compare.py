@@ -58,7 +58,13 @@ def main():
             row[f'{m}_{k}'], row[f'{m}_{k}_std'] = float(np.mean(v)), float(np.std(v))
         for s in ('dynamic', 'potentially_dynamic'):
             row[f'f1_{s}'] = float(np.mean([r['state_f1'][s] for r in reps]))
+        for l in ('dynamic', 'potentially_dynamic'):
+            for k in ('n', 'recall', 'other', 'missed', 'said', 'precision', 'false_min'):
+                row[f'{l}_{k}'] = float(np.mean([r['per_label'][l][k] for r in reps]))
         out[name] = row
+        print('   per label: ' + '  '.join(f"{l[:3]} n={row[f'{l}_n']:.0f} rec {row[f'{l}_recall']:.1%} other "
+              f"{row[f'{l}_other']:.1%} missed {row[f'{l}_missed']:.1%} prec {row[f'{l}_precision']:.1%} "
+              f"false/min {row[f'{l}_false_min']:.0f}" for l in ('dynamic', 'potentially_dynamic')))
         print(f"{name:18s} ALL rec {row['merged_recall']:.1%} FP/min {row['merged_fp_min']:.0f} MOTA {row['merged_mota']:.1%} "
               f"IDF1 {row['merged_idf1']:.1%} | MOVING rec {row['dynamic_only_recall']:.1%} prec "
               f"{row['dynamic_only_precision']:.1%} FP/min {row['dynamic_only_fp_min']:.0f} MOTA {row['dynamic_only_mota']:.1%}")

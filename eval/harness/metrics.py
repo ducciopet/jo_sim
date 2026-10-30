@@ -84,6 +84,7 @@ class EvalResult:
     state_recall: dict = field(default_factory=dict)     # gt_state -> P(correct label | gt state)
     state_precision: dict = field(default_factory=dict)  # pred_state -> on matched pairs
     state_f1: dict = field(default_factory=dict)
+    fp_by_state: dict = field(default_factory=dict)      # unmatched predictions per predicted state
     mcc: float = float('nan')
     latencies: list = field(default_factory=list)        # dicts: gt_id, t, from, to, latency (nan = censored)
     latency_mean: dict = field(default_factory=dict)     # 'to_dynamic' / 'to_potentially_dynamic' -> mean [s]
@@ -239,6 +240,10 @@ def evaluate(gt, pred, cfg=None):
         for i, g in enumerate(gts):
             if i not in matched_g:
                 conf[g[3]][MISSED] += 1
+        matched_p = {j for _, j, _ in m}
+        for j, p in enumerate(preds):
+            if j not in matched_p:
+                res.fp_by_state[p[3]] = res.fp_by_state.get(p[3], 0) + 1
         matched_state.append(frame_state)
         res.fn += len(gts) - len(m)
         res.fp += len(preds) - len(m)

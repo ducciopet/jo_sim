@@ -15,7 +15,7 @@ R = Path(__file__).resolve().parent / 'results/coda'
 def pool(tag):
     files = sorted(glob.glob(str(R / f'{tag}_w*.json')))
     S = {m: dict(tp=0, fp=0, fn=0, idsw=0, idtp=0, num_gt=0, num_pred=0) for m in ('merged', 'dynamic_only')}
-    conf, minutes = None, 0.0
+    conf, minutes, fps = None, 0.0, {}
     for f in files:
         d = json.load(open(f))
         for m in S:
@@ -25,6 +25,8 @@ def pool(tag):
         for g, r in d['metrics']['full']['confusion'].items():
             for k, v in r.items():
                 conf[g][k] += v
+        for k, v in d['metrics']['full'].get('fp_by_state', {}).items():
+            fps[k] = fps.get(k, 0) + v
         minutes += d['gt']['annotated_frames'] / 600.0          # 10 Hz annotation
     out = {'windows': len(files)}
     for m, s in S.items():
@@ -36,6 +38,15 @@ def pool(tag):
         tp, p, g = conf[lab][lab], sum(r[lab] for r in conf.values()), sum(conf[lab].values())
         f1[lab] = 2 * tp / max(1, p + g)
     out['state_f1'] = f1
+    # per label (full mode): of the GT rows with that label, found with it / found with the other / missed;
+    # precision = predictions with that label on a GT with that label / all predictions with that label (unmatched too)
+    lab = {}
+    for l, other in (('dynamic', 'potentially_dynamic'), ('potentially_dynamic', 'dynamic')):
+        n, said = sum(conf[l].values()), sum(r[l] for r in conf.values()) + fps.get(l, 0)
+        lab[l] = dict(n=n, recall=conf[l][l] / max(1, n), other=conf[l][other] / max(1, n),
+                      missed=conf[l]['missed'] / max(1, n), said=said,
+                      precision=conf[l][l] / said if said else float('nan'), false_min=fps.get(l, 0) / minutes)
+    out['per_label'] = lab
     return out
 
 
