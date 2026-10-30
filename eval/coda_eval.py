@@ -40,6 +40,20 @@ from points_adapter import load_dynamic_points                       # noqa: E40
 BASELINES = {'dynablox': ('/motion_detector/visualization/clusters', True),
              'lvdot': ('/onboard_detector/dynamic_bboxes', False),
              'mdetector': ('/m_detector/point_out', None)}
+# offline methods writing CSV tracks (t_ns, id, label, x, y, z, l, w, h, yaw, score; odom frame, id -1 = empty frame):
+# no motion state, every track counts as 'dynamic' (as UniMT/EagerMOT in the lab)
+CSV_METHODS = ('simpletrack', 'eagermot')
+
+
+def load_csv_tracks(path):
+    df = pd.read_csv(path)
+    if 'track_id' in df:                    # already the unified tracks CSV (run_eagermot_jo.py)
+        return make_tracks(df.to_dict('records'))
+    rows = [dict(t_ns=int(t), track_id=EMPTY_FRAME_ID) for t in df.loc[df['id'] < 0, 't_ns'].unique()]
+    d = df[df['id'] >= 0]
+    rows += [dict(t_ns=int(r.t_ns), track_id=int(r.id), x=r.x, y=r.y, z=r.z, l=r.l, w=r.w, h=r.h, yaw=r.yaw,
+                  state='dynamic', score=r.score, **{'class': r.label}) for r in d.itertuples()]
+    return make_tracks(rows)
 
 
 
@@ -129,7 +143,7 @@ def main():
     ap.add_argument('--gt', required=True)
     ap.add_argument('--odom', required=True)
     ap.add_argument('--topic', default=None)
-    ap.add_argument('--method', default='sins', choices=['sins', *BASELINES])
+    ap.add_argument('--method', default='sins', choices=['sins', *BASELINES, *CSV_METHODS])
     ap.add_argument('--range', type=float, default=25.0)
     ap.add_argument('--ignore-dist', type=float, default=1.0)
     ap.add_argument('--min-range', type=float, default=1.2)
@@ -147,6 +161,8 @@ def main():
         pred, frame_id, topic = load_obstacles(a.run, a.topic)
         if frame_id not in ('odom', ''):
             raise SystemExit(f'predictions in {frame_id}, expected odom')
+    elif a.method in CSV_METHODS:
+        pred, topic = load_csv_tracks(a.run), a.run
     else:                                   # baselines publish in the odom frame of the same odometry (global frame)
         topic, ids = BASELINES[a.method]
         # OS1-128 clouds are ~8x denser than the lab VLP-16: dynamic points are clustered with Dynablox's own default

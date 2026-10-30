@@ -713,3 +713,19 @@ min 20 punti (default Dynablox) invece dei 5 del lab, per la densità 8 volte ma
 
 ATTENZIONE: seq 0 = split di tuning di SINS. Prossimi: convertitore seq 1 (finestre sulle annotazioni) e JRDB
 (held-out), stesse regole; lì i numeri del paper.
+
+### 30/10: CODa, bici parcheggiate e confronto a 8 metodi (seq 0, split di tuning)
+- Bici ferme non classificate: YOLO le vedeva, la classe non arrivava al LiDAR. Correzioni (solo profilo outdoor, indoor
+  invariato per costruzione): foglie LiDAR dalla nuvola senza muri (`lidar_leaf_cloud_` dopo `isNearAnyWall`);
+  `yolo_leaf_nearest_cluster` + `yolo_leaf_min_box_coverage 0.5` per foglie fatte per lo più di punti oltre la depth;
+  `detection_frame_stride 1` su CODa (ZED a 7,5 Hz); `detection_inference_size 1280` outdoor (bici/immagine 0,9 -> 1,6).
+  Provata e scartata `track_first_class_weak_keeps_streak` (nessun guadagno chiaro, più falsi PD).
+- Risultato SINS C7 (3 rep): moving rec 84,6% prec 83,4%; PD trovati 3,5% -> 13,1%, falsi PD 17 -> 143/min (3/4 su
+  paletti "Bollard" annotati, il resto non annotato: persona dietro vetro, operatore). FP totali 96 -> 240/min.
+  Limite: bici in rastrelliera frammentate in molte tracce.
+- Nuovi baseline: CenterPoint (pesi CODa degli autori UniMT, `centerpoint_coda_cfg.py`, CenterHead standard, nessuna
+  chiave mancante) + SimpleTrack (`eval/baselines/unimt/infer_coda.py`, `run_unimt_coda.sh`, manifest
+  `make_coda_manifest.py`); EagerMOT (`eagermot/export_inputs_coda.py`, 3D CenterPoint > 0,3 + YOLO). CMDT CODa non
+  pubblicato; `unimt_coda`/`cmt_coda` richiedono codice non rilasciato. Pesi addestrati su CODa train: favoriti.
+- Valutazione: metriche per label (`fp_by_state` in harness/metrics.py, `per_label` in coda_pool.py). Video
+  `eval/make_coda_video.py`. Risultati `eval/results/coda/compare.json`, `eval/tables/coda_compare.csv`.

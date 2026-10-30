@@ -21,6 +21,9 @@ files:
       camera_names: [front_camera]
       # YOLO classes: base list (person, bicycle, car, motorbike, bus, truck, dog, cat, horse) already covers
       # CODa's movable classes (Pedestrian, Bike, Car, Motorcycle, Horse, ...): not overridden.
+      # Frame stride: the base profile's 2 is for a 30 Hz RealSense (YOLO at 15 Hz); CODa's color stream reaches the
+      # bags at ~7.5 Hz, so stride 1 keeps YOLO at the camera's own rate instead of 3.7 Hz.
+      detection_frame_stride: 1
   detection.yaml:
     yolo_seg_track_detector:
       camera_names: [front_camera]

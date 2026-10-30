@@ -20,12 +20,19 @@ from coda_pool import pool  # noqa: E402
 
 # name -> (coda_eval --method, run path template ({w} = window), sensors, note)
 METHODS = {
-    'SINS': [('sins', f'bags/coda/runs/{t}_v2_coda0_{{w}}', 'LiDAR + RGB-D', '') for t in ('B1', 'B1r2', 'B1r3')],
+    'SINS': [('sins', f'bags/coda/runs/{t}_v2_coda0_{{w}}', 'LiDAR + RGB-D', 'outdoor profile after the CODa fixes')
+             for t in ('C7', 'C7r2', 'C7r3')],
+    'SINS (before)': [('sins', f'bags/coda/runs/{t}_v2_coda0_{{w}}', 'LiDAR + RGB-D', 'outdoor profile of 29/10')
+                      for t in ('B1', 'B1r2', 'B1r3')],
     'Dynablox': [('dynablox', 'bags/dynablox_out/dynabloxa_coda0_{w}.bag', 'LiDAR', 'deterministic')],
     'M-detector': [('mdetector', 'bags/mdetector_out/mdetectora_coda0_{w}.bag', 'LiDAR', 'real time (1x)')],
     'M-detector 0.25x': [('mdetector', 'bags/mdetector_out/mdetectorslow_coda0_{w}.bag', 'LiDAR',
                           'played at 0.25x so that it processes every scan')],
     'LV-DOT': [('lvdot', 'bags/lvdot_out/lvdota_coda0_{w}.bag', 'LiDAR + RGB-D', '')],
+    'CenterPoint + SimpleTrack': [('simpletrack', 'bags/unimt_out/unimt_coda0_{w}_tracks.csv', 'LiDAR',
+                                   "UniMT authors' CODa weights and tracker; trained on CODa"),],
+    'EagerMOT': [('eagermot', 'bags/eagermot_out/eagermot_coda0_{w}.csv', 'LiDAR + camera',
+                  'CenterPoint (CODa) 3D + YOLO 2D, pedestrians')],
 }
 
 
