@@ -762,3 +762,18 @@ ATTENZIONE: seq 0 = split di tuning di SINS. Prossimi: convertitore seq 1 (fines
   insieme l'89%, e sono in disaccordo sul 18%: le foglie (mask) vengono solo dalla segmentazione. Leve: unione
   foglie box+maschera; associazione YOLO->cluster nello spazio immagine (proiezione dei cluster nella maschera) al
   posto di istogramma di profondità + IoU 3D; moto da punti per gli oggetti classificati fermi.
+
+### Registro delle prove CODa (TAG di `eval/scripts/coda_ab.sh`, seq 0, tutte con 3 finestre salvo nota)
+| TAG | Cosa | Esito |
+|---|---|---|
+| B1, B1r2, B1r3 | profilo outdoor del 29/10 | riferimento "prima" |
+| D1-D3, K1, K2, L0* | run di diagnosi con topic intermedi (una finestra o tutte) | solo analisi |
+| C1-C7 | foglie senza muri, YOLO 7,5 Hz, gruppo più vicino, copertura riquadro, YOLO 1280 | C7 tenuto |
+| E1-E4 | memoria di classe, maschere YOLO, limiti dimensione veicoli, copertura su maschere | E4 tenuto |
+| F1-F3 | voxel solo vicino (F2: scartato), altezza minima veicoli 1,1 m e conferma moto oggetti grandi | F3 tenuto |
+| G1 x3 | F3 + seconda camera stereo (STEREO=1) | tenuto (2 YOLO per camera) |
+| H1 x3 | memoria con 3 conferme | scartato |
+| I1 x3 | taglio dei cluster che contengono la foglia (`yolo_refine_nested`) | scartato |
+| M1 x3 | un solo YOLO per camera (maschere) + conferma moto per tutte le tracce con classe | |
+| M2 x3 | M1 + riquadro di riserva quando la maschera non dà foglia | **configurazione attuale** |
+| M3 | M2 + associazione per punti (`yolo_refine_assoc: points`) | interrotta (2 finestre), scartata dalle run singole L0* |

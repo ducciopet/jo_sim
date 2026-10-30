@@ -27,7 +27,7 @@ Il container `jo_sim_sins` ha l'orologio un'ora indietro (UTC). `bags/` sul host
 `bags/replay/run_method.sh` e `run_coda.sh` NON sono nel git: le copie aggiornate sono in `eval/scripts/`.
 **Non modificare script mentre una run li sta eseguendo** (bash li legge a pezzi: è già successo, run corrotte).
 
-## 3. Regole dell'utente (dalla memoria di Claude, copia in `memoria_claude/`)
+## 3. Regole dell'utente (dalla memoria di Claude, copia in `~/Desktop/claude_account_backup/sins_handoff/memoria_claude/`)
 
 - Niente tuning di pesi/Kalman sulle 6 sequenze di laboratorio; solo correzioni fisiche, con parametro che le
   spegne, verificate A/B. In generale: prove con **3 ripetizioni** (il rumore fra run è ±3 MOTA, ±6 IDF1).
@@ -44,7 +44,8 @@ Il container `jo_sim_sins` ha l'orologio un'ora indietro (UTC). `bags/` sul host
 ## 4. Stato attuale: CODa (dataset outdoor pubblico)
 
 CODa (UT Austin): LiDAR Ouster OS1-128 + ZED (cam3, con depth) + coppia stereo cam0/cam1. Usiamo la sequenza 0,
-tre finestre annotate (w1 cortile con rastrelliera e furgone, w2 corridoio interno, w3 viale), 2 min 45 s.
+tre finestre (w1 cortile con rastrelliera e furgone, w2 corridoio interno, w3 viale): 850 fotogrammi annotati a
+10 Hz (400 + 250 + 200 = 1 min 25 s), più 200 scansioni di rodaggio per finestra (in tutto 2 min 25 s di dati).
 **Sono lo split di tuning**: i numeri del paper vanno presi sulla sequenza 1 (ancora da convertire).
 
 ### Pipeline CODa
@@ -94,10 +95,21 @@ Il modello con maschere trova più bici del modello a riquadri ma con riquadri p
 tracker dà "bicycle" ai paletti.
 
 ## 5. Prossimi passi (in ordine)
-1. **Provare `track_lidar_fallback: false`** in `cfg/outdoor/tracker.yaml` (già compilato, non ancora testato):
-   atteso meno PD sui paletti. `STEREO=1 bash eval/scripts/coda_ab.sh N1` ×3 rep, confronto con M2.
-2. Bloccare la configurazione e **convertire CODa sequenza 1** (finestre da scegliere sulle annotazioni; serve anche
-   la bag stereo) → confronto completo lì (numeri del paper). Disco locale: ~14 GB liberi.
+1. **Provare `track_lidar_fallback: false`** in `sins/cfg/outdoor/tracker.yaml` (il codice è già compilato; cambiare
+   uno YAML non richiede ricompilare: l'installazione colcon è a link simbolici e `coda_ab.sh` rigenera `cfg/coda`).
+   Atteso: meno PD sui paletti. 3 ripetizioni (`N1`, `N1r2`, `N1r3`), confronto con M2 (comandi in §8).
+   **Criterio**: si tiene se i PD sbagliati/min calano chiaramente oltre il rumore fra ripetizioni e PD trovati,
+   chi-si-muove trovato e precisione restano entro il rumore. Se si tiene: commit in `sins/`, commit del puntatore
+   del submodule nel repo, `eval/coda_compare.py` (righe 23-24, oggi `M2`) puntato su `N1`, rilancio del confronto,
+   aggiornamento di `eval/STATUS.md` e della pagina "SINS a confronto". Se no: `git -C sins checkout cfg/outdoor/tracker.yaml`.
+2. **Bloccare la configurazione** (= un commit di `sins/` con nome, es. tag git `coda-frozen`, da non cambiare più fino
+   alla fine della valutazione held-out) e **convertire CODa sequenza 1** → confronto completo lì (numeri del paper).
+   Finestre: non c'è uno strumento; scegliere 2-3 tratti di 400-600 scansioni dove `3d_bbox/os1/1/` ha annotazioni
+   continue e ci sono sia persone in movimento sia oggetti fermi (bici, veicoli), più 200 scansioni di rodaggio prima.
+   Disco: per finestra ~2,4 GB (bag sensore) + ~2,9 GB (bag stereo) = ~5,3 GB; con 14 GB liberi ci stanno 2 finestre:
+   liberare spazio prima (es. vecchie bag in `bags/coda/runs/` con TAG scartati, ~100-170 MB l'una con i topic
+   intermedi). Tutti i metodi di confronto vanno rifatti sulle nuove finestre (deterministici: 1 run; M-detector anche a
+   0,25x; SINS 3 ripetizioni).
 3. JRDB (stesso VLP-16 del nostro robot, persone ferme fra la folla: banco giusto per il PD).
 4. SemanticKITTI con depth stereo (immagini in download, vedi §6).
 5. CROSSLAB 29/10 (nuove prove Qualisys, controprova del laboratorio).
@@ -145,15 +157,19 @@ Prossimo passo 1 (fallback del tracker spento), 3 ripetizioni e confronto con M2
         print(n,'PD rec %.3f prec %.3f falsePD/min %.0f'%tuple(np.mean([[p['recall'],p['precision'],p['false_min']] for p in pdl],0)))"
 
 Ogni run: ~1,5 min per finestra; risultati in `eval/results/coda/<TAG>_w<1-3>.json`, bag e log in
-`bags/coda/runs/<TAG>_v2_coda0_<w>{,_logs}`. I TAG usati finora (B1, C1-C7, E1-E4, F1-F3, G1, H1, I1, M1-M3...) sono
-descritti in `eval/STATUS.md`. **Fra una run e l'altra non modificare gli script di esecuzione né ricompilare.**
+`bags/coda/runs/<TAG>_v2_coda0_<w>{,_logs}`. I TAG sono descritti in `eval/STATUS.md` (sezione "Registro delle
+prove CODa"); `python3 eval/coda_pool.py <TAG> ...` stampa i numeri di ogni run. **Fra una run e l'altra non modificare gli script di esecuzione né ricompilare.**
 
 Sequenza 1 di CODa (held-out): copiare `eval/datasets/convert_coda0.sh` cambiando sequenza e finestre (scegliere
 finestre di 400-600 scansioni con annotazioni, più 200 di rodaggio prima; le annotazioni sono in
 `/mnt/kloster-reichenau/datasets_SINS/CODa/3d_bbox/os1/1/`), poi per ogni finestra
 `python3 eval/datasets/coda_stereo_bag.py <CODa root> bags/coda/coda1_<w>_gt.json bags/coda/coda1_<w>_stereo`.
-`run_coda.sh`, `coda_ab.sh`, `coda_eval.py` e `coda_compare.py` oggi hanno `coda0_` scritto dentro: vanno
-parametrizzati sulla sequenza. Baseline sulla stessa finestra: `eval/baselines/dynablox/run_dynablox_coda.sh
+Questi file hanno `coda0_` scritto dentro e vanno parametrizzati sulla sequenza (`coda_eval.py` invece no: prende i
+percorsi da riga di comando): `eval/scripts/run_coda.sh` (e la copia in `bags/replay/`), `eval/scripts/coda_ab.sh`,
+`eval/coda_compare.py`, `eval/make_coda_video.py`, `eval/coda_diag.py`, `eval/datasets/convert_coda0.sh`,
+`eval/datasets/coda_stereo_bag.py` (solo nell'esempio d'uso), `eval/baselines/unimt/{make_coda_manifest.py,run_unimt_coda.sh}`,
+`eval/baselines/eagermot/export_inputs_coda.py`, `eval/baselines/{dynablox,mdetector,lvdot}/run_*_coda.sh`,
+`eval/baselines/mdetector/make_input_coda.py`, `eval/baselines/lvdot/make_param_coda.py`. Baseline sulla stessa finestra: `eval/baselines/dynablox/run_dynablox_coda.sh
 coda1_w1 dynabloxa_coda1_w1` (idem `mdetector/run_mdetector_coda.sh`, `lvdot/run_lvdot_coda.sh`); CenterPoint +
 SimpleTrack: `eval/baselines/unimt/make_coda_manifest.py` poi `run_unimt_coda.sh` (scansioni copiate in locale,
 il NAS è lento); EagerMOT: `eval/baselines/eagermot/export_inputs_coda.py` + `run_eagermot_jo.py`.
