@@ -134,7 +134,7 @@ tracker dà "bicycle" ai paletti.
 
 **Attenzione: gli artifact su claude.ai sono privati di questo account.** Un altro account NON li apre: usa le copie
 in `~/Desktop/claude_account_backup/artifacts/` e questo file. Per pubblicarli di nuovo, ripubblicare le copie HTML
-(le figure e i video di "SINS a confronto" sono in `artifacts/sins_a_confronto_files/`).
+(ogni pagina con figure e video è una cartella completa: `artifacts/SINS_a_confronto/index.html`, `artifacts/Baseline_di_SINS/index.html`).
 
 Ambiente:
 - Container principale `jo_sim_sins` (immagine `jo-sim_sins:latest`), avviato con `docker compose up` dal repo
