@@ -755,3 +755,10 @@ ATTENZIONE: seq 0 = split di tuning di SINS. Prossimi: convertitore seq 1 (fines
   `yolo_refine_nested` (taglio di cluster che contengono la foglia: PD +1,6 pt, precisione PD 69 -> 60%). Entrambi
   restano come opzione spenta. `yolo_leaf_method` ora nello YAML del profilo (outdoor mask, indoor box): il launch lo
   legge se l'argomento è vuoto; coda_ab.sh non lo passa più.
+- (30/10 notte) Analisi stadio per stadio degli oggetti fermi (run K1 = G1 con tutti i topic intermedi;
+  `eval/diagnostics/coda_still_funnel.py`, statua esclusa): PD ok 54,7%; YOLO a box non lo vede 13,2%; preprocessing
+  <5 punti 1,8%; nessuna foglia sopra 13,7% (7,9% nessuna foglia dinamica entro 2 m, 5,2% foglia accanto); clustering
+  2,8%; cluster senza classe 8,1%; tracker 1,6%; classe ma D 4,0%. Box e segmentazione (K2, w1) vedono ciascuno l'80%,
+  insieme l'89%, e sono in disaccordo sul 18%: le foglie (mask) vengono solo dalla segmentazione. Leve: unione
+  foglie box+maschera; associazione YOLO->cluster nello spazio immagine (proiezione dei cluster nella maschera) al
+  posto di istogramma di profondità + IoU 3D; moto da punti per gli oggetti classificati fermi.
