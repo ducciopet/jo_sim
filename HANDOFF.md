@@ -117,3 +117,48 @@ tracker dà "bicycle" ai paletti.
 - Baseline di SINS: https://claude.ai/artifact/XGLMmauGC6XHbai8ygpQaz
 - Come funziona SINS: https://claude.ai/artifact/HBGNJo3pUHZNipahHnqXpE
 - SINS, punto della situazione (questa pagina in HTML): https://claude.ai/artifact/ES11EkRzwFGcXAZJBtZJrw (copia `artifacts/SINS_punto_della_situazione.html`)
+
+## 8. Ricette (comandi esatti, da `~/Desktop/jo_sim_sins`)
+
+**Attenzione: gli artifact su claude.ai sono privati di questo account.** Un altro account NON li apre: usa le copie
+in `~/Desktop/claude_account_backup/artifacts/` e questo file. Per pubblicarli di nuovo, ripubblicare le copie HTML
+(le figure e i video di "SINS a confronto" sono in `artifacts/sins_a_confronto_files/`).
+
+Ambiente:
+- Container principale `jo_sim_sins` (immagine `jo-sim_sins:latest`), avviato con `docker compose up` dal repo
+  (vedi `README.md`). Baseline in immagini a parte: `dynablox-noetic`, `mdetector-noetic`, `lvdot-noetic`,
+  `unimt-noetic` (usata anche per CenterPoint), `xu-rgbd-noetic`. EagerMOT gira sull'host:
+  `eval/baselines/eagermot/.venv`.
+- `bags/replay/` (dentro il container `/home/ros/bags/replay`) contiene gli script di esecuzione FUORI dal git;
+  se mancano: `cp eval/scripts/run_method.sh eval/scripts/run_coda.sh eval/adapters/stereo_depth_node.py
+  eval/adapters/realsense_bag_adapter.py bags/replay/`.
+- NAS (lo monta l'utente, credenziali sue): `sudo mount -t cifs "//konstanz.local/Kloster Reichenau"
+  /mnt/kloster-reichenau -o username=...,uid=1000,gid=1000,file_mode=0664,dir_mode=0775,vers=3.0`.
+
+Prossimo passo 1 (fallback del tracker spento), 3 ripetizioni e confronto con M2:
+
+    sed -i 's|^    track_lidar_fallback: true |    track_lidar_fallback: false|' sins/cfg/outdoor/tracker.yaml
+    for t in N1 N1r2 N1r3; do STEREO=1 bash eval/scripts/coda_ab.sh $t; done
+    cd eval && python3 -c "import sys,numpy as np; sys.path.insert(0,'.'); from coda_pool import pool
+    for n in ['M2','N1']:
+        rs=[pool(t) for t in (n,n+'r2',n+'r3')]; pdl=[r['per_label']['potentially_dynamic'] for r in rs]
+        print(n,'PD rec %.3f prec %.3f falsePD/min %.0f'%tuple(np.mean([[p['recall'],p['precision'],p['false_min']] for p in pdl],0)))"
+
+Ogni run: ~1,5 min per finestra; risultati in `eval/results/coda/<TAG>_w<1-3>.json`, bag e log in
+`bags/coda/runs/<TAG>_v2_coda0_<w>{,_logs}`. I TAG usati finora (B1, C1-C7, E1-E4, F1-F3, G1, H1, I1, M1-M3...) sono
+descritti in `eval/STATUS.md`. **Fra una run e l'altra non modificare gli script di esecuzione né ricompilare.**
+
+Sequenza 1 di CODa (held-out): copiare `eval/datasets/convert_coda0.sh` cambiando sequenza e finestre (scegliere
+finestre di 400-600 scansioni con annotazioni, più 200 di rodaggio prima; le annotazioni sono in
+`/mnt/kloster-reichenau/datasets_SINS/CODa/3d_bbox/os1/1/`), poi per ogni finestra
+`python3 eval/datasets/coda_stereo_bag.py <CODa root> bags/coda/coda1_<w>_gt.json bags/coda/coda1_<w>_stereo`.
+`run_coda.sh`, `coda_ab.sh`, `coda_eval.py` e `coda_compare.py` oggi hanno `coda0_` scritto dentro: vanno
+parametrizzati sulla sequenza. Baseline sulla stessa finestra: `eval/baselines/dynablox/run_dynablox_coda.sh
+coda1_w1 dynabloxa_coda1_w1` (idem `mdetector/run_mdetector_coda.sh`, `lvdot/run_lvdot_coda.sh`); CenterPoint +
+SimpleTrack: `eval/baselines/unimt/make_coda_manifest.py` poi `run_unimt_coda.sh` (scansioni copiate in locale,
+il NAS è lento); EagerMOT: `eval/baselines/eagermot/export_inputs_coda.py` + `run_eagermot_jo.py`.
+
+Riprendere le immagini KITTI quando il NAS ha spazio: `kill -CONT $(pgrep -f "python3 eval/datasets/remote_zip.py")`.
+
+Trappole già incontrate: `pkill -f <pattern>` uccide anche la propria shell se il pattern è nel comando (usare PID
+espliciti); il container ha l'orologio un'ora indietro; il disco locale ha ~14 GB liberi (ogni bag stereo ~2-3 GB).
