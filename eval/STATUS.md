@@ -777,3 +777,8 @@ ATTENZIONE: seq 0 = split di tuning di SINS. Prossimi: convertitore seq 1 (fines
 | M1 x3 | un solo YOLO per camera (maschere) + conferma moto per tutte le tracce con classe | |
 | M2 x3 | M1 + riquadro di riserva quando la maschera non dà foglia | **configurazione attuale** |
 | M3 | M2 + associazione per punti (`yolo_refine_assoc: points`) | interrotta (2 finestre), scartata dalle run singole L0* |
+| N1 x3 | M2 + `track_lidar_fallback: false` (niente classe 2D ai cluster solo LiDAR) | scartato: PD sbagliati/min 235 vs 122, precisione PD 51% vs 65%, PD trovati 46% invariati; moving 84,3/81,2 vs 83,3/82,6 |
+
+- (02/11) CODa seq 1 (held-out) controllata: solo due tratti annotati, 1750-2249 (2 pedoni) e 2900-3399 (3 pedoni + 1
+  cavallo), nessuna bici/veicolo. Troppo povera come banco PD: proposta JRDB come held-out principale, seq 1 solo
+  controprova sulle persone in movimento.
