@@ -17,6 +17,14 @@ files:
       # floor planes of the indoor base became ceilings and table tops (run J1: every person cropped). The terrain-
       # following ground grid of the outdoor profile (cameras near, LiDAR far, robot base plane in the blind cone)
       # needs no downward camera. The lab indoor profile keeps its planes.
+      # Depth = the projected VLP-16 (sparse rows): a leaf from the YOLO box takes the most populated depth band in
+      # it, in a crowd often the person or wall behind. Mask leaves (outdoor's choice for sparse depth) take the
+      # person's own pixels: on bytes-cafe (debug, 3 reps each) PD precision 83-84 -> 87-93%, false rows/min 1017 -> 467,
+      # MOTA 45.1 -> 48.3, IDF1 44.3 -> 47.6, PD found 53 -> 51%.
+      yolo_leaf_method: mask
+      # a mask that yields no leaf (few projected LiDAR pixels at 5-10 m) falls back to its box (outdoor's option):
+      # bytes-cafe 3 reps, PD precision 90.5 -> 93.5%, false rows/min 467 -> 291, MOTA 48.3 -> 50.2
+      yolo_leaf_mask_box_fallback: true
       ground_model: grid
       ground_grid_cell: 0.25
       ground_grid_tol: 0.15
@@ -33,6 +41,9 @@ files:
   semantic_segmentation.yaml:
     yolo_semantic_seg_detector:
       camera_names: [cam0, cam2, cam4, cam6, cam8]
+      # Sensor: JRDB images are 752x480. The base halves the JPEG before YOLO (a 1280x720 RealSense -> 640x360); here
+      # that gave 376x240 and about one person per frame per camera in a crowded cafe (bytes-cafe, debug run KB1).
+      detection_decode_reduced: 1
   detection.yaml:
     yolo_seg_track_detector:
       camera_names: [cam0, cam2, cam4, cam6, cam8]

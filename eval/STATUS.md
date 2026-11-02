@@ -875,3 +875,11 @@ tutto sotto di lui intorno al robot.
   GP1 (+ yolo_refine_assoc: points) x3: PD 52,0% prec 65,8%, falsi PD 133/min, FP tot 235: scartata (torna iou).
   JRDB heldout-v2 x3 (J2, J2r2, J2r3): PD rec 37,9/37,2/37,3% prec 81,3/80,4/82,3%, mai trovate ~60%; moving rec
   48,6/48,7/49,0% prec 74-76%; tutte rec ~43% prec ~86%, MOTA 32-33%, IDF1 33%.
+- (02/11 notte) JRDB, diagnosi su bytes-cafe (debug; `pd_funnel.py --jrdb`, criterio "visto da YOLO" corretto:
+  riquadro YOLO per metà dentro la box proiettata, non IoU: le persone sedute sono viste solo sopra il tavolo).
+  KB2 (indoor, riquadri): PD ok 55%, YOLO non vede 19%, foglia accanto 8,5%, classe non passa 7,3%, clustering 3,7%.
+  Profilo outdoor intero (KB3): PD rec 59 prec 68 (peggio). Prove 3 rep su bytes: KB2 indoor PD 53,0/83,5% F1 0,648
+  FP 1017/min MOTA 45,1 IDF1 44,3; KB4 + foglie da maschere 50,9/90,5% F1 0,651 FP 467 MOTA 48,3 IDF1 47,6;
+  KB5 + riquadro di riserva 51,6/93,5% F1 0,665 FP 291 MOTA 50,2 IDF1 47,4 (TENUTA); KB6 + YOLO 768 px 46,9/92,4%
+  (scartata); KB7 + gruppo più vicino 52,4/92,4% FP 372 (uguale, scartata). detection_decode_reduced 1 non cambia nulla.
+  Bloccata come tag sins `heldout-v4`; lanciate J3 x3 sulle 6 sequenze held-out.

@@ -5,7 +5,7 @@ the intermediate topics, see DIAG_TOPICS) is followed stage by stage.
 
 A. Still objects MISSED (annotated, not moving, in a camera view, not published as PD within 1 m): the first stage that
    loses it, in pipeline order
-     1 YOLO        no 2D detection of a dynamic class overlapping its projected box (IoU >= 0.3) in any camera
+     1 YOLO        no 2D detection of a dynamic class lying mostly inside its projected box in any camera
      2 preproc     fewer than 5 LiDAR points of it survive the floor/roof/wall crop (/sins/lidar/processed)
      3 leaf        no semantic leaf of a dynamic class on it (3a none within 2 m, 3b beside it, 3c 1-2 points)
      4 cluster     no cluster within 1 m (merged into something bigger, or split)
@@ -19,7 +19,8 @@ B. FALSE PD (published PD, no annotated object kept by the evaluation within 1 m
      (< 1.5 m: a duplicate or a mis-placed box of a real object; beyond: unannotated or a structure), whether a YOLO
      leaf of a dynamic class lies on it this tick (class from the camera) or not (memory / LiDAR-only fallback),
      and the persistent tracks behind most of them (position, size, class) to look at in the images.
-usage: pd_funnel.py <TAG> [w1 w2 w3]   (reads bags/coda/runs/<TAG>_v2_coda0_<w>)
+usage: pd_funnel.py <TAG> [w1 w2 w3]          (CODa: bags/coda/runs/<TAG>_v2_coda0_<w>)
+       pd_funnel.py --jrdb <TAG> <seq> [...]   (JRDB: bags/jrdb/runs/<TAG>_v2_jrdb_<seq>, five cameras, 15 m)
 """
 import collections
 import sys
@@ -112,7 +113,7 @@ def read(bag):
                 D[t].append((stamp(m), [(d.bbox.center.position.x, d.bbox.center.position.y, d.bbox.center.position.z,
                                          d.bbox.size.x, d.bbox.size.y, d.bbox.size.z,
                                          [h.hypothesis.class_id for h in d.results], d.id) for d in m.detections]))
-            elif t.startswith('/yolo_seg_track/') and t.endswith('/detections'):
+            elif (t.startswith('/yolo_seg_track/') or t.startswith('/yolo_semantic_seg/')) and t.endswith('/detections'):
                 m = r.deserialize(b, c.msgtype)
                 D['yolo_' + t.split('/')[2]].append((stamp(m), [
                     (d.bbox.center.position.x, d.bbox.center.position.y, d.bbox.size_x, d.bbox.size_y, d.results[0].hypothesis.class_id)
@@ -136,14 +137,19 @@ def inbox(P, g, m=0.2):
 
 
 def main():
-    tag = sys.argv[1]
-    wins = sys.argv[2:] or ['w1', 'w2', 'w3']
+    jrdb = '--jrdb' in sys.argv
+    args = [x for x in sys.argv[1:] if x != '--jrdb']
+    tag = args[0]
+    wins = args[1:] or ['w1', 'w2', 'w3']
+    if jrdb:
+        A.range = 15.0
+    stage_pts = collections.defaultdict(collections.Counter)
     stage, stage_cls = collections.Counter(), collections.defaultdict(collections.Counter)
     fp_rows = []
     stage5 = []
     for w in wins:
-        base = REPO / f'bags/coda/coda0_{w}'
-        run = REPO / f'bags/coda/runs/{tag}_v2_coda0_{w}'
+        base = REPO / (f'bags/jrdb/{w}' if jrdb else f'bags/coda/coda0_{w}')
+        run = REPO / (f'bags/jrdb/runs/{tag}_v2_jrdb_{w}' if jrdb else f'bags/coda/runs/{tag}_v2_coda0_{w}')
         odom = load_odometry(f'{base}_odom')
         ot, oT = full_odom(f'{base}_odom')
         gt, ign, frames, _ = ce.build_gt(f'{base}_gt.csv', odom, A)
@@ -151,12 +157,19 @@ def main():
         raw = raw[raw.track_id >= 0]
         Gall = objects(gt)
         G = Gall[Gall.state != 'dynamic']
-        stf, Kf, WHf = statics_K(base, 'front_camera')
         cams = {}
-        Tbv = stf[('base_link', 'velodyne')]
-        cams['front_camera'] = (Tbv @ stf[('velodyne', 'front_camera_depth_optical_frame')] @
-                                stf[('front_camera_depth_optical_frame', 'front_camera_color_optical_frame')], Kf, WHf)
-        if Path(f'{base}_stereo').exists():
+        if jrdb:
+            for cam in ('cam0', 'cam2', 'cam4', 'cam6', 'cam8'):
+                stc, Kc, WHc = statics_K(base, cam)
+                Tbv = stc[('base_link', 'velodyne')]
+                cams[cam] = (Tbv @ stc[('velodyne', f'{cam}_depth_optical_frame')] @
+                             stc[(f'{cam}_depth_optical_frame', f'{cam}_color_optical_frame')], Kc, WHc)
+        else:
+            stf, Kf, WHf = statics_K(base, 'front_camera')
+            Tbv = stf[('base_link', 'velodyne')]
+            cams['front_camera'] = (Tbv @ stf[('velodyne', 'front_camera_depth_optical_frame')] @
+                                    stf[('front_camera_depth_optical_frame', 'front_camera_color_optical_frame')], Kf, WHf)
+        if not jrdb and Path(f'{base}_stereo').exists():
             sts, Ks, WHs = statics_K(f'{base}_stereo', 'stereo_camera')
             if ('velodyne', 'stereo_camera_depth_optical_frame') in sts:
                 cams['stereo_camera'] = (Tbv @ sts[('velodyne', 'stereo_camera_depth_optical_frame')] @
@@ -195,8 +208,10 @@ def main():
                         continue
                     ix = max(0, min(x1, cx + sx / 2) - max(x0, cx - sx / 2))
                     iy = max(0, min(y1, cy + sy / 2) - max(y0, cy - sy / 2))
-                    uni = (x1 - x0) * (y1 - y0) + sx * sy - ix * iy
-                    if uni > 0 and ix * iy / uni >= 0.3:
+                    # seen: the YOLO box lies mostly inside the projected annotation (centre inside, >= half of its
+                    # area). Not IoU: a person sitting behind a table is detected head and torso only, while the
+                    # annotated box reaches the floor and the chair (IoU < 0.3 for a correct detection, JRDB)
+                    if x0 <= cx <= x1 and y0 <= cy <= y1 and sx * sy > 0 and ix * iy / (sx * sy) >= 0.5:
                         seen = True
             if not infov:
                 continue
@@ -251,6 +266,7 @@ def main():
                         st = '8 tracker: classified track, state ' + (tr[0][6][0] if tr[0][6] else '?')
             stage[st] += 1
             stage_cls[cls][st] += 1
+            stage_pts[pd.cut([gr.npts], [-1, 4, 9, 19, 49, 1e9], labels=['1-4', '5-9', '10-19', '20-49', '50+'])[0]][st] += 1
         # ── B: false PD ──────────────────────────────────────────────────────
         pdp = pub[pub.state == 'potentially_dynamic']
         kept = Gall
@@ -296,6 +312,12 @@ def main():
         print('   cluster height:', pd.cut(S5.cl_h, [0, 0.4, 0.6, 0.8, 1.1, 9]).value_counts().sort_index().to_dict())
         print('   cluster longest side:', pd.cut(S5.cl_l, [0, 0.5, 1, 2, 3, 6, 99]).value_counts().sort_index().to_dict())
         print('   leaf points on it: median %.0f; cluster centre to object: median %.2f m' % (S5.n_leaf.median(), S5.d.median()))
+    print('\n   by LiDAR returns on the object (annotation npts):')
+    for b in ['1-4', '5-9', '10-19', '20-49', '50+']:
+        cnt = stage_pts.get(b)
+        if cnt:
+            m = sum(cnt.values())
+            print(f'   {b:6s} n={m:5d} ' + ' '.join(f'{k[:2].strip()}:{100 * v / m:.0f}%' for k, v in sorted(cnt.items())))
     F = pd.DataFrame(fp_rows)
     if F.empty:
         print('B. no false PD')
