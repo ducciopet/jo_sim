@@ -115,7 +115,9 @@ def main():
     print('odometry (KISS-ICP)', flush=True)
     T_w_up = odometry(up, lo, L2U)
 
-    T_up_base, h, tilt, n_inl = ground_frame(up[0])
+    # ground plane: the fit with the most inliers over frames of the first 20 s (one frame alone can lock onto stairs:
+    # forbes-cafe frame 0 gave 0.71 m / 4.7 deg instead of the 1.24 m / 0.1 deg mount of every other sequence)
+    T_up_base, h, tilt, n_inl = max((ground_frame(up[j]) for j in range(0, min(len(up), 300), 10)), key=lambda g: g[3])
     T_base_up = np.linalg.inv(T_up_base)
     T_odom_w = T_base_up @ np.linalg.inv(T_w_up[0])
 
