@@ -789,3 +789,15 @@ ATTENZIONE: seq 0 = split di tuning di SINS. Prossimi: convertitore seq 1 (fines
 - Pipeline JRDB: `eval/datasets/jrdb/` (README con tutte le scelte), depth online dal LiDAR
   (`eval/adapters/lidar_depth_node.py`, hook `LIDAR_DEPTH` in run_method.sh), `eval/scripts/{run_jrdb,jrdb_ab}.sh`,
   `coda_pool.py --jrdb`. 6 sequenze (4 indoor, 2 outdoor), scelte dalle etichette di azione JRDB prima di ogni run.
+- (02/11) PROSSIMO FILONE (richiesta dell'utente): riconoscere e rimuovere il suolo su terreno irregolare (pendenze,
+  sassi, dislivelli) invece di un unico piano RANSAC. Bag di prova: Marina di Pisa 14/10, missione "Slope recognition"
+  (spiaggia di sassi, 5 min, 21 GB): registrazioni_robot/marina_di_pisa_20261014/2026-10-14_11-42-41_mdp-seaside_duccio-petreni.zip
+  (bag 20261014_094511_mdp_slopes). Modifica di metodo: dopo le run held-out a configurazione bloccata, solo profilo outdoor.
+- (02/11 pomeriggio) Prima run JRDB (J1, solo 1 ripetizione, fermata): indoor quasi vuoto (huangb 0,1%, tressider 0%,
+  packard 23%), outdoor ~55%. Causa: il pavimento di static_structures viene SOLO dalle camere (RANSAC, primo piano
+  orizzontale); con camere orizzontali e depth dal LiDAR diventava il soffitto o il piano dei tavoli e tagliava le
+  persone. Fatto: (1) base_link JRDB sul montaggio fisso 1,24 m (jrdb_reframe.py; forbes 0,71 m e bytes 0,43 m erano
+  fit sbagliati su scale/tavoli); (2) opzione `floor_lowest_below_sensor` (spenta di default, accesa nei profili
+  JRDB): A/B su bytes-cafe (debug) recall 17,7 -> 40,0%, ma il pavimento resta a 0,3-0,8 m: in un bar affollato il
+  pavimento non lo vede nessun sensore (VLP-16 a 1,24 m lo tocca solo oltre 4,6 m). Serve una stima del suolo che
+  usi anche il LiDAR e il piano su cui poggia il robot = il filone "suolo irregolare". Run J1 da NON usare.
