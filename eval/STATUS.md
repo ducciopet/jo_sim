@@ -858,3 +858,13 @@ tutto sotto di lui intorno al robot.
   40/95 (J1 0%), clark0 58/83, clark1 60/75. La griglia risolve il crollo indoor dei piani. FP/min JRDB non confrontabili
   con CODa (15 Hz, ~30 persone/fotogramma). Liberati 1,5 GB (run GG1*, K1, copia CODa interrotta). Lanciate K3
   (diagnosi CODa) + pd_funnel e le ripetizioni J2r2/J2r3.
+- (02/11 sera) Analisi PD (`eval/diagnostics/pd_funnel.py K3`, K3 = heldout-v2 con topic intermedi; testo in
+  eval/results/pd_analysis/). Oggetti fermi in vista camera (745 righe): PD ok 63,4%; YOLO non lo vede 16,9% (5 punti
+  = statua "Horse"); foglia ok + cluster ok ma classe non passa (stadio 5) 10,1%; clustering 3,8%; foglia accanto /
+  1-2 punti 3,1%; tracker 2,6%. Stadio 5 = 75 casi: 56 bici + 14 monopattini (foglia "bicycle") + 5 furgone; solo 16
+  cluster sotto 0,6 m (filtro bici); gli altri cluster 0,6-1,1 m alti, 0,5-2 m lunghi, a 0,24 m dall'oggetto, 38 punti
+  di foglia: rifiutati dall'associazione per IoU 3D delle box (cluster bici+rastrelliera più grande della foglia).
+  PD falsi (184 righe, 15 tracce): quasi tutti UNA traccia 0,43x0,18x0,54 m accanto al furgone con classe "truck" dalla
+  MEMORIA di classe (classAnchor non controllava l'altezza minima della classe: corretto in tracker_node.cpp).
+  In coda (chain_gp): ricompilazione dopo J2r2/J2r3, poi GH3 x3 (correzione memoria) e GP1 x3 (+ yolo_refine_assoc: points,
+  ora protetto dal filtro altezza bici 0,6 m che fermava i paletti).

@@ -140,6 +140,7 @@ def main():
     wins = sys.argv[2:] or ['w1', 'w2', 'w3']
     stage, stage_cls = collections.Counter(), collections.defaultdict(collections.Counter)
     fp_rows = []
+    stage5 = []
     for w in wins:
         base = REPO / f'bags/coda/coda0_{w}'
         run = REPO / f'bags/coda/runs/{tag}_v2_coda0_{w}'
@@ -234,6 +235,14 @@ def main():
                         st = '4 clustering: no cluster centred on it (merged/split)'
                     elif not any(len(x[6]) > 1 for x in fcl):
                         st = '5 YOLO->cluster: cluster without class this tick'
+                        lcls = collections.Counter()
+                        for k in ks:
+                            sel = inbox(D['leaves'][k][1], gr, 0.3) & np.isin(D['leaves'][k][2], DYN_IDX)
+                            lcls.update(NAMES[i] for i in D['leaves'][k][2][sel])
+                        cl_h = max([x[5] for x in fcl + own] or [0])
+                        cl_l = max([max(x[3], x[4]) for x in fcl + own] or [0])
+                        stage5.append(dict(cls=cls, leaf=lcls.most_common(1)[0][0] if lcls else '', cl_h=cl_h, cl_l=cl_l,
+                                           n_leaf=sum(lcls.values()), d=min([np.hypot(x[0] - g.x, x[1] - g.y) for x in fcl + own] or [9])))
                     elif not tr:
                         st = '6 tracker: no track on it'
                     elif not any(len(x[6]) > 1 and x[6][1] for x in tr):
@@ -280,6 +289,13 @@ def main():
     for cl, cnt in stage_cls.items():
         m = sum(cnt.values())
         print(f'   {cl:16s} n={m:5d} ' + ' '.join(f'{k[:2].strip()}:{100 * v / m:.0f}%' for k, v in sorted(cnt.items())))
+    if stage5:
+        S5 = pd.DataFrame(stage5)
+        print('\n   stage 5 detail (leaf on it, cluster there, no class):')
+        print('   annotated class x leaf class:', S5.groupby(['cls', 'leaf']).size().to_dict())
+        print('   cluster height:', pd.cut(S5.cl_h, [0, 0.4, 0.6, 0.8, 1.1, 9]).value_counts().sort_index().to_dict())
+        print('   cluster longest side:', pd.cut(S5.cl_l, [0, 0.5, 1, 2, 3, 6, 99]).value_counts().sort_index().to_dict())
+        print('   leaf points on it: median %.0f; cluster centre to object: median %.2f m' % (S5.n_leaf.median(), S5.d.median()))
     F = pd.DataFrame(fp_rows)
     if F.empty:
         print('B. no false PD')
