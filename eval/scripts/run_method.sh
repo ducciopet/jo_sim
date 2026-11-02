@@ -5,7 +5,8 @@
 # usage: run_method.sh <v1|v2> <sensor_bag> <odom_bag> <out_bag>   (env EXTRA_TOPICS: more topics to record)
 # env:   ADAPTER=1 (derive missing RealSense streams, eval/adapters/realsense_bag_adapter.py), V1_ARGS, V2_ARGS
 #        ADAPTER_CAMS (python list for the adapter's camera_names), STEREO=<cam> (online stereo depth for that camera,
-#        eval/adapters/stereo_depth_node.py), EXTRA_BAGS (more bags played with the sensor bag, e.g. a stereo pair)
+#        eval/adapters/stereo_depth_node.py), LIDAR_DEPTH (python list of cameras whose depth is the scan projected online,
+#        eval/adapters/lidar_depth_node.py), EXTRA_BAGS (more bags played with the sensor bag, e.g. a stereo pair)
 METHOD=$1; BAG=$2; ODOM=$3; OUT=$4
 export ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-77}
 # DDS on loopback only: an interface vanishing mid-run (e.g. a hotspot) stalled playback once (r8c v1 1942)
@@ -18,6 +19,9 @@ if [ -n "$ADAPTER" ]; then
 fi
 if [ -n "$STEREO" ]; then
   python3 $DIR/stereo_depth_node.py --ros-args -p use_sim_time:=true -p camera:=$STEREO > $LOG/stereo.log 2>&1 &
+fi
+if [ -n "$LIDAR_DEPTH" ]; then
+  python3 $DIR/lidar_depth_node.py --ros-args -p use_sim_time:=true -p "camera_names:=$LIDAR_DEPTH" > $LOG/lidar_depth.log 2>&1 &
 fi
 # start the detector BEFORE the bag and give it time to load (YOLO model, ~4-6 s), so no method loses
 # the first seconds of the sequence to start-up

@@ -1,0 +1,30 @@
+# JRDB (indoor sequences: eval/datasets/jrdb/convert_jrdb.sh), base profile cfg/indoor. Sensor setup only:
+# upper VLP-16 (= the robot's LiDAR: base ring spacing 2 deg and 15 m crop kept) + five rectified color cameras
+# cam0..cam8 of the upper ring (752x480, 15 Hz, no depth sensor). Their depth is the scan projected online into each
+# image (eval/adapters/lidar_depth_node.py), so its valid range is the LiDAR's: depth_max_value = the 15 m crop.
+# Method parameters come from the base profile verbatim (frozen: sins tag coda-frozen).
+base: indoor
+files:
+  preprocessing.yaml:
+    preprocessing_node:
+      camera_names: [cam0, cam2, cam4, cam6, cam8]
+      cam0: {aligned_depth_transport: zstd, aligned_depth_cloud_topic: /cam0/camera/depth/color/points, depth_max_value: 15.0}
+      cam2: {aligned_depth_transport: zstd, aligned_depth_cloud_topic: /cam2/camera/depth/color/points, depth_max_value: 15.0}
+      cam4: {aligned_depth_transport: zstd, aligned_depth_cloud_topic: /cam4/camera/depth/color/points, depth_max_value: 15.0}
+      cam6: {aligned_depth_transport: zstd, aligned_depth_cloud_topic: /cam6/camera/depth/color/points, depth_max_value: 15.0}
+      cam8: {aligned_depth_transport: zstd, aligned_depth_cloud_topic: /cam8/camera/depth/color/points, depth_max_value: 15.0}
+  static_structures.yaml:
+    static_structures_node:
+      camera_names: [cam0, cam2, cam4, cam6, cam8]
+  semantic_segmentation.yaml:
+    yolo_semantic_seg_detector:
+      camera_names: [cam0, cam2, cam4, cam6, cam8]
+  detection.yaml:
+    yolo_seg_track_detector:
+      camera_names: [cam0, cam2, cam4, cam6, cam8]
+  detection_yolo26.yaml:
+    yolo_seg_track_detector:
+      camera_names: [cam0, cam2, cam4, cam6, cam8]
+  tracker.yaml:
+    tracker_node:
+      camera_names: [cam0, cam2, cam4, cam6, cam8]

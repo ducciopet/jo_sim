@@ -782,3 +782,10 @@ ATTENZIONE: seq 0 = split di tuning di SINS. Prossimi: convertitore seq 1 (fines
 - (02/11) CODa seq 1 (held-out) controllata: solo due tratti annotati, 1750-2249 (2 pedoni) e 2900-3399 (3 pedoni + 1
   cavallo), nessuna bici/veicolo. Troppo povera come banco PD: proposta JRDB come held-out principale, seq 1 solo
   controprova sulle persone in movimento.
+
+### JRDB held-out (02/11)
+- Configurazione bloccata: tag `coda-frozen` su sins (M2 + correzione del profilo indoor: `yolo_class_min_height_*: []`
+  faceva abortire dbscan_detector_node all'avvio con env:=indoor dal 30/10, commit sins `8019cab`; outdoor invariato).
+- Pipeline JRDB: `eval/datasets/jrdb/` (README con tutte le scelte), depth online dal LiDAR
+  (`eval/adapters/lidar_depth_node.py`, hook `LIDAR_DEPTH` in run_method.sh), `eval/scripts/{run_jrdb,jrdb_ab}.sh`,
+  `coda_pool.py --jrdb`. 6 sequenze (4 indoor, 2 outdoor), scelte dalle etichette di azione JRDB prima di ogni run.
