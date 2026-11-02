@@ -883,3 +883,8 @@ tutto sotto di lui intorno al robot.
   KB5 + riquadro di riserva 51,6/93,5% F1 0,665 FP 291 MOTA 50,2 IDF1 47,4 (TENUTA); KB6 + YOLO 768 px 46,9/92,4%
   (scartata); KB7 + gruppo più vicino 52,4/92,4% FP 372 (uguale, scartata). detection_decode_reduced 1 non cambia nulla.
   Bloccata come tag sins `heldout-v4`; lanciate J3 x3 sulle 6 sequenze held-out.
+- (03/11 notte) JRDB held-out heldout-v4 (J3 x3) vs heldout-v3 (J2 x3): PD rec 37,5 -> 34,4%, prec 81,3 -> 81,7%,
+  F1 0,513 -> 0,484; moving 48,8/74,7 -> 47,9/75,8; MOTA 32,7 -> 30,5, IDF1 33,2 -> 33,4. forbes 33 -> 25%, huangb
+  28 -> 22% di persone trovate, altre invariate. Il guadagno su bytes-cafe (prec 84 -> 94%) NON si trasferisce:
+  sovra-adattamento a UNA sequenza di debug. Proposta: numeri JRDB = heldout-v3 (J2), v4 riportata come prova negativa;
+  per tarare su JRDB serve uno split di tuning di 4-5 sequenze JRDB train non usate (conversione dal NAS, in laboratorio).
