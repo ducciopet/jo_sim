@@ -13,6 +13,15 @@ files:
       cam4: {aligned_depth_transport: zstd, aligned_depth_cloud_topic: /cam4/camera/depth/color/points, depth_max_value: 15.0}
       cam6: {aligned_depth_transport: zstd, aligned_depth_cloud_topic: /cam6/camera/depth/color/points, depth_max_value: 15.0}
       cam8: {aligned_depth_transport: zstd, aligned_depth_cloud_topic: /cam8/camera/depth/color/points, depth_max_value: 15.0}
+      # No camera looks down at the floor (five horizontal color cameras, depth = the projected VLP-16): the per-camera
+      # floor planes of the indoor base became ceilings and table tops (run J1: every person cropped). The terrain-
+      # following ground grid of the outdoor profile (cameras near, LiDAR far, robot base plane in the blind cone)
+      # needs no downward camera. The lab indoor profile keeps its planes.
+      ground_model: grid
+      ground_grid_cell: 0.25
+      ground_grid_tol: 0.15
+      ground_grid_max_slope_deg: 40.0
+      ground_grid_memory_s: 30.0
   static_structures.yaml:
     static_structures_node:
       camera_names: [cam0, cam2, cam4, cam6, cam8]

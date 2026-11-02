@@ -826,3 +826,12 @@ tutto sotto di lui intorno al robot.
   l'EKF di make_odom.sh dà z=0 e 284 km. GNSS RTK fisso 1166/1169 fix (estratto in bags/mdp/mdp_slopes_gnss): percorso
   107 m, dislivello 1,24 m. KISS-ICP: xy 0,41 m mediana, ma z fino a 4 m. Riferimento = `eval/datasets/rtk_odom_bag.py`
   (posizione RTK, roll/pitch IMU, heading KISS-ICP) -> bags/mdp/mdp_slopes_odom_rtk.
+- (02/11 sera) Griglia del suolo in C++ (`sins/include/sins/ground_grid.hpp`, `ground_model: grid` in cfg/outdoor e nei
+  profili JRDB; indoor del laboratorio = piani). Costo: scansione preprocessing 11-15 -> 17-24 ms su OS1-128 (griglia
+  50x50 m), dentro il budget di 100 ms: si tiene all'istante k. GG1 x3 vs M2 x3 (CODa seq 0): PD trovati 46,1 -> 59,8%,
+  precisione PD 64,9 -> 49,4%, PD sbagliati/min 122 -> 319, moving 83,4/82,6 -> 84,8/80,6, FP/min tot 219 -> 425,
+  MOTA 41,6 -> 29,3%, IDF1 56,3 -> 49,4%. Suolo (etichette): w2 suolo rimasto 10,6 -> 5,4%, parte bassa degli agenti
+  48 -> 68%; w3 falsi D/min 127 -> 65. L'aumento dei PD falsi è quasi tutto in w1 (255 -> 670/min): archetti a U delle
+  rastrelliere, paletti, rastrelliera al muro, accanto alle bici (classe "bicycle" da YOLO). I piani li tagliavano
+  insieme a gambe e ruote (pavimento troppo alto): la griglia ha scoperto il problema già noto dei paletti PD.
+  Immagini: eval/results/ground/coda_w1_fp/. Video del suolo: ~/Desktop/suolo_video/.

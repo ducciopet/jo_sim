@@ -46,8 +46,11 @@ def chain(edges, parent, child):
 
 
 def depth_points(m, K, stride=4, zmax=4.0):
-    """compressedDepth (12-byte header + 16-bit PNG, mm) -> points in the image's optical frame."""
-    img = cv2.imdecode(np.frombuffer(bytes(m.data[12:]), np.uint8), cv2.IMREAD_UNCHANGED)
+    """compressedDepth (12-byte header + 16-bit PNG) or raw 16UC1 Image, mm -> points in the image's optical frame."""
+    if hasattr(m, 'encoding'):
+        img = np.frombuffer(bytes(m.data), np.uint16).reshape(m.height, m.step // 2)[:, :m.width]
+    else:
+        img = cv2.imdecode(np.frombuffer(bytes(m.data[12:]), np.uint8), cv2.IMREAD_UNCHANGED)
     if img is None:
         return np.zeros((0, 3))
     d = img[::stride, ::stride].astype(np.float64) / 1000.0
@@ -55,6 +58,73 @@ def depth_points(m, K, stride=4, zmax=4.0):
     z = d[v, u]
     u, v = u * stride, v * stride
     return np.stack([(u - K[0, 2]) * z / K[0, 0], (v - K[1, 2]) * z / K[1, 1], z], 1)
+
+
+def render(P, kept, T_ob, color_msg, k, grid, a):
+    """One video frame: top view (10 m around the robot) with the ground grid underneath, side view along the heading
+    (3 m wide band), front camera."""
+    W = 480
+    top = np.full((W, W, 3), 250, np.uint8)
+    c0, s = T_ob[:3, 3], W / 20.0                                       # 20 m wide, 2.4 cm per pixel
+    # ground grid: accepted ground cells shaded by height relative to the robot
+    for (i, j), z in grid.h.items():
+        u, v = int(W / 2 + ((i + 0.5) * grid.c - c0[0]) * s), int(W / 2 - ((j + 0.5) * grid.c - c0[1]) * s)
+        if 0 <= u < W and 0 <= v < W:
+            t = np.clip((z - c0[2] + 1.0) / 2.0, 0, 1)
+            col = (int(235 - 60 * t), int(225 - 20 * t), int(200 + 40 * t))
+            r = max(1, int(grid.c * s / 2))
+            cv2.rectangle(top, (u - r, v - r), (u + r, v + r), col, -1)
+    uv = np.stack([W / 2 + (P[:, 0] - c0[0]) * s, W / 2 - (P[:, 1] - c0[1]) * s], 1).astype(int)
+    ok = (uv[:, 0] >= 0) & (uv[:, 0] < W) & (uv[:, 1] >= 0) & (uv[:, 1] < W)
+    for msk, col in ((~kept, (120, 120, 120)), (kept, (40, 40, 210))):
+        q = uv[ok & msk]
+        top[q[:, 1], q[:, 0]] = col
+    cv2.circle(top, (W // 2, W // 2), 5, (0, 140, 0), -1)
+    hx = T_ob[:3, 0]
+    cv2.line(top, (W // 2, W // 2), (int(W / 2 + hx[0] * 25), int(W / 2 - hx[1] * 25)), (0, 140, 0), 2)
+    # side view: points within 1.5 m of the heading line, distance along heading vs height
+    side = np.full((W, W, 3), 250, np.uint8)
+    d = (P - c0) @ T_ob[:3, 0]
+    lat = (P - c0) @ T_ob[:3, 1]
+    band = np.abs(lat) < 1.5
+    sx, sz = W / 16.0, W / 5.0                                          # 16 m along, 5 m height
+    uv2 = np.stack([W * 0.25 + d * sx, W * 0.6 - (P[:, 2] - c0[2]) * sz], 1).astype(int)
+    ok2 = band & (uv2[:, 0] >= 0) & (uv2[:, 0] < W) & (uv2[:, 1] >= 0) & (uv2[:, 1] < W)
+    # estimated ground along the heading line
+    prev = None
+    for dd in np.arange(-4, 12, grid.c):
+        p = c0 + dd * T_ob[:3, 0]
+        z = grid.height_above(np.array([[p[0], p[1], 0.0]]))[0]
+        if np.isfinite(z):
+            gz = -z                                                      # ground height at p (height_above of z=0)
+            pt = (int(W * 0.25 + dd * sx), int(W * 0.6 - (gz - c0[2]) * sz))
+            if prev is not None:
+                cv2.line(side, prev, pt, (60, 160, 60), 2)
+            prev = pt
+        else:
+            prev = None
+    for msk, col in ((~kept, (120, 120, 120)), (kept, (40, 40, 210))):
+        q = uv2[ok2 & msk]
+        for x, y in q:
+            cv2.circle(side, (x, y), 1, col, -1)
+    cv2.circle(side, (int(W * 0.25), int(W * 0.6)), 5, (0, 140, 0), -1)
+    cam = np.full((W, W, 3), 250, np.uint8)
+    if color_msg is not None:
+        if hasattr(color_msg, 'encoding'):             # raw Image (CODa: rgb8)
+            img = np.frombuffer(bytes(color_msg.data), np.uint8).reshape(color_msg.height, color_msg.width, -1)
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) if color_msg.encoding == 'rgb8' else img.copy()
+        else:
+            img = cv2.imdecode(np.frombuffer(bytes(color_msg.data), np.uint8), cv2.IMREAD_COLOR)
+        if img is not None:
+            h = int(img.shape[0] * W / img.shape[1])
+            cam[(W - h) // 2:(W - h) // 2 + h] = cv2.resize(img, (W, h))
+    out = np.hstack([top, side, cam])
+    bar = np.full((44, out.shape[1], 3), 255, np.uint8)
+    cv2.putText(bar, f'scan {k}   grey = ground   red = kept as possible obstacle   green = estimated ground', (8, 18),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (30, 30, 30), 1)
+    cv2.putText(bar, 'top view 20 m x 20 m (shade = ground height)  |  side view along heading, 16 m x 5 m  |  front camera',
+                (8, 37), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (90, 90, 90), 1)
+    return np.vstack([bar, out])
 
 
 def main():
@@ -69,7 +139,15 @@ def main():
     ap.add_argument('--radius', type=float, default=15.0)
     ap.add_argument('--frames', default='300,1000,1700,2400')
     ap.add_argument('--no-cams', action='store_true')
+    ap.add_argument('--mode', default='step', choices=['step', 'grad'])
+    ap.add_argument('--max-grad', type=float, default=40.0)
+    ap.add_argument('--tol', type=float, default=None, help="mode grad: accepted |surface - predicted| (default --step)")
     ap.add_argument('--depth-max', type=float, default=4.0)
+    ap.add_argument('--color-topic', default='/front_camera/camera/color/image_raw/compressed')
+    ap.add_argument('--depth', nargs='*', default=None,
+                    help='depth image topics as IMAGE:INFO (compressedDepth or raw 16UC1); default: the two lab RealSense')
+    ap.add_argument('--video', help='write an mp4: top view, side view, front camera, ground grey / kept red')
+    ap.add_argument('--video-range', default='0:100000', help='scans first:last for the video')
     a = ap.parse_args()
     out = Path(a.out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -93,11 +171,18 @@ def main():
             k -= 1
         return odom[ost[k]] if abs(ost[k] - st) < 1.5e8 else None
 
-    grid = GroundGrid(a.cell, a.slope, a.step, a.radius, 30.0)
+    grid = GroundGrid(a.cell, a.slope, a.step, a.radius, 30.0, mode=a.mode, max_grad_deg=a.max_grad)
+    if a.tol is not None:
+        grid.step_tol = a.tol
     edges, K, depth_last = {}, {}, {}
-    cams = [] if a.no_cams else ['front_camera', 'back_camera']
-    topics = {'/velodyne_points', '/tf_static'} | {f'/{c}/camera/aligned_depth_to_color/image_raw/compressedDepth' for c in cams} \
-        | {f'/{c}/camera/aligned_depth_to_color/camera_info' for c in cams}
+    if a.depth is None:
+        a.depth = [f'/{c}/camera/aligned_depth_to_color/image_raw/compressedDepth:/{c}/camera/aligned_depth_to_color/camera_info'
+                   for c in ('front_camera', 'back_camera')]
+    dpairs = [] if a.no_cams else [tuple(x.split(':')) for x in a.depth]
+    info_of = {i: d for d, i in dpairs}
+    vr = [int(x) for x in a.video_range.split(':')]
+    color_last, writer = None, None
+    topics = {'/velodyne_points', '/tf_static', a.color_topic} | {d for d, _ in dpairs} | {i for _, i in dpairs}
     stats, path, k = [], [], -1
     with AnyReader([Path(a.bag)]) as r:
         for c, t, raw in r.messages(connections=[c for c in r.connections if c.topic in topics]):
@@ -106,13 +191,17 @@ def main():
                 for x in m.transforms:
                     edges[(x.header.frame_id, x.child_frame_id)] = T_of(x.transform)
                 continue
-            if c.topic.endswith('camera_info'):
-                K[c.topic.split('/')[1]] = np.array(m.k).reshape(3, 3)
+            if c.topic == a.color_topic:
+                if a.video:
+                    color_last = m
                 continue
-            if c.topic.endswith('compressedDepth'):
-                cam = c.topic.split('/')[1]
-                if cam in K:
-                    depth_last[cam] = (stamp(m), depth_points(m, K[cam], zmax=a.depth_max), m.header.frame_id)
+            if c.topic in info_of:
+                K[info_of[c.topic]] = np.array(m.k).reshape(3, 3)
+                continue
+            if c.topic in K:
+                depth_last[c.topic] = (stamp(m), depth_points(m, K[c.topic], zmax=a.depth_max), m.header.frame_id)
+                continue
+            if c.topic != '/velodyne_points':           # a depth image before its camera_info
                 continue
             st = stamp(m)
             T_ob = pose_at(st)
@@ -128,7 +217,7 @@ def main():
                 if abs(dst - st) < 2e8:
                     T = T_ob @ chain(edges, 'base_link', frame)
                     parts.append(Pc @ T[:3, :3].T + T[:3, 3])
-            grid.update(np.vstack(parts), T_ob[:3, 3], st * 1e-9)
+            grid.update(np.vstack(parts), T_ob[:3, 3], st * 1e-9, T_ob[:3, :3])
             path.append(T_ob[:3, 3].copy())
             rng = np.linalg.norm(L[:, :2], axis=1)
             sel = (rng > 1.2) & (rng < 15)
@@ -136,6 +225,13 @@ def main():
             kept = ~(np.nan_to_num(ha, nan=np.inf) < a.margin)
             stats.append(dict(scan=k, t=st * 1e-9, n=int(sel.sum()), kept=int(kept.sum()),
                               robot_z=float(T_ob[2, 3])))
+            if a.video and k > vr[1]:
+                break
+            if a.video and vr[0] <= k <= vr[1]:
+                frame = render(Lg[sel], kept, T_ob, color_last, k, grid, a)
+                if writer is None:
+                    writer = cv2.VideoWriter(a.video, cv2.VideoWriter_fourcc(*'mp4v'), 10, (frame.shape[1], frame.shape[0]))
+                writer.write(frame)
             if k in want:
                 P = Lg[sel]
                 img = np.full((600, 1200, 3), 255, np.uint8)
@@ -156,6 +252,8 @@ def main():
                 cv2.imwrite(str(out / f'frame_{k}.png'), img)
             if k % 500 == 0:
                 print(f'{k} scans', flush=True)
+    if writer is not None:
+        writer.release()
     path = np.array(path)
     cells = np.array([(i, j, z) for (i, j), (z, _) in grid.mem.items()])
     if len(cells):

@@ -48,25 +48,43 @@ def stamp(m):
 
 
 class GroundGrid:
-    def __init__(self, cell, slope_deg, step, radius, mem_s, robot_r=0.6, ref_min=False):
+    def __init__(self, cell, slope_deg, step, radius, mem_s, robot_r=0.6, ref_min=False, mode='step', max_grad_deg=40.0,
+                 grad_alpha=0.5):
         self.ref_min = ref_min
+        # mode 'grad': each cell carries a terrain gradient; a neighbour is ground when its surface lies within `step`
+        # of the height PREDICTED by continuing that gradient (smooth slopes pass however steep, up to max_grad_deg;
+        # objects are steps). mode 'step': within step + cell*tan(slope) of the neighbour's height (flat prediction).
+        self.mode, self.gmax, self.galpha, self.step_tol = mode, np.tan(np.radians(max_grad_deg)), grad_alpha, step
         self.c, self.rise = cell, step + cell * np.tan(np.radians(slope_deg))
         self.radius, self.mem_s, self.robot_r = radius, mem_s, robot_r
         self.mem = {}                 # cell -> (ground z, time) of accepted ground observations
 
-    def update(self, pts, robot_xyz, t):
+    def update(self, pts, robot_xyz, t, robot_R=None):
+        """robot_R: base_link orientation in odom. The robot stands on the ground: its base plane IS the local terrain
+        (height and slope) under it, which seeds the growth (mode 'grad'; 'step' seeds flat at the robot's height)."""
         c = self.c
+        g0 = np.zeros(2)
+        if robot_R is not None and self.mode == 'grad':
+            nz = robot_R[:, 2]
+            g0 = np.array([-nz[0] / nz[2], -nz[1] / nz[2]])
         ij = np.floor(pts[:, :2] / c).astype(np.int64)
         cells = {}
         order = np.argsort(pts[:, 2])
         for k, z in zip(map(tuple, ij[order]), pts[order, 2]):
             cells.setdefault(k, []).append(z)          # ascending heights per cell
+        if self.mode == 'grad':                         # offsets from the cell centre too, to remove the local slope
+            off = pts[:, :2] - (ij + 0.5) * c
+            cxy = {}
+            for k, o, z in zip(map(tuple, ij), off, pts[:, 2]):
+                cxy.setdefault(k, []).append((o[0], o[1], z))
+            cells = {k: np.array(v) for k, v in cxy.items()}
         for k, (z, tm) in list(self.mem.items()):
             if t - tm > self.mem_s:
                 del self.mem[k]
         r0 = np.floor(np.array(robot_xyz[:2]) / c).astype(int)
         R = int(self.radius / c)
         h = {}
+        g = {}
         heap = []
         nr = int(np.ceil(self.robot_r / c))
         for di in range(-nr, nr + 1):
@@ -74,8 +92,12 @@ class GroundGrid:
                 k = (r0[0] + di, r0[1] + dj)
                 # under the robot: what the sensors see there if they see it (odometry z drifts), else the robot's
                 # own height (the blind cone of a LiDAR mounted high)
-                z = self.surface(cells.get(k, ()), robot_xyz[2] - 0.3)
-                h[k] = z if z is not None and z <= robot_xyz[2] + 0.3 else robot_xyz[2]
+                ck = cells.get(k, ())
+                zb = robot_xyz[2] + g0 @ ((np.array(k) + 0.5) * c - np.asarray(robot_xyz[:2]))   # base plane here
+                z = (self.surface_sloped(ck if len(ck) else None, zb - 0.3, g0) if self.mode == 'grad'
+                     else self.surface(ck, zb - 0.3))
+                h[k] = z if z is not None and z <= zb + 0.3 else zb
+                g[k] = g0.copy()
                 heapq.heappush(heap, (np.hypot(di, dj), k))
         while heap:
             _, k = heapq.heappop(heap)
@@ -83,6 +105,28 @@ class GroundGrid:
                 for dj in (-1, 0, 1):
                     n = (k[0] + di, k[1] + dj)
                     if n in h or abs(n[0] - r0[0]) > R or abs(n[1] - r0[1]) > R:
+                        continue
+                    if self.mode == 'grad':
+                        dvec = np.array([di, dj], float) * self.c
+                        pred = h[k] + g[k] @ dvec
+                        lo, hi = pred - self.step_tol, pred + self.step_tol
+                        z = self.surface_sloped(cells.get(n), lo, g[k])
+                        if z is None or z > hi:
+                            mz = self.mem.get(n)
+                            z = mz[0] if mz is not None and lo <= mz[0] <= hi else None
+                        if z is not None and z <= hi:
+                            h[n] = z
+                            dl = np.linalg.norm(dvec)
+                            u = dvec / dl
+                            gn = g[k] + self.galpha * ((z - h[k]) / dl - g[k] @ u) * u
+                            nrm = np.linalg.norm(gn)
+                            g[n] = gn if nrm <= self.gmax else gn * self.gmax / nrm
+                            if n in cells:
+                                self.mem[n] = (z, t)
+                        else:
+                            h[n] = pred
+                            g[n] = 0.5 * g[k]          # under an object: keep the trend, let it fade
+                        heapq.heappush(heap, (np.hypot(n[0] - r0[0], n[1] - r0[1]), n))
                         continue
                     lim = self.rise * (np.sqrt(2) if di and dj else 1)
                     ref = h[k]
@@ -103,7 +147,7 @@ class GroundGrid:
                     else:
                         h[n] = ref
                     heapq.heappush(heap, (np.hypot(n[0] - r0[0], n[1] - r0[1]), n))
-        self.h = h
+        self.h, self.g = h, g
         return h
 
     @staticmethod
@@ -115,9 +159,25 @@ class GroundGrid:
             return None
         return float(np.median([z for z in v if z <= v[0] + band]))
 
+    @staticmethod
+    def surface_sloped(pts, lo, grad, band=0.10):
+        """As surface(), on the cell's returns with the local slope removed (heights referred to the cell centre
+        along `grad`): on a 30 deg slope a 0.25 m cell rises 0.14 m edge to edge, which a flat cell would read as an
+        object on its high side."""
+        if pts is None or not len(pts):
+            return None
+        zc = np.sort(pts[:, 2] - pts[:, :2] @ grad)
+        v = zc[zc >= lo]
+        if not len(v):
+            return None
+        return float(np.median(v[v <= v[0] + band]))
+
     def height_above(self, P):
         ij = np.floor(P[:, :2] / self.c).astype(np.int64)
         g = np.array([self.h.get(tuple(k), np.nan) for k in ij])
+        if self.mode == 'grad':                          # the cell is a small tilted plane, not a flat tile
+            gr = np.array([self.g.get(tuple(k), (0.0, 0.0)) for k in ij])
+            g = g + np.sum((P[:, :2] - (ij + 0.5) * self.c) * gr, axis=1)
         return P[:, 2] - g
 
 
@@ -133,6 +193,9 @@ def main():
     ap.add_argument('--radius', type=float, default=25.0)
     ap.add_argument('--mem', type=float, default=30.0)
     ap.add_argument('--ref-min', action='store_true')
+    ap.add_argument('--mode', default='step', choices=['step', 'grad'])
+    ap.add_argument('--max-grad', type=float, default=40.0)
+    ap.add_argument('--tol', type=float, default=None, help="mode grad: accepted |surface - predicted| (default --step)")
     ap.add_argument('--no-lidar', action='store_true')
     ap.add_argument('--no-cams', action='store_true')
     ap.add_argument('--out')
@@ -156,11 +219,14 @@ def main():
             ev.append((t, c.topic, r.deserialize(raw, c.msgtype)))
     ev.sort(key=lambda e: e[0])
 
-    grid = GroundGrid(a.cell, a.slope, a.step, a.radius, a.mem, ref_min=a.ref_min)
+    grid = GroundGrid(a.cell, a.slope, a.step, a.radius, a.mem, ref_min=a.ref_min, mode=a.mode, max_grad_deg=a.max_grad)
+    if a.tol is not None:
+        grid.step_tol = a.tol
     T_ob = None
     cams = {}
     planes = {}
     rows = []
+    bycls = {}
     band = {k: [0, 0, 0, 0] for k in ((0, 3), (3, 8), (8, 15), (15, 25))}
     for t, topic, m in ev:
         if topic == '/odometry/filtered':
@@ -189,7 +255,7 @@ def main():
             if not a.no_cams:
                 parts += list(cams.values())
             pts = np.vstack(parts) if parts else np.zeros((0, 3))
-            grid.update(pts, T_ob[:3, 3], st * 1e-9)
+            grid.update(pts, T_ob[:3, 3], st * 1e-9, T_ob[:3, :3])
             if st not in labelled:
                 continue
             i = labelled[st]
@@ -219,6 +285,10 @@ def main():
                     zr = P[:, 2] - (b['z'] - b['h'] / 2)
                     low |= ins & (zr > 0.25) & (zr < 0.75)   # legs/wheels well clear of the ground: no correct crop cuts them
             terr = lab > 0
+            for l in np.unique(lab[terr]):
+                s_ = lab == l
+                bycls.setdefault(int(l), [0, 0, 0])
+                bycls[int(l)][0] += s_.sum(); bycls[int(l)][1] += (s_ & ~g_grid).sum(); bycls[int(l)][2] += (s_ & ~g_pl).sum()
             dr = np.hypot(*(P[:, :2] - T_ob[:2, 3]).T)
             for r0, r1 in ((0, 3), (3, 8), (8, 15), (15, 25)):
                 s_ = terr & (dr >= r0) & (dr < r1)
@@ -245,6 +315,12 @@ def main():
               f" | legs 0.25-0.75 m cut {o['low_cut']:.1%}")
     for k, (n, gl, pl, nan) in band.items():
         print(f'  terrain {k[0]}-{k[1]} m: {n} pts, left by grid {gl / max(1, n):.1%} (outside grid {nan / max(1, n):.1%}), by planes {pl / max(1, n):.1%}')
+    hard = [v for l, v in bycls.items() if l != 11]       # 11 = Short Vegetation: shrubs/beds, an obstacle for a ground robot
+    if hard:
+        n, gl, pl = (sum(v[i] for v in hard) for i in range(3))
+        print(f'  HARD terrain (no short vegetation): {n} pts, left by grid {gl / max(1, n):.1%}, by planes {pl / max(1, n):.1%}')
+    for l, (n, gl, pl) in sorted(bycls.items(), key=lambda x: -x[1][0])[:6]:
+        print(f'  terrain class {l}: {n} pts, left by grid {gl / max(1, n):.1%}, by planes {pl / max(1, n):.1%}')
     if a.out:
         json.dump(out, open(a.out, 'w'), indent=1)
 
