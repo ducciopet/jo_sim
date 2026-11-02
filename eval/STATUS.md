@@ -801,3 +801,14 @@ ATTENZIONE: seq 0 = split di tuning di SINS. Prossimi: convertitore seq 1 (fines
   JRDB): A/B su bytes-cafe (debug) recall 17,7 -> 40,0%, ma il pavimento resta a 0,3-0,8 m: in un bar affollato il
   pavimento non lo vede nessun sensore (VLP-16 a 1,24 m lo tocca solo oltre 4,6 m). Serve una stima del suolo che
   usi anche il LiDAR e il piano su cui poggia il robot = il filone "suolo irregolare". Run J1 da NON usare.
+
+### Suolo irregolare (dal 02/11, anticipato prima delle run JRDB held-out)
+Vincolo dell'utente: il pavimento viene dalle camere perché il LiDAR ha un grande cono d'ombra intorno al robot;
+il LiDAR può aggiungersi solo lontano. Piano: modello del suolo a griglia (altezza per cella) che fonde camere (vicino),
+LiDAR (lontano) e il terreno sotto le ruote (cono d'ombra), cresciuto dal robot con limite di pendenza; switch, indoor
+spento. Oggi `heightAboveGround()` = MINIMO su tutti i piani delle camere: un solo piano sbagliato (tavolo) taglia
+tutto sotto di lui intorno al robot.
+- Metrica: `eval/diagnostics/coda_ground_eval.py` (etichette di terreno per punto di CODa, 3d_semantic, 200 scansioni
+  in w2/w3; run con MORE_TOPICS=/sins/lidar/processed). Riferimento GR0 (= M2): suolo rimasto 758 / 3956 punti per
+  scansione (10,6% / 17,2% dei voxel di terreno, w2 / w3); punti degli agenti rimasti 71% / 71%, ultimi 50 cm 48% / 55%.
+- Bag dei sassi: `eval/datasets/extract_topics.py` (estrazione in streaming dallo zip, solo i topic di SINS, ~6,7 GB).
