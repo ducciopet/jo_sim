@@ -16,6 +16,11 @@ files:
   static_structures.yaml:
     static_structures_node:
       camera_names: [cam0, cam2, cam4, cam6, cam8]
+      # Horizontal cameras whose depth (the projected scan) reaches ceilings and table tops: the floor is the lowest
+      # near-horizontal plane below the sensor (static_structures_node floor_lowest_below_sensor), not the best-supported
+      # one. Found on the first JRDB run (J1): the ceiling (and tables) became the floor indoors and every person was
+      # cropped; checked A/B on bytes-cafe (debug sequence, never scored).
+      floor_lowest_below_sensor: true
   semantic_segmentation.yaml:
     yolo_semantic_seg_detector:
       camera_names: [cam0, cam2, cam4, cam6, cam8]

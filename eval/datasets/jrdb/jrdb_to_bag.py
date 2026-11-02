@@ -94,6 +94,7 @@ def main():
     ap.add_argument('--first', type=int, default=0)
     ap.add_argument('--last', type=int, default=-1)
     ap.add_argument('--rate', type=float, default=15.0)
+    ap.add_argument('--mount-height', type=float, default=1.24)
     a = ap.parse_args()
     root, seq, out = a.root, a.seq, Path(a.out)
     for p in (out, Path(f'{out}_odom')):
@@ -115,9 +116,12 @@ def main():
     print('odometry (KISS-ICP)', flush=True)
     T_w_up = odometry(up, lo, L2U)
 
-    # ground plane: the fit with the most inliers over frames of the first 20 s (one frame alone can lock onto stairs:
-    # forbes-cafe frame 0 gave 0.71 m / 4.7 deg instead of the 1.24 m / 0.1 deg mount of every other sequence)
-    T_up_base, h, tilt, n_inl = max((ground_frame(up[j]) for j in range(0, min(len(up), 300), 10)), key=lambda g: g[3])
+    # base_link = the robot's fixed LiDAR mount (1.24 m above a flat floor, level; see jrdb_reframe.py), not a per-sequence
+    # fit: one frame can lock onto stairs (forbes-cafe 0.71 m) or table tops (bytes-cafe 0.43 m). The fit over the first
+    # 20 s is kept in the sidecar as a check.
+    _, h_fit, tilt_fit, n_inl = max((ground_frame(up[j]) for j in range(0, min(len(up), 300), 10)), key=lambda g: g[3])
+    T_up_base, h, tilt = np.eye(4), a.mount_height, 0.0
+    T_up_base[2, 3] = -a.mount_height
     T_base_up = np.linalg.inv(T_up_base)
     T_odom_w = T_base_up @ np.linalg.inv(T_w_up[0])
 
@@ -223,7 +227,7 @@ def main():
     json.dump(dict(seq=seq, first=frames[0], last=frames[-1], rate_hz=a.rate, t0_ns=t0, t1_ns=t_ns[frames[-1]],
                    annotated_frames=frames, annotated_t_ns=[t_ns[i] for i in frames], classes=['Pedestrian'],
                    instance_ids=ids, frame='odom', lidar_height_m=h, lidar_tilt_deg=tilt, ground_inliers=n_inl,
-                   T_base_velodyne=T_base_up.tolist(), overhead_fraction=ovh,
+                   T_base_velodyne=T_base_up.tolist(), mount='fixed', fit_lidar_height_m=h_fit, fit_lidar_tilt_deg=tilt_fit, overhead_fraction=ovh,
                    path_length_m=float(np.sum(np.linalg.norm(np.diff(path[:, :2], axis=0), axis=1))),
                    end_drift_z_m=float(path[-1, 2] - path[0, 2]), cameras=[f'cam{k}' for k in CAMS]),
               open(f'{out}_gt.json', 'w'), indent=1)
