@@ -835,3 +835,8 @@ tutto sotto di lui intorno al robot.
   rastrelliere, paletti, rastrelliera al muro, accanto alle bici (classe "bicycle" da YOLO). I piani li tagliavano
   insieme a gambe e ruote (pavimento troppo alto): la griglia ha scoperto il problema già noto dei paletti PD.
   Immagini: eval/results/ground/coda_w1_fp/. Video del suolo: ~/Desktop/suolo_video/.
+- (02/11 sera) Altezza minima per la classe bicycle (outdoor, dbscan + fallback tracker): GH1 0,7 m x3: PD 39,8% prec
+  69,1% falsi PD 93/min, FP tot 180, MOTA 44,5 IDF1 57,5 (troppe bici in rastrelliera perse); GH2 0,6 m x3 (altezze
+  osservate: bici vere mediana 0,80, archetti falsi 0,55): PD 50,8% prec 64,0% (F1 PD 0,57 vs M2 0,54), falsi PD
+  148/min, moving 84,9/79,3, FP tot 270 (M2 219, rumore 172-322), MOTA 39,5 IDF1 55,0. Bloccata GH2: tag sins
+  `heldout-v2`. Lanciate le run JRDB held-out J2 x3 (6 sequenze) + prova su bytes-cafe (DBG2).
