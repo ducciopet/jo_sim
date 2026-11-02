@@ -840,3 +840,15 @@ tutto sotto di lui intorno al robot.
   osservate: bici vere mediana 0,80, archetti falsi 0,55): PD 50,8% prec 64,0% (F1 PD 0,57 vs M2 0,54), falsi PD
   148/min, moving 84,9/79,3, FP tot 270 (M2 219, rumore 172-322), MOTA 39,5 IDF1 55,0. Bloccata GH2: tag sins
   `heldout-v2`. Lanciate le run JRDB held-out J2 x3 (6 sequenze) + prova su bytes-cafe (DBG2).
+- (02/11 ~19:00) FERMATO su richiesta dell'utente (porta il PC a casa). Stato per ripartire:
+  * JRDB held-out heldout-v2: ripetizione J2 GIRATA su tutte le 6 sequenze (bags/jrdb/runs/J2_*.done), VALUTATE solo
+    forbes, huangb, packard2 (eval/results/jrdb/J2_*.json). Da fare: valutare J2 tressider2/clark0/clark1
+    (`python3 eval/coda_eval.py --run bags/jrdb/runs/J2_v2_jrdb_<s> --gt bags/jrdb/<s>_gt.csv --odom bags/jrdb/<s>_odom
+    --range 15 --out eval/results/jrdb/J2_<s>.json`), poi J2r2 e J2r3 (`bash eval/scripts/jrdb_ab.sh J2r2` ecc.).
+    Prova di debug DBG2 su bytes-cafe fatta (eval/results/jrdb/DBG2_bytes.json).
+  * Analisi PD: script pronto `eval/diagnostics/pd_funnel.py <TAG>`; run di diagnosi da lanciare:
+    `MORE_TOPICS="/sins/lidar/processed /sins/front_camera/semantic_leaves /sins/stereo_camera/semantic_leaves
+    /sins/dbscan_detector/lidar/detections3d" STEREO=1 bash eval/scripts/coda_ab.sh K3` poi `python3 eval/diagnostics/pd_funnel.py K3`
+    (script mai eseguito: possibile qualche errore da correggere al primo giro).
+  * Copia locale CODa per la metrica del suolo senza NAS: INTERROTTA (bags/coda/raw_seq0, 126/850 scansioni). Da
+    completare in laboratorio (serve il NAS) oppure cancellare; gli script NON la usano ancora (leggono dal NAS).
