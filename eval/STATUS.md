@@ -821,3 +821,8 @@ tutto sotto di lui intorno al robot.
   w3 suolo 19,6 -> 15,5%, gambe 0,5 -> 4,3%, agenti 3,5 -> 5,8%. Scartati: riferimento al vicino più basso (w2 suolo 47%),
   pendenza 30 deg (gambe w2 19%). Attenzione: /sins/lidar/voxelized_sensor NON ha il suolo (fascia tagliata per i muri).
 - Bag dei sassi estratta: bags/mdp/mdp_slopes (7,1 GB, 292 s; senza /odometry/filtered: c'è /odometry/local e glim).
+- (02/11) Marina di Pisa "mdp_slopes": odometria. /odometry/local è 2D; GLIM pubblica PIÙ stime sullo stesso
+  /glim_ros/odom (anche nella registrazione a bordo) e il flusso principale deriva 26 m (mediana) rispetto all'RTK;
+  l'EKF di make_odom.sh dà z=0 e 284 km. GNSS RTK fisso 1166/1169 fix (estratto in bags/mdp/mdp_slopes_gnss): percorso
+  107 m, dislivello 1,24 m. KISS-ICP: xy 0,41 m mediana, ma z fino a 4 m. Riferimento = `eval/datasets/rtk_odom_bag.py`
+  (posizione RTK, roll/pitch IMU, heading KISS-ICP) -> bags/mdp/mdp_slopes_odom_rtk.
