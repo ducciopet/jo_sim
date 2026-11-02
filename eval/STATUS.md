@@ -812,3 +812,12 @@ tutto sotto di lui intorno al robot.
   in w2/w3; run con MORE_TOPICS=/sins/lidar/processed). Riferimento GR0 (= M2): suolo rimasto 758 / 3956 punti per
   scansione (10,6% / 17,2% dei voxel di terreno, w2 / w3); punti degli agenti rimasti 71% / 71%, ultimi 50 cm 48% / 55%.
 - Bag dei sassi: `eval/datasets/extract_topics.py` (estrazione in streaming dallo zip, solo i topic di SINS, ~6,7 GB).
+- Prototipo griglia (`eval/diagnostics/ground_grid_proto.py`, offline, causale; ingressi = scansione LiDAR intera +
+  depth delle camere della run GR1 + odometria). Griglia 0,25 m in odom, crescita dal robot (celle sotto il robot =
+  quello che vedono i sensori, altrimenti la quota del robot), punto più basso valido della cella accettato se entro
+  0,10 m + 0,25 m*tan(20 deg) dal vicino (sopra: oggetto, sotto: riflesso), superficie = mediana dei 10 cm più bassi,
+  memoria 30 s, margine 0,15 m. Metrica gambe = punti degli agenti 0,25-0,75 m sopra la base della box.
+  Piani SINS (GR1) vs griglia: w2 suolo rimasto 7,9 -> 5,9%, gambe tagliate 49,0 -> 4,7%, agenti tagliati 28,3 -> 3,1%;
+  w3 suolo 19,6 -> 15,5%, gambe 0,5 -> 4,3%, agenti 3,5 -> 5,8%. Scartati: riferimento al vicino più basso (w2 suolo 47%),
+  pendenza 30 deg (gambe w2 19%). Attenzione: /sins/lidar/voxelized_sensor NON ha il suolo (fascia tagliata per i muri).
+- Bag dei sassi estratta: bags/mdp/mdp_slopes (7,1 GB, 292 s; senza /odometry/filtered: c'è /odometry/local e glim).
