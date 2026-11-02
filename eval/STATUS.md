@@ -852,3 +852,9 @@ tutto sotto di lui intorno al robot.
     (script mai eseguito: possibile qualche errore da correggere al primo giro).
   * Copia locale CODa per la metrica del suolo senza NAS: INTERROTTA (bags/coda/raw_seq0, 126/850 scansioni). Da
     completare in laboratorio (serve il NAS) oppure cancellare; gli script NON la usano ancora (leggono dal NAS).
+- (02/11 sera, a casa) JRDB held-out heldout-v2, ripetizione J2 (6 sequenze, valutazione completa): tutte le persone
+  rec 43,6% prec 86,3%; PD (persone ferme) rec 37,9% prec 81,3%, mai trovate 59,5%; moving rec 48,6% prec 74,1%;
+  IDSW 6537 (folla). Per sequenza (rec/prec): forbes 34/82, huangb 29/88 (J1 0%), packard2 54/85 (J1 23%), tressider2
+  40/95 (J1 0%), clark0 58/83, clark1 60/75. La griglia risolve il crollo indoor dei piani. FP/min JRDB non confrontabili
+  con CODa (15 Hz, ~30 persone/fotogramma). Liberati 1,5 GB (run GG1*, K1, copia CODa interrotta). Lanciate K3
+  (diagnosi CODa) + pd_funnel e le ripetizioni J2r2/J2r3.
