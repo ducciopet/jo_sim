@@ -868,3 +868,10 @@ tutto sotto di lui intorno al robot.
   MEMORIA di classe (classAnchor non controllava l'altezza minima della classe: corretto in tracker_node.cpp).
   In coda (chain_gp): ricompilazione dopo J2r2/J2r3, poi GH3 x3 (correzione memoria) e GP1 x3 (+ yolo_refine_assoc: points,
   ora protetto dal filtro altezza bici 0,6 m che fermava i paletti).
+- (02/11 notte) Correzione memoria di classe (classAnchor rispetta track_class_min_height_*), GH3 x3 vs GH2 x3:
+  PD 50,8 -> 47,7%, precisione PD 64,0 -> 76,7%, falsi PD/min 148 -> 63, F1 PD 0,566 -> 0,588; moving 84,9/79,3 ->
+  87,1/84,7; FP/min tot 270 -> 148 (rep 127-178 vs 216-322); MOTA 39,5 -> 50,1; IDF1 55,0 -> 61,1. TENUTA: tag sins
+  `heldout-v3`. Su JRDB non cambia nulla (la classe person non ha altezza minima): le run J2 x3 restano valide.
+  GP1 (+ yolo_refine_assoc: points) x3: PD 52,0% prec 65,8%, falsi PD 133/min, FP tot 235: scartata (torna iou).
+  JRDB heldout-v2 x3 (J2, J2r2, J2r3): PD rec 37,9/37,2/37,3% prec 81,3/80,4/82,3%, mai trovate ~60%; moving rec
+  48,6/48,7/49,0% prec 74-76%; tutte rec ~43% prec ~86%, MOTA 32-33%, IDF1 33%.
