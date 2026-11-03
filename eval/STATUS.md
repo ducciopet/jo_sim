@@ -888,3 +888,27 @@ tutto sotto di lui intorno al robot.
   28 -> 22% di persone trovate, altre invariate. Il guadagno su bytes-cafe (prec 84 -> 94%) NON si trasferisce:
   sovra-adattamento a UNA sequenza di debug. Proposta: numeri JRDB = heldout-v3 (J2), v4 riportata come prova negativa;
   per tarare su JRDB serve uno split di tuning di 4-5 sequenze JRDB train non usate (conversione dal NAS, in laboratorio).
+- (03/11 sera/notte) Analisi PD su GH3 (= heldout-v3): rifatta con la run di diagnosi K4 (GH3 + topic intermedi: le run
+  GH3 non li hanno, e pd_funnel contava "preprocessing <5 punti" 27% = artefatto). K4: PD ok 54,5%, YOLO non vede 15,6%,
+  classe non passa (stadio 5) 13,4%, foglia accanto 5%, clustering 4%, tracker 5%. YOLO non vede = 39 righe del cavallo
+  (dietro un muro nell'immagine: invisibile alla camera) + bici in rastrelliera a 15-18 m (65 px). Offline (stesso modello
+  yolo26s-seg a 1280): su 77 riquadri mancati 18 hanno punteggio >= 0,5, 48 tra 0,3 e 0,5, 11 sotto 0,3. Lo stadio 5
+  sono in gran parte le STESSE bici lontane (YOLO intermittente vicino a 0,5): nessun cluster entro 3 m prende la classe.
+  Nuovo parametro yolo_seg_track_detector `class_score_thresholds` (una sola inferenza alla soglia più bassa, le altre
+  classi scartate sotto score_threshold): cfg/outdoor `["bicycle:0.3"]`.
+  T1 x3 vs GH3 x3: PD rec 47,7 -> 60,2% (±1,2), prec PD 76,7 -> 81,7%, falsi PD/min 63 -> 57; MOTA 50,1 -> 53,2;
+  IDF1 61,1 -> 62,9; moving rec 87,1 -> 88,1, prec 84,7 -> 81,8 (falsi "dinamico"/min 85 -> 109, soprattutto w2: tracce
+  1,3-1,6 m a 0-3 m dal robot, persone non annotate/duplicati; GH3 oscilla già 45-58 su w2). TENUTA (commit sins a78dd21).
+  Profilo JRDB indoor riportato a heldout-v3 (la v4 era rimasta attiva nei file). JRDB: J4 x3 solo clark0/clark1 (outdoor,
+  unico profilo che cambia; indoor = J2). Baseline su JRDB: Dynablox e M-detector (solo LiDAR, VLP-16 15 Hz,
+  eval/baselines/{dynablox,mdetector}/*jrdb*); LV-DOT escluso (JRDB non ha camera di profondità), CenterPoint/EagerMOT
+  esclusi (pesi addestrati su CODa OS1-128, non trasferibili al VLP-16 senza riaddestrare). Confronto:
+  `python3 eval/coda_compare.py --jrdb`.
+- (03/11 notte) JRDB J4 x3 (clark0/clark1, profilo outdoor con bici da 0,3) vs J2: PD rec 50,6 -> 50,9%, prec 49,5 ->
+  47,6%, falsi tot +9% (righe 4266 -> 4650, rep sovrapposte; parte bici vere non annotate: JRDB annota solo persone),
+  MOTA 34,1 -> 32,4. Tenuta comunque (guadagno grande su CODa, costo piccolo su JRDB). SINS JRDB = J5 (link: indoor J2,
+  outdoor J4) = tag sins heldout-v5. Confronto JRDB (eval/results/jrdb/compare.json, tables/jrdb_compare.csv):
+  SINS moving rec 49,6% prec 76,2%, PD 37,5%/80,9%, tutte rec 43,1% MOTA 32,5 IDF1 33,3; Dynablox moving 39,3/44,8, tutte
+  13,3%, MOTA 7,3, IDF1 7,9; M-detector moving 35,0/57,6, tutte 10,6%, MOTA -1,6. CODa compare aggiornato a T1 (SINS
+  moving 88,1/81,8, PD 60,2/81,7, FP/min 166, MOTA 53,2, IDF1 62,9; CenterPoint+SimpleTrack 91,7/63,2 MOTA 29,2;
+  EagerMOT 91,1/70,5 MOTA 28,4). Pagina "SINS a confronto" aggiornata (sezione JRDB).

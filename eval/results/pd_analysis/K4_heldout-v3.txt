@@ -1,0 +1,48 @@
+A. still objects in a camera view: 745 rows (window-frames)
+   0 PD ok                                                     54.5%
+   1 YOLO does not detect it                                   15.6%
+   3a leaf: none of a dynamic class within 2 m                  0.8%
+   3b leaf: nearby but beside it (0.3-2 m)                      5.0%
+   3c leaf: 1-2 points on it only                               1.3%
+   4 clustering: no cluster centred on it (merged/split)        4.0%
+   5 YOLO->cluster: cluster without class this tick            13.4%
+   6 tracker: no track on it                                    0.4%
+   7 tracker: track without class                               1.1%
+   8 tracker: classified track, state dynamic                   3.5%
+   8 tracker: classified track, state potentially_dynamic       0.4%
+   Bike             n=  549 0:56% 1:13% 3a:1% 3b:6% 3c:1% 4:4% 5:15% 6:1% 7:1% 8:3% 8:1%
+   Scooter          n=  102 0:60% 1:7% 3b:5% 3c:5% 4:10% 5:14%
+   Service Vehicle  n=   55 0:67% 5:11% 7:5% 8:16%
+   Horse            n=   39 1:100%
+
+   stage 5 detail (leaf on it, cluster there, no class):
+   annotated class x leaf class: {('Bike', 'bicycle'): 80, ('Scooter', 'bicycle'): 14, ('Service Vehicle', 'truck'): 6}
+   cluster height: {Interval(0.0, 0.4, closed='right'): 2, Interval(0.4, 0.6, closed='right'): 20, Interval(0.6, 0.8, closed='right'): 35, Interval(0.8, 1.1, closed='right'): 37, Interval(1.1, 9.0, closed='right'): 6}
+   cluster longest side: {Interval(0.0, 0.5, closed='right'): 7, Interval(0.5, 1.0, closed='right'): 30, Interval(1.0, 2.0, closed='right'): 57, Interval(2.0, 3.0, closed='right'): 3, Interval(3.0, 6.0, closed='right'): 3, Interval(6.0, 99.0, closed='right'): 0}
+   leaf points on it: median 42; cluster centre to object: median 0.29 m
+
+   by LiDAR returns on the object (annotation npts):
+   5-9    n=    1 0:100%
+   10-19  n=  110 0:22% 1:29% 3a:2% 3b:18% 3c:5% 4:9% 5:15%
+   20-49  n=  305 0:50% 1:17% 3a:1% 3b:6% 3c:1% 4:4% 5:18% 6:1% 7:1% 8:1% 8:1%
+   50+    n=  329 0:69% 1:10% 3a:0% 4:3% 5:9% 6:0% 7:1% 8:7% 8:0%
+
+B. false PD rows: 51 (9 tracks)
+   by window: {'w1': 17, 'w2': 29, 'w3': 5}
+   by track class: {'?': 35, 'truck': 12, 'bicycle': 4}
+   class from a YOLO leaf this tick: 27%
+   distance to the nearest annotated object: {'<1.5 m (duplicate/offset of an annotated object)': 34, '1.5-3 m': 12, '3-6 m': 0, '>6 m': 5}
+   nearest annotated class when < 1.5 m: {'Pedestrian': 25, 'Service Vehicle': 7, 'Bike': 2}
+   observed height: {Interval(0.0, 0.5, closed='right'): 2, Interval(0.5, 0.8, closed='right'): 31, Interval(0.8, 1.2, closed='right'): 8, Interval(1.2, 1.6, closed='right'): 3, Interval(1.6, 9.0, closed='right'): 7}
+   tracks behind most false PD rows:
+           n       x       y     l    wd     h      cls  d_ann  leaf
+w  track                                                            
+w2 16     29 -104.55  172.25  0.50  0.30  0.68        ?   1.06   0.0
+w1 2375    7  -20.09   34.74  1.01  0.61  1.50    truck   1.55   1.0
+   2416    5  -21.05   34.85  0.82  0.45  1.70    truck   1.48   1.0
+w3 101     5 -103.58  111.73  1.10  0.11  0.92        ?  11.45   0.0
+w1 1063    1  -13.17   43.59  0.54  0.15  0.73  bicycle   0.09   1.0
+   1367    1  -22.02   35.32  0.36  0.12  0.53  bicycle   2.32   0.0
+   1767    1  -16.25   45.06  0.66  0.21  0.40  bicycle   1.04   0.0
+   2201    1  -20.66   34.70  0.32  0.26  0.33    truck   1.34   1.0
+   2271    1  -29.28   45.16  1.45  0.68  0.98  bicycle   2.50   0.0

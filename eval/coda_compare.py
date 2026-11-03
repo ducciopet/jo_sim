@@ -2,7 +2,8 @@
 """
 SINS vs literature methods on the CODa windows: runs coda_eval.py for every (method run, window) not yet evaluated,
 pools each method over the windows (coda_pool.pool), writes results/coda/compare.json and tables/coda_compare.csv.
-usage: coda_compare.py [--windows w1 w2 w3]
+--jrdb: the same on the six JRDB held-out sequences (range 15 m), results/jrdb/compare.json, tables/jrdb_compare.csv.
+usage: coda_compare.py [--jrdb] [--windows w1 w2 w3]
 """
 import argparse
 import csv
@@ -20,8 +21,8 @@ from coda_pool import pool  # noqa: E402
 
 # name -> (coda_eval --method, run path template ({w} = window), sensors, note)
 METHODS = {
-    'SINS': [('sins', f'bags/coda/runs/{t}_v2_coda0_{{w}}', 'LiDAR + 2 cameras (ZED RGB-D, stereo cam0 with online depth)', 'outdoor profile, one YOLO (instance seg) per camera')
-             for t in ('M2', 'M2r2', 'M2r3')],
+    'SINS': [('sins', f'bags/coda/runs/{t}_v2_coda0_{{w}}', 'LiDAR + 2 cameras (ZED RGB-D, stereo cam0 with online depth)', 'outdoor profile (heldout-v5: bikes from YOLO score 0.3), one YOLO (instance seg) per camera')
+             for t in ('T1', 'T1r2', 'T1r3')],
     'SINS (before)': [('sins', f'bags/coda/runs/{t}_v2_coda0_{{w}}', 'LiDAR + RGB-D', 'outdoor profile of 29/10')
                       for t in ('B1', 'B1r2', 'B1r3')],
     'Dynablox': [('dynablox', 'bags/dynablox_out/dynabloxa_coda0_{w}.bag', 'LiDAR', 'deterministic')],
@@ -35,27 +36,39 @@ METHODS = {
                   'CenterPoint (CODa) 3D + YOLO 2D, pedestrians')],
 }
 
+# JRDB held-out: nothing tuned on these sequences (SINS: jrdb_indoor / jrdb_outdoor profiles, chosen before any run)
+JRDB_SEQS = ['forbes', 'huangb', 'packard2', 'tressider2', 'clark0', 'clark1']
+METHODS_JRDB = {
+    'SINS': [('sins', f'bags/jrdb/runs/{t}_v2_jrdb_{{w}}', 'LiDAR (VLP-16) + 5 cameras, depth projected from the LiDAR',
+              'heldout-v5 (indoor runs J2 = v3 profile, outdoor runs J4), one YOLO (instance seg) per camera') for t in ('J5', 'J5r2', 'J5r3')],
+    'Dynablox': [('dynablox', 'bags/dynablox_out/dynabloxa_jrdb_{w}.bag', 'LiDAR', 'deterministic')],
+    'M-detector': [('mdetector', 'bags/mdetector_out/mdetectora_jrdb_{w}.bag', 'LiDAR', 'real time (1x)')],
+}
+
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--windows', nargs='+', default=['w1', 'w2', 'w3'])
+    ap.add_argument('--windows', nargs='+')
+    ap.add_argument('--jrdb', action='store_true')
     a = ap.parse_args()
+    ds = 'jrdb' if a.jrdb else 'coda'
+    wins = a.windows or (JRDB_SEQS if a.jrdb else ['w1', 'w2', 'w3'])
+    gt_of = (lambda w: REPO / f'bags/jrdb/{w}') if a.jrdb else (lambda w: REPO / f'bags/coda/coda0_{w}')
     out = {}
-    for name, runs in METHODS.items():
+    for name, runs in (METHODS_JRDB if a.jrdb else METHODS).items():
         reps = []
         for k, (method, tpl, sensors, note) in enumerate(runs):
             tag = f"cmp_{name.replace(' ', '').replace('.', '')}_{k}"
-            for w in a.windows:
-                run, res = REPO / tpl.format(w=w), E / 'results/coda' / f'{tag}_{w}.json'
+            for w in wins:
+                run, res = REPO / tpl.format(w=w), E / f'results/{ds}' / f'{tag}_{w}.json'
                 if not run.exists():
                     print('missing', run)
                     continue
                 if not res.exists():
                     subprocess.run([sys.executable, str(E / 'coda_eval.py'), '--method', method, '--run', str(run),
-                                    '--gt', str(REPO / f'bags/coda/coda0_{w}_gt.csv'),
-                                    '--odom', str(REPO / f'bags/coda/coda0_{w}_odom'), '--out', str(res)],
-                                   check=True, capture_output=True)
-            reps.append(pool(tag))
+                                    '--gt', f'{gt_of(w)}_gt.csv', '--odom', f'{gt_of(w)}_odom', '--out', str(res),
+                                    *(['--range', '15'] if a.jrdb else [])], check=True, capture_output=True)
+            reps.append(pool(tag, ds))
         keys = [('merged', 'recall'), ('merged', 'precision'), ('merged', 'fp_min'), ('merged', 'mota'),
                 ('merged', 'idf1'), ('dynamic_only', 'recall'), ('dynamic_only', 'precision'),
                 ('dynamic_only', 'fp_min'), ('dynamic_only', 'mota'), ('dynamic_only', 'idf1')]
@@ -75,8 +88,8 @@ def main():
         print(f"{name:18s} ALL rec {row['merged_recall']:.1%} FP/min {row['merged_fp_min']:.0f} MOTA {row['merged_mota']:.1%} "
               f"IDF1 {row['merged_idf1']:.1%} | MOVING rec {row['dynamic_only_recall']:.1%} prec "
               f"{row['dynamic_only_precision']:.1%} FP/min {row['dynamic_only_fp_min']:.0f} MOTA {row['dynamic_only_mota']:.1%}")
-    json.dump(out, open(E / 'results/coda/compare.json', 'w'), indent=1)
-    with open(E / 'tables/coda_compare.csv', 'w', newline='') as f:
+    json.dump(out, open(E / f'results/{ds}/compare.json', 'w'), indent=1)
+    with open(E / f'tables/{ds}_compare.csv', 'w', newline='') as f:
         w = csv.DictWriter(f, fieldnames=['method', *next(iter(out.values())).keys()])
         w.writeheader()
         for k, v in out.items():
