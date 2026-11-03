@@ -957,3 +957,14 @@ tutto sotto di lui intorno al robot.
   Pedoni a <0,8 m da un altro: 2% trovati (fusione cluster). DECISIONE utente: seq 10 = secondo TUNING CODa,
   held-out = solo 11, 12 (chain_heldout.sh non cancella i bag della 10). EagerMOT: export corretto per topic
   /yolo_seg_track (prima sceglieva tutti i messaggi). LV-DOT: calibrazione per sequenza.
+- (03/11 notte) HELD-OUT CODa UFFICIALE (seq 11+12, heldout-v5 congelato, compareH.json): SINS moving rec 46,5% prec
+  77,8% MOTA 32,1% (tutte: rec 50,5% FP/min 1245 MOTA 15,6%); CenterPoint+SimpleTrack 90,0/45,0 MOTA -20,6;
+  EagerMOT 66,4/57,9 MOTA 17,3; Dynablox 66,7/21,7 MOTA -181; M-detector 22,7/62,8; LV-DOT 3,0/98,0 MOTA 0.
+- (03/11 notte) Tuning seq 0 + 10 sul blocco disocclusione (tracker: log diagnostico track_log_motion_block, off).
+  D1: 86% dei blocchi su tracce in moto senza classe = disocclusione; occlusore a ~6 m, traccia bloccata a ~17 m.
+  A1 track_disocclusion_lateral_margin 0,2 (cono limitato alla sagoma): seq10 moving rec 49 -> 49%, seq0 88 -> 83%: NO.
+  A2 track_disocclusion_require_unseen (vista al tick prima = non nascosta): seq10 moving rec 50 -> 62%, MOTA 25 -> 29;
+  seq0 prec 82 -> 70%, MOTA 68 -> 49 (pali/tronchi parzialmente coperti 'si muovono'): NO. A3 = A2 + innovazione
+  <= 0,3 m: uguale ad A2: NO. Etichettatura dei casi esentati (D5): solo 2-4% su pedoni annotati, nessuna feature
+  (dimensioni, altezza, distanza dietro l'occlusore, eta', innovazione) li separa. Profilo resta heldout-v5; i tre
+  parametri restano nel codice, default off. Latenza: un confronto per traccia, trascurabile.

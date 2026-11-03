@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Pool coda_eval.py results over windows: sums of TP/FP/FN/IDSW/IDTP per mode -> recall, precision, FP/min, MOTA, IDF1;
 state F1 (D / PD) from the summed confusion of the full mode.
-usage: coda_pool.py [--jrdb] <tag> [<tag> ...]   (reads eval/results/coda/<tag>_w*.json, or eval/results/jrdb/<tag>_*.json)
+usage: coda_pool.py [--jrdb | --seq N] <tag> [<tag> ...]   (--seq: CODa sequence N only; 0 = <tag>_w<k>)   (reads eval/results/coda/<tag>_w*.json, or eval/results/jrdb/<tag>_*.json)
 FP/min counts false rows per annotated frame: at JRDB's 15 Hz a persistent false object weighs 1.5x its CODa (10 Hz) value."""
 import glob
 import json
@@ -55,7 +55,11 @@ def pool(tag, dataset='coda'):
 
 if __name__ == '__main__':
     ds = 'jrdb' if '--jrdb' in sys.argv else 'coda'
-    for tag in [t for t in sys.argv[1:] if not t.startswith('--')]:
+    args = sys.argv[1:]
+    if '--seq' in args:
+        k = args.index('--seq'); n = args[k + 1]; del args[k:k + 2]
+        DATASETS['coda'] = ('coda', '_w[0-9].json' if n == '0' else f'_{n}_w[0-9].json', 10.0)
+    for tag in [t for t in args if not t.startswith('--')]:
         o = pool(tag, ds)
         m, d = o['merged'], o['dynamic_only']
         print(f"{tag:10s} ({o['windows']} win) ALL: rec {m['recall']:.1%} prec {m['precision']:.1%} FP/min {m['fp_min']:.0f} "
