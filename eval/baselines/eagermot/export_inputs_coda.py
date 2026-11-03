@@ -32,13 +32,14 @@ def stamp(h):
 
 def main():
     w, run = sys.argv[1], sys.argv[2]
+    w = w if '_' in w else f'0_{w}'   # bare w<k> = seq 0, else <seq>_w<k>
     B = REPO / 'bags'
-    d3 = pd.read_csv(B / 'unimt_out' / f'unimt_coda0_{w}_dets.csv')
+    d3 = pd.read_csv(B / 'unimt_out' / f'unimt_coda{w}_dets.csv')
     dets3d = [(t * 1e-9, [dict(x=r.x, y=r.y, z=r.z, l=r.l, w=r.w, h=r.h, yaw=r.yaw, score=r.score, cls=r.label)
                           for r in g.itertuples() if r.id == -1 and isinstance(r.label, str) and r.score > 0.3])
               for t, g in d3.groupby('t_ns')]
     statics, K, size = {}, None, None
-    with AnyReader([B / 'coda' / f'coda0_{w}'], default_typestore=typestore()) as r:
+    with AnyReader([B / 'coda' / f'coda{w}'], default_typestore=typestore()) as r:
         for c, t, raw in r.messages([c for c in r.connections if c.topic in ('/tf_static', '/front_camera/camera/color/camera_info')]):
             m = r.deserialize(raw, c.msgtype)
             if c.topic == '/tf_static':
@@ -62,7 +63,7 @@ def main():
             dets2d.append((stamp(m.header), boxes))
     t2d = np.array([d[0] for d in dets2d]) if dets2d else np.zeros(0)
     odo = []
-    with AnyReader([B / 'coda' / f'coda0_{w}_odom']) as r:
+    with AnyReader([B / 'coda' / f'coda{w}_odom']) as r:
         for c, t, raw in r.messages([c for c in r.connections if c.topic == '/odometry/filtered']):
             m = r.deserialize(raw, c.msgtype)
             odo.append((stamp(m.header), T_of(m.pose.pose.position, m.pose.pose.orientation)))
@@ -77,9 +78,9 @@ def main():
             if abs(t2d[i] - ts) <= 0.1:
                 boxes2d = dets2d[i][1]
         frames.append(dict(t=ts, dets3d=frame, dets2d=boxes2d, T_cam_odom=T_cam_odom.tolist()))
-    out = B / 'eagermot_out' / f'in_coda0_{w}.json'
+    out = B / 'eagermot_out' / f'in_coda{w}.json'
     out.parent.mkdir(exist_ok=True)
-    out.write_text(json.dumps(dict(seq=f'coda0_{w}', rep='a', K=K, img_shape=size, frames=frames)))
+    out.write_text(json.dumps(dict(seq=f'coda{w}', rep='a', K=K, img_shape=size, frames=frames)))
     print(f'wrote {out}: {len(frames)} frames, {sum(len(f["dets3d"]) for f in frames)} 3D and '
           f'{sum(len(f["dets2d"]) for f in frames)} 2D detections')
 

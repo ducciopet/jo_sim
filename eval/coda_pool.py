@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 
 RES = Path(__file__).resolve().parent / 'results'
-DATASETS = {'coda': ('coda', '_w*.json', 10.0), 'jrdb': ('jrdb', '_*.json', 15.0)}
+DATASETS = {'coda': ('coda', '_*w[0-9].json', 10.0), 'jrdb': ('jrdb', '_*.json', 15.0)}
 
 
 def pool(tag, dataset='coda'):

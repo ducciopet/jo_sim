@@ -5,7 +5,7 @@
 set -e
 W=$1; OUT=$2
 D=$(cd $(dirname $0) && pwd); R=$(cd $D/../../.. && pwd); B=$R/bags; IN=$B/lvdot_tmp/in_$W.bag
-CODA=${CODA:-/mnt/kloster-reichenau/datasets_SINS/CODa}
+CODA=${CODA:-/mnt/nas-imperatore/datasets_SINS/CODa}
 mkdir -p $B/lvdot_tmp $B/lvdot_out
 [ -e $IN ] || rosbags-convert --src $B/coda/$W $B/coda/${W}_odom --dst $IN --dst-typestore ros1_noetic \
   --include-topic /velodyne_points /front_camera/camera/depth/image_rect_raw /front_camera/camera/color/image_raw /odometry/filtered

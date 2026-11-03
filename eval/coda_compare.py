@@ -5,7 +5,8 @@ pools each method over the windows (coda_pool.pool), writes results/coda/compare
 --jrdb: the same on the six JRDB held-out sequences (range 15 m), results/jrdb/compare.json, tables/jrdb_compare.csv.
   --tune: the seven JRDB TUNING sequences (SINS runs TU0*) instead; --pano: predictions on movable non-person objects
   labelled by JRDB-PanoTrack (bags/jrdb/<seq>_pano.csv) are ignored, as JRDB's boxes cover people only.
-usage: coda_compare.py [--jrdb [--tune] [--pano]] [--windows w1 w2 w3]
+--heldout: the CODa HELD-OUT windows of seqs 10/11/12 (SINS runs H1*, frozen heldout-v5), compareH.json.
+usage: coda_compare.py [--heldout | --jrdb [--tune] [--pano]] [--windows w1 w2 w3]
 """
 import argparse
 import csv
@@ -23,22 +24,25 @@ from coda_pool import pool  # noqa: E402
 
 # name -> (coda_eval --method, run path template ({w} = window), sensors, note)
 METHODS = {
-    'SINS': [('sins', f'bags/coda/runs/{t}_v2_coda0_{{w}}', 'LiDAR + 2 cameras (ZED RGB-D, stereo cam0 with online depth)', 'outdoor profile (heldout-v5: bikes from YOLO score 0.3), one YOLO (instance seg) per camera')
+    'SINS': [('sins', f'bags/coda/runs/{t}_v2_coda{{w}}', 'LiDAR + 2 cameras (ZED RGB-D, stereo cam0 with online depth)', 'outdoor profile (heldout-v5: bikes from YOLO score 0.3), one YOLO (instance seg) per camera')
              for t in ('T1', 'T1r2', 'T1r3')],
-    'SINS (before)': [('sins', f'bags/coda/runs/{t}_v2_coda0_{{w}}', 'LiDAR + RGB-D', 'outdoor profile of 29/10')
+    'SINS (before)': [('sins', f'bags/coda/runs/{t}_v2_coda{{w}}', 'LiDAR + RGB-D', 'outdoor profile of 29/10')
                       for t in ('B1', 'B1r2', 'B1r3')],
-    'Dynablox': [('dynablox', 'bags/dynablox_out/dynabloxa_coda0_{w}.bag', 'LiDAR', 'deterministic')],
-    'M-detector': [('mdetector', 'bags/mdetector_out/mdetectora_coda0_{w}.bag', 'LiDAR', 'real time (1x)')],
-    'M-detector 0.25x': [('mdetector', 'bags/mdetector_out/mdetectorslow_coda0_{w}.bag', 'LiDAR',
+    'Dynablox': [('dynablox', 'bags/dynablox_out/dynabloxa_coda{w}.bag', 'LiDAR', 'deterministic')],
+    'M-detector': [('mdetector', 'bags/mdetector_out/mdetectora_coda{w}.bag', 'LiDAR', 'real time (1x)')],
+    'M-detector 0.25x': [('mdetector', 'bags/mdetector_out/mdetectorslow_coda{w}.bag', 'LiDAR',
                           'played at 0.25x so that it processes every scan')],
-    'LV-DOT': [('lvdot', 'bags/lvdot_out/lvdota_coda0_{w}.bag', 'LiDAR + RGB-D', '')],
-    'CenterPoint + SimpleTrack': [('simpletrack', 'bags/unimt_out/unimt_coda0_{w}_tracks.csv', 'LiDAR',
+    'LV-DOT': [('lvdot', 'bags/lvdot_out/lvdota_coda{w}.bag', 'LiDAR + RGB-D', '')],
+    'CenterPoint + SimpleTrack': [('simpletrack', 'bags/unimt_out/unimt_coda{w}_tracks.csv', 'LiDAR',
                                    "UniMT authors' CODa weights and tracker; trained on CODa"),],
-    'EagerMOT': [('eagermot', 'bags/eagermot_out/eagermot_coda0_{w}.csv', 'LiDAR + camera',
+    'EagerMOT': [('eagermot', 'bags/eagermot_out/eagermot_coda{w}.csv', 'LiDAR + camera',
                   'CenterPoint (CODa) 3D + YOLO 2D, pedestrians')],
 }
 
 # JRDB held-out: nothing tuned on these sequences (SINS: jrdb_indoor / jrdb_outdoor profiles, chosen before any run)
+CODA_HELDOUT = ['10_w1', '10_w2', '10_w3', '10_w4', '10_w5', '11_w1', '11_w2', '11_w3', '12_w1', '12_w2', '12_w3']
+SINS_HELDOUT = [('sins', f'bags/coda/runs/{t}_v2_coda{{w}}', METHODS['SINS'][0][2], METHODS['SINS'][0][3])
+                for t in ('H1', 'H1r2', 'H1r3')]
 JRDB_SEQS = ['forbes', 'huangb', 'packard2', 'tressider2', 'clark0', 'clark1']
 JRDB_TUNE = ['bytes', 'gateslab', 'nvidia', 'stlc', 'tressider1', 'memorial', 'hewlett']
 SINS_TUNE = [('sins', f'bags/jrdb/runs/{t}_v2_jrdb_{{w}}', 'LiDAR (VLP-16) + 5 cameras, depth projected from the LiDAR',
@@ -51,25 +55,33 @@ METHODS_JRDB = {
 }
 
 
+def cw(w):
+    """CODa window name -> '<seq>_<window>' (bare w1..w3 = seq 0)."""
+    return w if '_' in w else f'0_{w}'
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--windows', nargs='+')
     ap.add_argument('--jrdb', action='store_true')
     ap.add_argument('--tune', action='store_true')
     ap.add_argument('--pano', action='store_true')
+    ap.add_argument('--heldout', action='store_true')
     a = ap.parse_args()
     ds = 'jrdb' if a.jrdb else 'coda'
-    wins = a.windows or ((JRDB_TUNE if a.tune else JRDB_SEQS) if a.jrdb else ['w1', 'w2', 'w3'])
-    sfx = ('T' if a.tune else '') + ('pano' if a.pano else '')
+    wins = a.windows or ((JRDB_TUNE if a.tune else JRDB_SEQS) if a.jrdb else (CODA_HELDOUT if a.heldout else ['w1', 'w2', 'w3']))
+    sfx = ('H' if a.heldout else '') + ('T' if a.tune else '') + ('pano' if a.pano else '')
     methods = dict(METHODS_JRDB, SINS=SINS_TUNE) if a.tune else (METHODS_JRDB if a.jrdb else METHODS)
-    gt_of = (lambda w: REPO / f'bags/jrdb/{w}') if a.jrdb else (lambda w: REPO / f'bags/coda/coda0_{w}')
+    if a.heldout:
+        methods = {k: v for k, v in dict(METHODS, SINS=SINS_HELDOUT).items() if k not in ('SINS (before)', 'M-detector 0.25x')}
+    gt_of = (lambda w: REPO / f'bags/jrdb/{w}') if a.jrdb else (lambda w: REPO / f'bags/coda/coda{cw(w)}')
     out = {}
     for name, runs in methods.items():
         reps = []
         for k, (method, tpl, sensors, note) in enumerate(runs):
             tag = f"cmp{sfx}_{name.replace(' ', '').replace('.', '')}_{k}"
             for w in wins:
-                run, res = REPO / tpl.format(w=w), E / f'results/{ds}' / f'{tag}_{w}.json'
+                run, res = REPO / tpl.format(w=w if a.jrdb else cw(w)), E / f'results/{ds}' / f'{tag}_{w}.json'
                 if not run.exists():
                     print('missing', run)
                     continue

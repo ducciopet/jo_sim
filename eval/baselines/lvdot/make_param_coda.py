@@ -15,9 +15,10 @@ import yaml
 
 win, root, out = sys.argv[1:4]
 src = open(__file__.replace('make_param_coda.py', 'detector_param_jo.yaml')).read()
-T_bv = np.array(json.load(open(f'{win}_gt.json'))['T_base_velodyne'])
-E = np.array(yaml.safe_load(open(f'{root}/calibrations/0/calib_os1_to_cam3.yaml'))['extrinsic_matrix']['data']).reshape(4, 4)
-K = yaml.safe_load(open(f'{root}/calibrations/0/calib_cam3_intrinsics.yaml'))['camera_matrix']['data']
+side = json.load(open(f'{win}_gt.json'))
+T_bv, seq = np.array(side['T_base_velodyne']), side['seq']
+E = np.array(yaml.safe_load(open(f'{root}/calibrations/{seq}/calib_os1_to_cam3.yaml'))['extrinsic_matrix']['data']).reshape(4, 4)
+K = yaml.safe_load(open(f'{root}/calibrations/{seq}/calib_cam3_intrinsics.yaml'))['camera_matrix']['data']
 T_bc = T_bv @ np.linalg.inv(E)
 
 
