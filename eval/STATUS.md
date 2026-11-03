@@ -968,3 +968,14 @@ tutto sotto di lui intorno al robot.
   <= 0,3 m: uguale ad A2: NO. Etichettatura dei casi esentati (D5): solo 2-4% su pedoni annotati, nessuna feature
   (dimensioni, altezza, distanza dietro l'occlusore, eta', innovazione) li separa. Profilo resta heldout-v5; i tre
   parametri restano nel codice, default off. Latenza: un confronto per traccia, trascurabile.
+- (03-04/11) Perche' SINS trova poche persone su CODa held-out: funnel su 11+12 (H1): output ok 63%, traccia c'e' ma
+  'static' 24% (83% si muove >1 m/s, 85% fuori FOV), cluster senza traccia 10%, nessun cluster 3%. Recall per FOV
+  camera: dentro 88% (3434 righe), fuori 49% (5928 righe, 63% delle persone). Il collo di bottiglia e' decidere il
+  moto senza YOLO fuori dal FOV della sola camera frontale, non vedere le persone.
+  Nuovo parametro track_disocclusion_travel_window (+ _min_dist 1,5 m, _min_straightness 0,8; default off): una traccia
+  che negli ultimi W s si e' spostata >= min_dist quasi in linea retta non e' bloccata dalla disocclusione.
+  B1 (W=2 s) x3: seq10 moving rec 49 -> 56%, MOTA 25 -> 30, ALL MOTA ~0 -> 7; seq0 moving rec 88 -> 82%, prec 82 -> 86,
+  MOTA 68 -> 68 (calo concentrato in w2, non spiegato dai log: la regola scatta ~35 volte). B2 (3 s, 2,5 m, 0,9) x3:
+  seq10 moving rec 51%, MOTA 27; seq0 MOTA 66: troppo poco.
+  B1 come candidato v6 su held-out 11+12 (valutazione unica, criterio fissato prima: moving MOTA >= v5): moving rec
+  46,5 -> 50,3%, prec 77,8 -> 74,0%, MOTA 32,1 -> 31,1, FP/min 1245 -> 1425. NON adottato: profilo resta heldout-v5.
