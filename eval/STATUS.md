@@ -912,3 +912,9 @@ tutto sotto di lui intorno al robot.
   13,3%, MOTA 7,3, IDF1 7,9; M-detector moving 35,0/57,6, tutte 10,6%, MOTA -1,6. CODa compare aggiornato a T1 (SINS
   moving 88,1/81,8, PD 60,2/81,7, FP/min 166, MOTA 53,2, IDF1 62,9; CenterPoint+SimpleTrack 91,7/63,2 MOTA 29,2;
   EagerMOT 91,1/70,5 MOTA 28,4). Pagina "SINS a confronto" aggiornata (sezione JRDB).
+- (03/11) Diagnosi K5 = T1 (heldout-v5) + topic intermedi, CODa: PD ok 54,5% (K4) -> 71,0%; YOLO non vede 15,6 -> 8,2%
+  (resta il cavallo dietro il muro, 39 righe); passo 5 (foglia bicycle sul cluster, cluster senza classe) 13,4 -> 8,3%;
+  clustering 4 -> 5%. Falsi PD 51 -> 50 righe. Passo 5 restante: ~1/3 cluster sotto 0,6 m (soglia anti-rastrelliera
+  voluta), il resto respinto dall'associazione IoU (motivo non registrato: serve log non limitato in yolo_refine).
+  Analisi: eval/results/pd_analysis/K5_heldout-v5.txt. Pulizia disco: tolti input tmp LV-DOT/UniMT/Dynablox e run scartate
+  (J3, KB*, DBG2, GP1, GR0/1, K3, K4): 17 GB liberi.
