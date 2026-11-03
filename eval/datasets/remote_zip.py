@@ -61,12 +61,19 @@ def main():
     ap.add_argument('dest')
     ap.add_argument('--match', default='.')
     ap.add_argument('--list', action='store_true')
+    ap.add_argument('--dump', help='with --list: write "name<TAB>compressed size" of the matching members to this file')
+    ap.add_argument('--names', help='file with exact member names (one per line) to extract instead of --match')
     ap.add_argument('--workers', type=int, default=16)
     a = ap.parse_args()
     z = zipfile.ZipFile(io.BufferedReader(HttpFile(a.url), 1 << 20))
-    members = [m for m in z.infolist() if not m.is_dir() and re.search(a.match, m.filename)]
+    want = set(open(a.names).read().split('\n')) - {''} if a.names else None
+    members = [m for m in z.infolist() if not m.is_dir() and (m.filename in want if want is not None else re.search(a.match, m.filename))]
     print(f'{len(members)} members, {sum(m.compress_size for m in members) / 1e9:.1f} GB', flush=True)
     if a.list:
+        if a.dump:
+            with open(a.dump, 'w') as f:
+                for m in members:
+                    f.write(f'{m.filename}\t{m.compress_size}\n')
         return
     dest = Path(a.dest)
     local = threading.local()

@@ -925,3 +925,21 @@ tutto sotto di lui intorno al robot.
   cluster), il resto foglia centrata altrove (maschera su piu' bici) o cluster gia' preso dall'altra camera. Il ritardo
   camera-LiDAR non c'entra (86-92% delle scansioni con foglia entro 0,08 s). Nessuna correzione: e' un problema di
   rastrelliera densa, nested/points (che lo attaccano) avevano gia' quasi raddoppiato i falsi PD.
+- (03/11 pomeriggio) SPLIT DI TUNING JRDB (scelto prima di ogni run, per persone ferme entro 15 m, luoghi diversi dalle
+  held-out; eval/datasets/jrdb/convert_jrdb_tune.sh): indoor bytes, gateslab, nvidia, stlc; outdoor tressider1 (16/03_1),
+  memorial, hewlett. TU0 x3 (profili attuali): ALL rec 50,5% FP/min 2301 MOTA 22,1% | MOVING rec 47,8% prec 80,7%.
+  TU1 x3 (indoor v4: foglie da maschere + riquadro) sulle 4 indoor vs TU0 sulle stesse: ALL rec 46,5 -> 42,8%, prec
+  84,4 -> 89,1%, FP/min 1075 -> 656, MOTA 35,0 -> 35,6%, moving rec 45,1 -> 42,9%: nessun guadagno netto, v4 resta fuori
+  (conferma il held-out). Baseline sul tuning: Dynablox ALL rec 23,8% MOTA 18,0%, moving 42,4/54,7%; M-detector ALL rec
+  23,0% MOTA -4,4%, moving 52,6/67,1% (MOTA moving -25%).
+- (03/11) JRDB-PanoTrack: labels_3d_pseudo_panoptic_CW (1 Hz, per punto, upper poi lower, label = inst<<16 | classe;
+  verifica: 90-100% dei punti "pedestrian" su persone annotate). eval/datasets/jrdb/jrdb_pano_ignore.py -> bags/jrdb/<seq>
+  _pano.csv (bici/monopattini, auto, golf cart, veicoli grandi, carrelli, skateboard, animali; esclusi entro 0,8 m da una
+  persona annotata); coda_eval --extra-ignore (0,3 m, +-0,5 s); coda_compare --pano. Oggetti mobili non-persona solo in
+  hewlett (21 bici), tressider1 (5), memorial (3), clark1 (3); indoor nessuno. Tuning con pano: SINS MOTA 22,1 -> 29,5%,
+  FP/min 2301 -> 1583; held-out invariato (MOTA 32,5%). Residuo su hewlett (TU0): FP su vegetazione 33%, non etichettato
+  36%, bici residue 22%, lampioni 9% -> errori veri di SINS all'aperto (bici/persona YOLO su alberi e pali).
+- (03/11) CODa: seq 0 (tuning) e' tra le piu' povere (1,7 pedoni/fotogramma). Seq 1 inutile come held-out (2 pedoni +
+  statua del cavallo): conversione interrotta e cancellata. RGB-D ZED esiste solo per seq 0, 1, 10, 11, 12 -> HELD-OUT
+  CODa = 10, 11, 12 (19/23/21 pedoni, bici, monopattini, veicoli di servizio, 28 auto), solo finestre annotate + 20 s
+  (eval/datasets/coda_select/sel_*.txt, download_coda_heldout.sh via remote_zip --names, 30 GB sul NAS imperatore).

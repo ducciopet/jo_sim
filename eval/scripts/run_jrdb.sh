@@ -7,7 +7,7 @@
 D=/home/ros/bags/jrdb; R=/home/ros/bags/replay
 CAMS=cam0,cam2,cam4,cam6,cam8; AC="[cam0, cam2, cam4, cam6, cam8]"
 for s in ${@:-forbes huangb packard2 tressider2 clark0 clark1}; do
-  case $s in clark*) ENV=jrdb_outdoor ;; *) ENV=jrdb_indoor ;; esac
+  case $s in clark*|tressider1|memorial|hewlett) ENV=jrdb_outdoor ;; *) ENV=jrdb_indoor ;; esac
   ENV=${JRDB_ENV:-$ENV}   # JRDB_ENV=jrdb_outdoor: one profile for every sequence
   out=$D/runs/${TAG:-t0}_v2_jrdb_$s
   [ -e $out.done ] && continue

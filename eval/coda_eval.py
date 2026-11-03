@@ -132,6 +132,21 @@ def filter_pred(pred, ign, frames, odom, odom_z, a):
         p = by_t.get(tt)
         if p is not None and np.min(np.hypot(p[:, 0] - x, p[:, 1] - y)) < a.ignore_dist:
             hit[j] = True
+    if getattr(a, 'extra_ignore', None):
+        ex = pd.read_csv(a.extra_ignore)
+        et = np.unique(ex['t_ns'].to_numpy())
+        ex_by_t = {tt: g[['x', 'y']].to_numpy() for tt, g in ex.groupby('t_ns')}
+        if len(et):
+            k = np.clip(np.searchsorted(et, obj['t_ns'].to_numpy()), 1, len(et) - 1) if len(et) > 1 else np.zeros(len(obj), int)
+            for j, (tp, x, y) in enumerate(zip(obj['t_ns'].to_numpy(), obj['x'], obj['y'])):
+                if hit[j]:
+                    continue
+                for kk in {max(0, k[j] - 1), k[j]}:
+                    if abs(et[kk] - tp) / 1e9 <= a.extra_ignore_dt:
+                        p = ex_by_t[et[kk]]
+                        if np.min(np.hypot(p[:, 0] - x, p[:, 1] - y)) < a.extra_ignore_dist:
+                            hit[j] = True
+                            break
     kept = obj[~far & ~hit]
     marks = [dict(t_ns=int(t), track_id=EMPTY_FRAME_ID) for t in np.unique(pred['t_ns']) if t not in set(kept['t_ns'])]
     return make_tracks(kept.to_dict('records') + marks), int(far.sum()), int(hit.sum())
@@ -152,6 +167,12 @@ def main():
     ap.add_argument('--pd-everywhere', action='store_true', help='score still objects outside the camera view too')
     ap.add_argument('--dyn-speed', type=float, default=0.3)
     ap.add_argument('--match-dist', type=float, default=1.0)
+    ap.add_argument('--extra-ignore', help='CSV t_ns,x,y[,..] of points of objects the GT does not annotate (JRDB: '
+                    'movable non-person objects from JRDB-PanoTrack, eval/datasets/jrdb/jrdb_pano_ignore.py), labelled at a '
+                    'lower rate: a prediction centred within --extra-ignore-dist of one of them, within --extra-ignore-dt of '
+                    'its labelled frame, is dropped (neither TP nor FP)')
+    ap.add_argument('--extra-ignore-dist', type=float, default=0.3)
+    ap.add_argument('--extra-ignore-dt', type=float, default=0.5)
     ap.add_argument('--out')
     a = ap.parse_args()
 
