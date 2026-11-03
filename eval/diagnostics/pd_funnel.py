@@ -256,7 +256,7 @@ def main():
                             lcls.update(NAMES[i] for i in D['leaves'][k][2][sel])
                         cl_h = max([x[5] for x in fcl + own] or [0])
                         cl_l = max([max(x[3], x[4]) for x in fcl + own] or [0])
-                        stage5.append(dict(cls=cls, leaf=lcls.most_common(1)[0][0] if lcls else '', cl_h=cl_h, cl_l=cl_l,
+                        stage5.append(dict(w=w, t=g.t_ns, x=g.x, y=g.y, cls=cls, leaf=lcls.most_common(1)[0][0] if lcls else '', cl_h=cl_h, cl_l=cl_l,
                                            n_leaf=sum(lcls.values()), d=min([np.hypot(x[0] - g.x, x[1] - g.y) for x in fcl + own] or [9])))
                     elif not tr:
                         st = '6 tracker: no track on it'
@@ -307,6 +307,7 @@ def main():
         print(f'   {cl:16s} n={m:5d} ' + ' '.join(f'{k[:2].strip()}:{100 * v / m:.0f}%' for k, v in sorted(cnt.items())))
     if stage5:
         S5 = pd.DataFrame(stage5)
+        S5.to_csv(REPO / f'eval/results/pd_analysis/{tag}_stage5.csv', index=False)   # positions, for yolo_refine log attribution
         print('\n   stage 5 detail (leaf on it, cluster there, no class):')
         print('   annotated class x leaf class:', S5.groupby(['cls', 'leaf']).size().to_dict())
         print('   cluster height:', pd.cut(S5.cl_h, [0, 0.4, 0.6, 0.8, 1.1, 9]).value_counts().sort_index().to_dict())

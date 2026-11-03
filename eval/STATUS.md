@@ -918,3 +918,10 @@ tutto sotto di lui intorno al robot.
   voluta), il resto respinto dall'associazione IoU (motivo non registrato: serve log non limitato in yolo_refine).
   Analisi: eval/results/pd_analysis/K5_heldout-v5.txt. Pulizia disco: tolti input tmp LV-DOT/UniMT/Dynablox e run scartate
   (J3, KB*, DBG2, GP1, GR0/1, K3, K4): 17 GB liberi.
+- (03/11) Diagnosi K6 (= K5 + nuovo parametro yolo_refine_log_all: ogni scarto di yolo_refine nel log, con leaf_pos;
+  default false) e attribuzione per posizione e tempo (pd_funnel scrive <TAG>_stage5.csv). Passo 5 = 72 righe, tutte in w1
+  nelle rastrelliere a x -13..-27: ~15% "too low" (bici viste <= 0,6 m nella rastrelliera dietro: soglia voluta),
+  ~40% foglia ACCEPTED nello stesso istante ma su un cluster vicino (bici a 0,5 m l'una dall'altra, una foglia -> un
+  cluster), il resto foglia centrata altrove (maschera su piu' bici) o cluster gia' preso dall'altra camera. Il ritardo
+  camera-LiDAR non c'entra (86-92% delle scansioni con foglia entro 0,08 s). Nessuna correzione: e' un problema di
+  rastrelliera densa, nested/points (che lo attaccano) avevano gia' quasi raddoppiato i falsi PD.
