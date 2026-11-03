@@ -5,7 +5,7 @@ pools each method over the windows (coda_pool.pool), writes results/coda/compare
 --jrdb: the same on the six JRDB held-out sequences (range 15 m), results/jrdb/compare.json, tables/jrdb_compare.csv.
   --tune: the seven JRDB TUNING sequences (SINS runs TU0*) instead; --pano: predictions on movable non-person objects
   labelled by JRDB-PanoTrack (bags/jrdb/<seq>_pano.csv) are ignored, as JRDB's boxes cover people only.
---heldout: the CODa HELD-OUT windows of seqs 10/11/12 (SINS runs H1*, frozen heldout-v5), compareH.json.
+--heldout: the CODa HELD-OUT windows of seqs 11/12; --seq10: seq 10 (second tuning sequence) (SINS runs H1*, frozen heldout-v5), compareH.json.
 usage: coda_compare.py [--heldout | --jrdb [--tune] [--pano]] [--windows w1 w2 w3]
 """
 import argparse
@@ -40,7 +40,8 @@ METHODS = {
 }
 
 # JRDB held-out: nothing tuned on these sequences (SINS: jrdb_indoor / jrdb_outdoor profiles, chosen before any run)
-CODA_HELDOUT = ['10_w1', '10_w2', '10_w3', '10_w4', '10_w5', '11_w1', '11_w2', '11_w3', '12_w1', '12_w2', '12_w3']
+CODA_TUNE10 = ['10_w1', '10_w2', '10_w3', '10_w4', '10_w5']   # second CODa tuning sequence since 03/11
+CODA_HELDOUT = ['11_w1', '11_w2', '11_w3', '12_w1', '12_w2', '12_w3']
 SINS_HELDOUT = [('sins', f'bags/coda/runs/{t}_v2_coda{{w}}', METHODS['SINS'][0][2], METHODS['SINS'][0][3])
                 for t in ('H1', 'H1r2', 'H1r3')]
 JRDB_SEQS = ['forbes', 'huangb', 'packard2', 'tressider2', 'clark0', 'clark1']
@@ -67,12 +68,13 @@ def main():
     ap.add_argument('--tune', action='store_true')
     ap.add_argument('--pano', action='store_true')
     ap.add_argument('--heldout', action='store_true')
+    ap.add_argument('--seq10', action='store_true', help='CODa seq 10 (tuning), SINS runs H1*')
     a = ap.parse_args()
     ds = 'jrdb' if a.jrdb else 'coda'
-    wins = a.windows or ((JRDB_TUNE if a.tune else JRDB_SEQS) if a.jrdb else (CODA_HELDOUT if a.heldout else ['w1', 'w2', 'w3']))
-    sfx = ('H' if a.heldout else '') + ('T' if a.tune else '') + ('pano' if a.pano else '')
+    wins = a.windows or ((JRDB_TUNE if a.tune else JRDB_SEQS) if a.jrdb else (CODA_HELDOUT if a.heldout else CODA_TUNE10 if a.seq10 else ['w1', 'w2', 'w3']))
+    sfx = ('H' if a.heldout else 'S10' if a.seq10 else '') + ('T' if a.tune else '') + ('pano' if a.pano else '')
     methods = dict(METHODS_JRDB, SINS=SINS_TUNE) if a.tune else (METHODS_JRDB if a.jrdb else METHODS)
-    if a.heldout:
+    if a.heldout or a.seq10:
         methods = {k: v for k, v in dict(METHODS, SINS=SINS_HELDOUT).items() if k not in ('SINS (before)', 'M-detector 0.25x')}
     gt_of = (lambda w: REPO / f'bags/jrdb/{w}') if a.jrdb else (lambda w: REPO / f'bags/coda/coda{cw(w)}')
     out = {}

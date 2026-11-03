@@ -1,7 +1,7 @@
 #!/bin/bash
-# CODa held-out (seqs 10, 11, 12), one sequence at a time for the disk: convert -> SINS H1 x3 (frozen heldout-v5,
+# CODa seqs 10 (tuning since 03/11), 11, 12 (held-out), one sequence at a time for the disk: convert -> SINS H1 x3 (frozen heldout-v5,
 # STEREO=1, as T1) -> Dynablox, M-detector, LV-DOT, CenterPoint+SimpleTrack, EagerMOT -> drop the window bags
-# (regenerable from the NAS; GT csv/json and odometry kept). Resumable: every step skips what is done.
+# (regenerable from the NAS; GT csv/json and odometry kept) -- except seq 10, a TUNING sequence since 03/11 (kept). Resumable: every step skips what is done.
 cd /home/duccio/Desktop/jo_sim_sins
 B=bags; E=eval/baselines; CODA=/mnt/nas-imperatore/datasets_SINS/CODa
 while pgrep -f "convert_coda_heldou[t].sh" > /dev/null; do sleep 30; done   # a conversion started by hand
@@ -35,7 +35,7 @@ for S in 10 11 12; do
     fi
     echo "$(date +%T) $w baselines done"
   done
-  for w in $W; do rm -rf $B/coda/coda$w $B/coda/coda${w}_stereo; done
+  [ $S != 10 ] && for w in $W; do rm -rf $B/coda/coda$w $B/coda/coda${w}_stereo; done
   touch $B/coda/heldout_$S.done; echo "$(date +%T) seq $S complete"; df -h / | tail -1
 done
 python3 eval/coda_compare.py --heldout 2>&1 | grep -v "per label"

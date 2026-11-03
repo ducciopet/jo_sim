@@ -51,7 +51,11 @@ def main():
         statics[('front_camera_depth_optical_frame', 'front_camera_color_optical_frame')]
     dets2d = []
     with AnyReader([B / 'coda' / 'runs' / run], default_typestore=typestore()) as r:
-        for c, t, raw in r.messages([c for c in r.connections if c.topic == '/yolo_semantic_seg/front_camera/detections']):
+        # semantic-seg runs (older profiles) or instance-seg runs (heldout-v5); never an empty list (= every message)
+        conns = [c for c in r.connections if c.topic == '/yolo_semantic_seg/front_camera/detections'] or \
+            [c for c in r.connections if c.topic == '/yolo_seg_track/front_camera/detections']
+        assert conns, 'no YOLO detections topic in ' + run
+        for c, t, raw in r.messages(conns):
             m = r.deserialize(raw, c.msgtype)
             boxes = []
             for d in m.detections:

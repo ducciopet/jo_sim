@@ -10,7 +10,7 @@ U=https://web.corral.tacc.utexas.edu/texasrobotics/web_CODa
 for s in 10 11 12; do
   for z in sequences depthonly; do
     echo "$(date +%T) $z/$s"
-    for t in 1 2 3; do python3 eval/datasets/remote_zip.py $U/$z/$s.zip $D --names eval/datasets/coda_select/sel_$s.txt && break; sleep 120; done
+    for t in 1 2 3 4 5 6; do python3 eval/datasets/remote_zip.py $U/$z/$s.zip $D --names eval/datasets/coda_select/sel_$s.txt && break; sleep 120; done
   done
 done
 echo "$(date +%T) ALL DONE"

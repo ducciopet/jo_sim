@@ -943,3 +943,17 @@ tutto sotto di lui intorno al robot.
   statua del cavallo): conversione interrotta e cancellata. RGB-D ZED esiste solo per seq 0, 1, 10, 11, 12 -> HELD-OUT
   CODa = 10, 11, 12 (19/23/21 pedoni, bici, monopattini, veicoli di servizio, 28 auto), solo finestre annotate + 20 s
   (eval/datasets/coda_select/sel_*.txt, download_coda_heldout.sh via remote_zip --names, 30 GB sul NAS imperatore).
+- (03/11 sera) Rete: Wi-Fi debole (-71 dBm, 120-440 ms al router) -> download CODa quasi tutto fallito e lettura NAS
+  ~0,4 MB/s; passati su Ethernet (LAN 192.168.178.53): ~20 MB/s. Download rifatto (resumable), completo 17:14.
+- (03/11 sera) CODa seq 10 con heldout-v5 (H1 x3) e tutte le baseline (coda_compare.py --seq10, compareS10.json):
+  SINS ALL rec 47,1% FP/min 1465 MOTA -0,5% | moving rec 49,2% prec 68,4%; Dynablox moving 76,0/26,4 MOTA -140;
+  M-detector 12,4/39,5; LV-DOT 3,7/80,7 (quasi nessun dinamico); CenterPoint+SimpleTrack 88,0/46,3 MOTA -14,8;
+  EagerMOT 85,9/58,9 MOTA 24,8 (CenterPoint addestrato su CODa: forse seq 10 nel suo training). Due cause:
+  (1) dataset: auto parcheggiate non annotate (w1: GT 0,7 auto/frame, CenterPoint 3,9; 45% dei falsi SINS su di esse);
+  (2) SINS: funnel pedoni (scratchpad ped_funnel.py) seq 10 vs seq 0: uscita ok 55% vs 94%; cluster mancante 5%;
+  cluster senza traccia 10%; TRACCIA ESISTENTE MA "static" 30% vs 3%. Quelle tracce camminano (GT 1-1,5 m/s, KF
+  >1 m/s nel 65%, eta' >2 s nel 43%), 83% fuori FOV camera (senza classe -> PATH 3: serve kf_vel_confident o point
+  vote, 5 tick consecutivi, gate dimensioni, blocco disocclusione — 38 log/s throttled di "disocclusion artifact" in w4).
+  Pedoni a <0,8 m da un altro: 2% trovati (fusione cluster). DECISIONE utente: seq 10 = secondo TUNING CODa,
+  held-out = solo 11, 12 (chain_heldout.sh non cancella i bag della 10). EagerMOT: export corretto per topic
+  /yolo_seg_track (prima sceglieva tutti i messaggi). LV-DOT: calibrazione per sequenza.
