@@ -11,12 +11,13 @@ for w in ${@:-w1 w2 w3}; do
   out=$D/runs/${TAG:-t0}_v2_coda$w
   [ -e $out.done ] && continue
   mkdir -p $D/runs
+  ENV=coda; case $w in 10_*) [ -d /home/ros/local_install/sins/share/sins/cfg/coda10 ] && ENV=coda10 ;; esac   # seq 10: its own class list (coda10)
   CAMS=front_camera; XB=""; XS=""; AC=""
   if [ -n "$STEREO" ]; then
     CAMS=front_camera,stereo_camera; XB=$D/coda${w}_stereo; XS=stereo_camera; AC="[front_camera, stereo_camera]"
   fi
   EXTRA_TOPICS="${MORE_TOPICS} /sins/tracker/tracks /sins/dbscan_detector/fused/detections3d /yolo_semantic_seg/front_camera/detections /yolo_semantic_seg/stereo_camera/detections /yolo_seg_track/front_camera/detections /yolo_seg_track/stereo_camera/detections /tf /tf_static" \
   ADAPTER=1 ADAPTER_CAMS="$AC" STEREO="$XS" EXTRA_BAGS="$XB" \
-  V2_ARGS="env:=coda camera_names:=$CAMS raw_depth_transport:=raw enable_calibration:=false $V2_EXTRA" \
+  V2_ARGS="env:=$ENV camera_names:=$CAMS raw_depth_transport:=raw enable_calibration:=false $V2_EXTRA" \
     bash $R/run_method.sh v2 $D/coda$w $D/coda${w}_odom $out && touch $out.done
 done

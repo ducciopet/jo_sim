@@ -38,6 +38,8 @@ files:
   tracker.yaml:
     tracker_node:
       camera_names: [front_camera]
+      # Only classes CODa annotates get the potentially-dynamic label: no dog/cat/cow/sheep in its label set
+      track_semantic_dynamic_classes: [person, car, bus, truck, motorbike, bicycle, horse]
       track_disocclusion_person_exempt: true   # heldout-v6 (04/11): walker-shaped track at walking speed exempt from the disocclusion guard
   dbscan_detector.yaml:
     dbscan_detector_node:

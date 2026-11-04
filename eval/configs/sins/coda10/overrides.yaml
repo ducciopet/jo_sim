@@ -1,0 +1,8 @@
+# CODa seq 10 (tuning): the coda profile, except that its annotation leaves the parked cars out (0.7 annotated cars per
+# frame against 3.9 seen by CenterPoint), so vehicles get no semantic (potentially-dynamic) label on this sequence.
+# Same rule as for the whole dataset: no label for a class the ground truth does not annotate.
+base: coda
+files:
+  tracker.yaml:
+    tracker_node:
+      track_semantic_dynamic_classes: [person, motorbike, bicycle, horse]

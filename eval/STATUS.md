@@ -993,3 +993,17 @@ tutto sotto di lui intorno al robot.
   -> 75,2%, MOTA 32,1 -> 32,6; ALL rec 50,5 -> 54,4%, ALL MOTA 15,6 -> 14,3, FP/min 1245 -> 1438. ADOTTATO come
   heldout-v6 (guadagno modesto; il +11 punti di recall in tuning diventa +4 su held-out). Latenza: qualche confronto
   per traccia, trascurabile. Prossime cause: tracce non confermate/coasting (16%, frammentazione vicino al robot).
+- (04/11) Regola classi (utente): etichetta PD solo per classi che la GT annota. CODa: track_semantic_dynamic_classes
+  senza dog/cat/cow/sheep; profilo coda10 (eval/configs/sins/coda10, scelto da run_coda.sh per le finestre 10_*):
+  anche senza car/bus/truck (auto parcheggiate non annotate). C0 = v6 + regola, x3: seq10 moving rec 58%, prec 72%,
+  MOTA 34 (v6: 31), ALL MOTA 18 (v6: 11), FP/min 1090 (v6: 1390); seq0 moving prec 86%, MOTA 71 (v6: 67).
+  Rotture di traccia (parametri nuovi, default off): track_publish_coasting_ticks 3 (C1) e track_inherit_motion_dist
+  1,0 m / _age 1,0 s (C2), insieme C3 x3: seq10 moving rec 66% ma MOTA 30, seq0 MOTA 51: NO. C1 (1 rip.): seq0 MOTA 62;
+  C2 (1 rip.): seq10 MOTA 36, seq0 MOTA 63: NO.
+  Veicoli in movimento: il gate dimensioni blocca ogni oggetto non classificato piu' grande di una persona. Righe GT in
+  movimento: seq0 ~66 veicoli, seq10 ~43, seq11 ~785, seq12 ~2970 (quasi meta' del moto in seq12). Nuovo
+  track_size_gate_travel_window (+ _min_dist 2 m al netto dello spostamento del sensore, rettilineita' 0,7+0,05*impronta
+  <= 0,95; default off). V1 x3: seq10 moving MOTA 31,5 (C0 33,6), seq0 67,0 (C0 70,8), FP seq0 +16%: i grandi oggetti
+  dinamici sono pochi (~60 righe/rip. su seq10, alcuni auto vere non annotate); il beneficio non e' misurabile sulle
+  sequenze di tuning (poche auto in moto). NON adottato finche' non c'e' una sequenza di tuning con traffico.
+  Profilo corrente: C0 (heldout-v6 + regola classi), non ancora valutato sull'held-out.
