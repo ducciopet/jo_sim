@@ -1,0 +1,31 @@
+# Marina di Pisa 14/10 "street" (robot standing on the kerb, cars and pedestrians passing; VLP-16 + front RealSense).
+# The robot's own sensors and the base outdoor profile; only what this recording changes:
+#  - front camera only: the back camera was pointed at the ground for the whole mission (pavement in every frame);
+#  - depth: the bag has the aligned depth as compressedDepth (the live transport), no native RealSense cloud, so the
+#    deprojected-image path is used (aligned_depth_cloud_topic empty);
+#  - color extracted at 10 Hz (eval/datasets/extract_topics.py --image-hz 10, disk space): YOLO stride 1 keeps it at
+#    10 Hz, as the base stride 2 does on the 30 Hz live stream (15 Hz).
+base: outdoor
+files:
+  preprocessing.yaml:
+    preprocessing_node:
+      camera_names: [front_camera]
+      front_camera:
+        aligned_depth_transport: compressedDepth
+        aligned_depth_cloud_topic: ""
+  static_structures.yaml:
+    static_structures_node:
+      camera_names: [front_camera]
+  semantic_segmentation.yaml:
+    yolo_semantic_seg_detector:
+      camera_names: [front_camera]
+      detection_frame_stride: 1
+  detection.yaml:
+    yolo_seg_track_detector:
+      camera_names: [front_camera]
+  detection_yolo26.yaml:
+    yolo_seg_track_detector:
+      camera_names: [front_camera]
+  tracker.yaml:
+    tracker_node:
+      camera_names: [front_camera]

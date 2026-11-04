@@ -5,7 +5,7 @@
 set -o pipefail
 cd $(dirname $0)/../..
 R=${CODA:-/mnt/kloster-reichenau/datasets_SINS/CODa}
-CLASSES=(Pedestrian Bike Scooter Skateboard "Service Vehicle" Horse Car Motorcycle "Golf Cart" Truck Wheelchair)
+CLASSES=(Pedestrian Bike Scooter Skateboard "Service Vehicle" Horse Car Motorcycle "Golf Cart" "Pickup Truck" "Delivery Truck" "Utility Vehicle" Bus Cart Wheelchair)   # CODa has no plain "Truck" class
 for w in "200 799 w1" "4550 4999 w2" "5400 5799 w3"; do
   set -- $w; out=bags/coda/coda0_$3
   [ -e $out.done ] && continue

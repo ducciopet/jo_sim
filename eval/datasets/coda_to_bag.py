@@ -212,8 +212,10 @@ def main():
         return T_odom_world @ T_world_os1(i) @ T_os1_base
 
     calib = f'{root}/calibrations/{seq}'
-    T_cam_os1 = read_matrix(f'{calib}/calib_os1_to_cam3.yaml')    # p_cam = E p_os1
-    intr = yaml.safe_load(open(f'{calib}/calib_cam3_intrinsics.yaml'))
+    # sequences without the ZED archive (all but 0, 1, 10-12) run with the stereo pair only: in_fov is then cam0's
+    fov_cam = 'cam0' if a.no_camera and not os.path.exists(f'{calib}/calib_os1_to_cam3.yaml') else 'cam3'
+    T_cam_os1 = read_matrix(f'{calib}/calib_os1_to_{fov_cam}.yaml')    # p_cam = E p_os1
+    intr = yaml.safe_load(open(f'{calib}/calib_{fov_cam}_intrinsics.yaml'))
     K = np.array(intr['camera_matrix']['data']).reshape(3, 3)
 
     for p in (out, Path(f'{out}_odom')):
@@ -313,10 +315,14 @@ def main():
                              in_fov=in_camera_fov(b, T_cam_os1, K, intr)))
     import pandas as pd
     pd.DataFrame(rows).to_csv(f'{out}_gt.csv', index=False, float_format='%.4f')
+    n_color, n_depth = len(color), len(depth)
+    if a.gt_only and Path(f'{out}_gt.json').exists():          # the bags are untouched: keep their camera frame counts
+        old = json.load(open(f'{out}_gt.json'))
+        n_color, n_depth = old.get('n_color', 0), old.get('n_depth', 0)
     json.dump(dict(seq=seq, first=a.first, last=a.last, t0_ns=int(t0), t1_ns=int(t1), annotated_frames=annotated,
                    annotated_t_ns=[int(t_scan[i]) for i in annotated], classes=a.classes, instance_ids=ids,
                    frame='odom', lidar_height_m=h, lidar_tilt_deg=tilt, ground_inliers=n_inl,
-                   T_base_velodyne=T_base_os1.tolist(), n_color=len(color), n_depth=len(depth)),
+                   T_base_velodyne=T_base_os1.tolist(), n_color=n_color, n_depth=n_depth),
               open(f'{out}_gt.json', 'w'), indent=1)
     print(f'done: {len(frames)} scans, {len(color)} color, {len(depth)} depth, {len(annotated)} annotated frames, '
           f'{len(ids)} instances; LiDAR {h:.2f} m above ground, tilt {tilt:.1f} deg')

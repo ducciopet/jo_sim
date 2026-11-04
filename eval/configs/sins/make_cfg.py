@@ -42,7 +42,15 @@ def apply(text, node, overrides, tag):
             raise SystemExit(f'{node}.{key} appears {len(hit)} times')
         if hit:
             m = re.match(rf'^(\s+{re.escape(key)}:\s*)([^#]*?)(\s*#.*)?$', lines[hit[0]])
-            lines[hit[0]] = f'{m.group(1)}{fmt(val)}  # {tag} (base: {m.group(2).strip()}){(m.group(3) or "").rstrip()}'
+            lines[hit[0]] = f'{m.group(1).rstrip()} {fmt(val)}  # {tag} (base: {m.group(2).strip()}){(m.group(3) or "").rstrip()}'
+            # a block-style mapping in the base (children indented below the key) is replaced as a whole
+            ind = len(lines[hit[0]]) - len(lines[hit[0]].lstrip())
+            j = hit[0] + 1
+            while j < end and lines[j].strip() and len(lines[j]) - len(lines[j].lstrip()) > ind:
+                j += 1
+            if j > hit[0] + 1:
+                del lines[hit[0] + 1:j]
+                end -= j - hit[0] - 1
         else:
             lines.insert(params + 1, f'    {key}: {fmt(val)}  # {tag} (not in base)')
             end += 1

@@ -1007,3 +1007,40 @@ tutto sotto di lui intorno al robot.
   dinamici sono pochi (~60 righe/rip. su seq10, alcuni auto vere non annotate); il beneficio non e' misurabile sulle
   sequenze di tuning (poche auto in moto). NON adottato finche' non c'e' una sequenza di tuning con traffico.
   Profilo corrente: C0 (heldout-v6 + regola classi), non ancora valutato sull'held-out.
+- (04/11 pomeriggio) ERRORE NELLA GT CODa: la lista classi di convert_coda0.sh / convert_coda_heldout.sh aveva "Truck",
+  classe che CODa non ha; Pickup Truck, Delivery Truck, Utility Vehicle, Bus e Cart annotati restavano fuori dalla GT
+  (contati come falsi). Seq 10 (finestre valutate): +1170 box (Pickup 499, Delivery 330, Utility 341); seq 11: +2880
+  (Service Vehicle era gia' dentro); seq 12: +216; seq 0: nessuna. Corretto (lista classi nei due script), GT rigenerata
+  con coda_to_bag.py --gt-only (n_color/n_depth del json conservati), vecchie GT in bags/coda/gt_v1/, vecchi risultati
+  in eval/results/coda/gt_v1/. Conseguenza: le "auto parcheggiate non annotate" della seq 10 SONO annotate (10_w1: GT
+  0,7 -> ~4,2 veicoli/fotogramma, CenterPoint 3,9): la premessa del profilo coda10 era sbagliata (C0 su seq 10 con GT
+  nuova: PD F1 ~1%, moving rec 54% prec 73% MOTA 31,5 media 3 rip.). Da rifare: C0 su seq 10 con profilo coda.
+  Held-out ricalcolato (nessuna run nuova): SINS v6 moving rec 48,8% prec 76,1% MOTA 32,1, ALL MOTA 18,0, FP/min 1285;
+  v5 44,2/78,0/30,7, ALL 17,8; CenterPoint+ST ALL MOTA 23,9 (era 11,0), moving -8,4; EagerMOT ALL 26,6, moving 17,3.
+- (04/11 pomeriggio) Sequenza di tuning con veicoli: sondaggio su CODa (annotazioni ogni 50 fotogrammi, pose dense):
+  veicoli in moto rari ovunque; migliore seq 16 (16 coppie a 5 s con veicoli in moto, 830 di pedoni), senza ZED
+  (solo stereo cam0/cam1 -> run_coda.sh usa stereo_camera come unica camera se n_color = 0). Finestre 2900-3799,
+  8450-9249, 10320-11559, 14700-15849 (eval/datasets/coda_select/sel_16.txt, download sul NAS in corso, ~23 GB).
+- (04/11 pomeriggio) Marina di Pisa "street" (14/10, 18 min, robot FERMO sul marciapiede, auto e pedoni che passano):
+  estratta in bags/mdp/mdp_street (extract_topics.py --image-hz 10 --min-free-gb, camere a 10 Hz per lo spazio),
+  odometria KISS-ICP bags/mdp/mdp_street_odom (spostamento nullo). Camera posteriore puntata a terra: solo frontale.
+  Riferimento automatico degli oggetti IN MOVIMENTO (eval/datasets/static_sensor_movers.py: sfondo = voxel occupati
+  >= 10% delle scansioni in 180 s, cluster, tracking offline, spostamento netto >= 2 m): 201 oggetti, 45 veicoli
+  (lunghezza mediana 3,8 m, ~10,6 m dal robot = la strada) e 156 persone/bici; campione di 8 controllato sulle
+  immagini, tutti veri. Profili eval/configs/sins/mdp_street (base outdoor, sola camera frontale, depth compressedDepth
+  senza nuvola nativa, YOLO stride 1) e mdp_street_v1 (+ V1). make_cfg.py: ora sostituisce anche un blocco annidato.
+  Risultati street (media 3 rip., coda_eval dynamic_only entro 15 m, riferimento automatico sopra):
+    A (outdoor)  rec 37,9% prec 82,3% MOTA 28,8 | rec veicoli 5,7%  persone 43,3%
+    V1           rec 43,9% prec 80,8% MOTA 32,4 | rec veicoli 7,9%  persone 49,9%
+    V2           rec 46,2% prec 80,9% MOTA 34,2 | rec veicoli 34,9% persone 48,2%
+  (variazione tra rip. < 1 punto). Diagnosi V1: veicoli clusterizzati al 94% ma tracciati al 20%: gate di associazione
+  tarati sulle persone (8 m/s, innovazione 0,6 m, direzione 1,2 rad) scartano le auto a 5-14 m/s. V2 = V1 + gate per
+  oggetti grandi in tracker_node (track_large_object_footprint, -1 = spento; >= 2 m su traccia E rilevamento:
+  velocita' 20 m/s, direzione 15 rad = di fatto libera, innovazione 2 m). Latenza scansione->tracce invariata (mediana
+  98,0 vs 98,1 ms, p95 114,6 entrambe). Persone -1,7 punti, ripetibile: da capire (gruppi >= 2 m con gate larghi?).
+  Controllo visivo del riferimento su 12 fotogrammi proiettati sulla camera (scratchpad gt_overlay.py): veicoli 6/6
+  giusti, persone quasi tutte, 1 errore (pezzo d'auto etichettato persona). Il riferimento usa lo stesso lidar di SINS:
+  valido per confronti A/B, non per numeri assoluti nel paper.
+  Bag sensori spostata sul NAS (datasets_SINS/derived/mdp_street, md5 verificato) per far posto alla seq 16.
+- (04/11 sera) run_coda.sh: tolto l'instradamento delle finestre 10_* sul profilo coda10 (premessa sbagliata, vedi GT
+  sopra); il profilo resta in eval/configs ma non e' usato. convert_coda_heldout.sh: ONLY=wK converte una sola finestra.

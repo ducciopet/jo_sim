@@ -11,10 +11,14 @@ for w in ${@:-w1 w2 w3}; do
   out=$D/runs/${TAG:-t0}_v2_coda$w
   [ -e $out.done ] && continue
   mkdir -p $D/runs
-  ENV=coda; case $w in 10_*) [ -d /home/ros/local_install/sins/share/sins/cfg/coda10 ] && ENV=coda10 ;; esac   # seq 10: its own class list (coda10)
+  ENV=coda   # one profile for every CODa sequence (the GT now lists all vehicle classes, so no per-seq class list)
   CAMS=front_camera; XB=""; XS=""; AC=""
   if [ -n "$STEREO" ]; then
     CAMS=front_camera,stereo_camera; XB=$D/coda${w}_stereo; XS=stereo_camera; AC="[front_camera, stereo_camera]"
+  fi
+  # sequences without CODa's ZED archive (all but 0, 1, 10-12; converted with --no-camera): the stereo pair is the only camera
+  if grep -q '"n_color": 0' $D/coda${w}_gt.json; then
+    CAMS=stereo_camera; XB=$D/coda${w}_stereo; XS=stereo_camera; AC="[stereo_camera]"
   fi
   EXTRA_TOPICS="${MORE_TOPICS} /sins/tracker/tracks /sins/dbscan_detector/fused/detections3d /yolo_semantic_seg/front_camera/detections /yolo_semantic_seg/stereo_camera/detections /yolo_seg_track/front_camera/detections /yolo_seg_track/stereo_camera/detections /tf /tf_static" \
   ADAPTER=1 ADAPTER_CAMS="$AC" STEREO="$XS" EXTRA_BAGS="$XB" \

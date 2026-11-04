@@ -3,20 +3,22 @@
  "topic": "/perception/tracked_dynamic_obstacles",
  "gt": {
   "annotated_frames": 500,
-  "pedestrians": 20,
-  "gt_rows": 2618,
-  "ignored_hidden": 1953,
-  "out_of_range": 669,
-  "dynamic_rows": 1810,
+  "pedestrians": 23,
+  "gt_rows": 3035,
+  "ignored_hidden": 2521,
+  "out_of_range": 686,
+  "dynamic_rows": 1905,
   "rows_by_class": {
    "Bike": 52,
    "Car": 299,
+   "Delivery Truck": 31,
    "Pedestrian": 1617,
-   "Service Vehicle": 650
+   "Service Vehicle": 650,
+   "Utility Vehicle": 386
   }
  },
  "pred_dropped_out_of_range": 939,
- "pred_dropped_ignore": 771,
+ "pred_dropped_ignore": 980,
  "config": {
   "run": "bags/coda/runs/P6r3_v2_coda11_w1",
   "gt": "bags/coda/coda11_w1_gt.csv",
@@ -40,28 +42,28 @@
   "full": {
    "num_frames": 500,
    "num_frames_skipped": 0,
-   "num_gt": 2572,
-   "num_pred": 2944,
-   "tp": 1608,
-   "fp": 1336,
-   "fn": 964,
-   "idsw": 111,
-   "mota": 0.06259720062208396,
-   "motp": 0.2216432382555905,
-   "idtp": 1065,
-   "idf1": 0.38614938361131257,
+   "num_gt": 2983,
+   "num_pred": 2735,
+   "tp": 1733,
+   "fp": 1002,
+   "fn": 1250,
+   "idsw": 167,
+   "mota": 0.1890714046262152,
+   "motp": 0.2301006670410572,
+   "idtp": 1106,
+   "idf1": 0.38684854844351174,
    "confusion": {
     "dynamic": {
      "dynamic": 1358,
      "potentially_dynamic": 36,
      "static": 0,
-     "missed": 376
+     "missed": 467
     },
     "potentially_dynamic": {
-     "dynamic": 11,
-     "potentially_dynamic": 203,
+     "dynamic": 22,
+     "potentially_dynamic": 317,
      "static": 0,
-     "missed": 588
+     "missed": 783
     },
     "static": {
      "dynamic": 0,
@@ -71,56 +73,63 @@
     }
    },
    "state_recall": {
-    "dynamic": 0.7672316384180791,
-    "potentially_dynamic": 0.25311720698254364,
+    "dynamic": 0.7297152068780226,
+    "potentially_dynamic": 0.2825311942959002,
     "static": NaN
    },
    "state_precision": {
-    "dynamic": 0.9919649379108838,
-    "potentially_dynamic": 0.8493723849372385,
+    "dynamic": 0.9840579710144928,
+    "potentially_dynamic": 0.8980169971671388,
     "static": NaN
    },
    "state_f1": {
-    "dynamic": 0.9829895041621425,
-    "potentially_dynamic": 0.8962472406181016,
+    "dynamic": 0.9790915645277577,
+    "potentially_dynamic": 0.9161849710982659,
     "static": NaN
    },
    "fp_by_state": {
-    "dynamic": 215,
-    "potentially_dynamic": 1121
+    "dynamic": 198,
+    "potentially_dynamic": 804
    },
-   "mcc": 0.8811149219455661,
+   "mcc": 0.8955733417882564,
    "latencies": [
     {
-     "gt_id": 11,
+     "gt_id": 12,
+     "t": 1675441224.485481,
+     "from": "dynamic",
+     "to": "potentially_dynamic",
+     "latency": NaN
+    },
+    {
+     "gt_id": 13,
      "t": 1675441232.6854732,
      "from": "dynamic",
      "to": "potentially_dynamic",
      "latency": NaN
     },
     {
-     "gt_id": 11,
+     "gt_id": 13,
      "t": 1675441235.6854703,
      "from": "dynamic",
      "to": "potentially_dynamic",
      "latency": NaN
     },
     {
-     "gt_id": 11,
+     "gt_id": 13,
      "t": 1675441238.7854674,
      "from": "dynamic",
      "to": "potentially_dynamic",
      "latency": NaN
     },
     {
-     "gt_id": 16,
+     "gt_id": 18,
      "t": 1675441248.585458,
      "from": "dynamic",
      "to": "potentially_dynamic",
      "latency": 0.0
     },
     {
-     "gt_id": 16,
+     "gt_id": 18,
      "t": 1675441265.0854423,
      "from": "potentially_dynamic",
      "to": "dynamic",
@@ -133,28 +142,28 @@
    },
    "latency_censored": {
     "to_dynamic": "0/1",
-    "to_potentially_dynamic": "3/4"
+    "to_potentially_dynamic": "4/5"
    }
   },
   "merged": {
    "num_frames": 500,
    "num_frames_skipped": 0,
-   "num_gt": 2572,
-   "num_pred": 2944,
-   "tp": 1608,
-   "fp": 1336,
-   "fn": 964,
-   "idsw": 111,
-   "mota": 0.06259720062208396,
-   "motp": 0.2216432382555905,
-   "idtp": 1065,
-   "idf1": 0.38614938361131257,
+   "num_gt": 2983,
+   "num_pred": 2735,
+   "tp": 1733,
+   "fp": 1002,
+   "fn": 1250,
+   "idsw": 167,
+   "mota": 0.1890714046262152,
+   "motp": 0.2301006670410572,
+   "idtp": 1106,
+   "idf1": 0.38684854844351174,
    "confusion": {
     "dynamic": {
-     "dynamic": 1608,
+     "dynamic": 1733,
      "potentially_dynamic": 0,
      "static": 0,
-     "missed": 964
+     "missed": 1250
     },
     "potentially_dynamic": {
      "dynamic": 0,
@@ -170,7 +179,7 @@
     }
    },
    "state_recall": {
-    "dynamic": 0.6251944012441679,
+    "dynamic": 0.5809587663426081,
     "potentially_dynamic": NaN,
     "static": NaN
    },
@@ -185,7 +194,7 @@
     "static": NaN
    },
    "fp_by_state": {
-    "dynamic": 1336
+    "dynamic": 1002
    },
    "mcc": NaN,
    "latencies": [],
@@ -201,22 +210,22 @@
   "dynamic_only": {
    "num_frames": 500,
    "num_frames_skipped": 0,
-   "num_gt": 1770,
-   "num_pred": 1584,
+   "num_gt": 1861,
+   "num_pred": 1578,
    "tp": 1360,
-   "fp": 224,
-   "fn": 410,
+   "fp": 218,
+   "fn": 501,
    "idsw": 11,
-   "mota": 0.6355932203389831,
+   "mota": 0.6077377753895755,
    "motp": 0.15458713559367454,
    "idtp": 950,
-   "idf1": 0.5664877757901013,
+   "idf1": 0.5524861878453039,
    "confusion": {
     "dynamic": {
      "dynamic": 1360,
      "potentially_dynamic": 0,
      "static": 0,
-     "missed": 410
+     "missed": 501
     },
     "potentially_dynamic": {
      "dynamic": 0,
@@ -232,7 +241,7 @@
     }
    },
    "state_recall": {
-    "dynamic": 0.768361581920904,
+    "dynamic": 0.7307898979043524,
     "potentially_dynamic": NaN,
     "static": NaN
    },
@@ -247,40 +256,47 @@
     "static": NaN
    },
    "fp_by_state": {
-    "dynamic": 224
+    "dynamic": 218
    },
    "mcc": NaN,
    "latencies": [
     {
-     "gt_id": 11,
+     "gt_id": 12,
+     "t": 1675441224.485481,
+     "from": "dynamic",
+     "to": "potentially_dynamic",
+     "latency": NaN
+    },
+    {
+     "gt_id": 13,
      "t": 1675441232.6854732,
      "from": "dynamic",
      "to": "potentially_dynamic",
      "latency": NaN
     },
     {
-     "gt_id": 11,
+     "gt_id": 13,
      "t": 1675441235.6854703,
      "from": "dynamic",
      "to": "potentially_dynamic",
      "latency": NaN
     },
     {
-     "gt_id": 11,
+     "gt_id": 13,
      "t": 1675441238.7854674,
      "from": "dynamic",
      "to": "potentially_dynamic",
      "latency": NaN
     },
     {
-     "gt_id": 16,
+     "gt_id": 18,
      "t": 1675441248.585458,
      "from": "dynamic",
      "to": "potentially_dynamic",
      "latency": NaN
     },
     {
-     "gt_id": 16,
+     "gt_id": 18,
      "t": 1675441265.0854423,
      "from": "potentially_dynamic",
      "to": "dynamic",
@@ -293,7 +309,7 @@
    },
    "latency_censored": {
     "to_dynamic": "0/1",
-    "to_potentially_dynamic": "4/4"
+    "to_potentially_dynamic": "5/5"
    }
   }
  }
