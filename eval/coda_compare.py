@@ -44,6 +44,9 @@ CODA_TUNE10 = ['10_w1', '10_w2', '10_w3', '10_w4', '10_w5']   # second CODa tuni
 CODA_HELDOUT = ['11_w1', '11_w2', '11_w3', '12_w1', '12_w2', '12_w3']
 SINS_HELDOUT = [('sins', f'bags/coda/runs/{t}_v2_coda{{w}}', METHODS['SINS'][0][2], METHODS['SINS'][0][3])
                 for t in ('H1', 'H1r2', 'H1r3')]
+# heldout-v6 (04/11: + track_disocclusion_person_exempt), same frozen-profile protocol
+SINS_HELDOUT_V6 = [('sins', f'bags/coda/runs/{t}_v2_coda{{w}}', METHODS['SINS'][0][2], METHODS['SINS'][0][3])
+                   for t in ('P6', 'P6r2', 'P6r3')]
 JRDB_SEQS = ['forbes', 'huangb', 'packard2', 'tressider2', 'clark0', 'clark1']
 JRDB_TUNE = ['bytes', 'gateslab', 'nvidia', 'stlc', 'tressider1', 'memorial', 'hewlett']
 SINS_TUNE = [('sins', f'bags/jrdb/runs/{t}_v2_jrdb_{{w}}', 'LiDAR (VLP-16) + 5 cameras, depth projected from the LiDAR',
@@ -75,7 +78,7 @@ def main():
     sfx = ('H' if a.heldout else 'S10' if a.seq10 else '') + ('T' if a.tune else '') + ('pano' if a.pano else '')
     methods = dict(METHODS_JRDB, SINS=SINS_TUNE) if a.tune else (METHODS_JRDB if a.jrdb else METHODS)
     if a.heldout or a.seq10:
-        methods = {k: v for k, v in dict(METHODS, SINS=SINS_HELDOUT).items() if k not in ('SINS (before)', 'M-detector 0.25x')}
+        methods = {k: v for k, v in (dict(METHODS, SINS=SINS_HELDOUT_V6, **{'SINS v5': SINS_HELDOUT}) if a.heldout else dict(METHODS, SINS=SINS_HELDOUT)).items() if k not in ('SINS (before)', 'M-detector 0.25x')}
     gt_of = (lambda w: REPO / f'bags/jrdb/{w}') if a.jrdb else (lambda w: REPO / f'bags/coda/coda{cw(w)}')
     out = {}
     for name, runs in methods.items():

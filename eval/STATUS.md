@@ -979,3 +979,17 @@ tutto sotto di lui intorno al robot.
   seq10 moving rec 51%, MOTA 27; seq0 MOTA 66: troppo poco.
   B1 come candidato v6 su held-out 11+12 (valutazione unica, criterio fissato prima: moving MOTA >= v5): moving rec
   46,5 -> 50,3%, prec 77,8 -> 74,0%, MOTA 32,1 -> 31,1, FP/min 1245 -> 1425. NON adottato: profilo resta heldout-v5.
+- (04/11) Diagnosi tick per tick (D7 = v5 + track_debug_csv, nuovo parametro diagnostico: una riga CSV per traccia per
+  tick con stato, flag di moto, dimensioni) sui pedoni in movimento della seq 10 (tuning): trovati 52%; persi per
+  disocclusione 23%, traccia appena nata non confermata 9%, traccia in coasting 7%, nessun cluster 5%, altro 4%.
+  Script in eval/diagnostics/coda_walkers/ (attrib.py, occl3.py). Dei 39k blocchi di disocclusione solo il 4% cade su
+  pedoni; tra quelli con evidenza di moto, sagoma persona (h 1,0-1,9 m, impronta 0,3-0,9 m) + velocita' KF 0,8-2,2 m/s
+  => 82% pedoni (contro 11%), copre il 68% dei pedoni bloccati.
+  Nuovo parametro track_disocclusion_person_exempt (+ _min/_max_speed/height/footprint; default off). P1 x3:
+  seq10 moving rec 49 -> 60%, MOTA 25 -> 31, ALL MOTA ~0 -> 11, FP/min 1465 -> 1390; seq0 moving rec 88 -> 84,
+  MOTA 68 -> 67, FP/min 166 -> 158 (calo da un solo episodio in w2: persona a 0-5 m fusa con un'altra in un cluster
+  di 3,5 m, la traccia nuova rinasce piu' tardi; D8/D9).
+  Held-out 11+12 (seconda valutazione dopo B1, stesso criterio moving MOTA >= v5): moving rec 46,5 -> 50,8%, prec 77,8
+  -> 75,2%, MOTA 32,1 -> 32,6; ALL rec 50,5 -> 54,4%, ALL MOTA 15,6 -> 14,3, FP/min 1245 -> 1438. ADOTTATO come
+  heldout-v6 (guadagno modesto; il +11 punti di recall in tuning diventa +4 su held-out). Latenza: qualche confronto
+  per traccia, trascurabile. Prossime cause: tracce non confermate/coasting (16%, frammentazione vicino al robot).
