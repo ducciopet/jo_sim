@@ -1044,3 +1044,29 @@ tutto sotto di lui intorno al robot.
   Bag sensori spostata sul NAS (datasets_SINS/derived/mdp_street, md5 verificato) per far posto alla seq 16.
 - (04/11 sera) run_coda.sh: tolto l'instradamento delle finestre 10_* sul profilo coda10 (premessa sbagliata, vedi GT
   sopra); il profilo resta in eval/configs ma non e' usato. convert_coda_heldout.sh: ONLY=wK converte una sola finestra.
+- (05/11) TRACKING/MOTO SENZA SOGLIE PER TIPO (richiesta utente: meno hardcoded). Regole nuove in tracker_node (tutte
+  default off, sins c807344): W1 track_two_point_init (velocita' KF dalle prime due osservazioni: prima tutto cio' che
+  andava > ~3 m/s rinasceva a ogni scansione), W2 track_size_gate_body_lengths 1.0 (size gate passato dopo aver
+  percorso la propria lunghezza), N track_motion_min_net_footprints 0.5 (moto solo dopo che il centro ha lasciato il
+  punto di nascita di max(0,3 m, mezzo ingombro)), C track_motion_consistency_window 1 s / ratio 0.5 (velocita' KF
+  confermata dallo spostamento osservato), J track_jitter_footprint_scale 1.0 (gate di associazione meno mezzo
+  ingombro della traccia), M track_fragment_merge_margin 0.3 (pezzi dentro l'ingombro previsto di una traccia in moto
+  fusi prima dell'associazione). Profili coda_w1/w/w1n/wn/wnc/wncjm, mdp_street_idem. W NON usa i gate V2 per oggetti grandi.
+  Street (media 3 rip., dynamic_only 15 m; rec / prec / MOTA | rec veicoli, persone):
+    V2 46,2/80,9/34,2 | 34,9 48,2;  W1 53,9/82,9/41,6 | 32,2 57,6;  W 58,7/82,3/44,8 | 39,9 61,9
+    (solo rip. 2-3:) WN 57,5/82,7/44,3 | 36,0 61,2;  W1N 51,8/83,4/40,4 | 27,5 56,0. Latenza scan->tracce 98,3 / p95 115 ms.
+  CODa tuning, moving only, media 3 rip. (rec/prec/MOTA), K0 = profilo coda attuale con GT nuova:
+    seq 0:  K0 85,6/85,5/70,8  W1 86,5/74,7/57,0  W 85,0/68,9/46,3  W1N 84,5/80,1/63,3  WN 83,9/77,9/59,9
+    seq 10: K0 54,0/70,4/29,4  W1 61,2/68,5/30,6  W 60,8/66,6/27,2  W1N 59,5/69,9/31,6  WN (r1-2) 60,2/68,5/29,2
+    seq 16: K0 62,7/93,6/57,3  W1 67,9/93,5/61,6  W 73,9/89,9/62,7  W1N 67,1/94,0/61,5  WN 73,6/91,2/63,9
+  Seq 0: FP = frammenti fermi (centro sposta < 0,5 m, KF 0,5-0,8 m/s) dichiarati dinamici: l'init a due punti da' loro
+  velocita'; N dimezza l'aumento (FP righe 59 K0 -> 208 W1 -> 138 W1N). C pensata per il resto (non ancora provata).
+  Auto street (scratchpad -> eval/scripts/analysis/car_clusters.py, car_gaps.py): 33% dei fotogrammi auto in >= 2
+  cluster; salto del centro > 0,6 m nel 24% delle scansioni (gate persona 0,6/1,0 m); tra i pezzi distacco tipico 0,45 m
+  (5-10 m) e 0,80 m (10-15 m) contro eps 0,33/0,40: eps spiega ~1/3-1/2, il resto sono buchi veri -> J + M. Eps far
+  0,45 -> ~0,7 m nel profilo street ancora da provare.
+  Run perse per errori DDS UDP (meta' scansioni): street wn/w1n rip. 1, CODa KWNr3 10_w4/10_w5 -> da rifare.
+  PASSAGGIO AL PC DEL LABORATORIO (05/11 sera): esperimenti interrotti; in coda eval/scripts/analysis/lab_resume.sh
+  (build, KWNr3 10_w4/w5, CODa KWNC/KWNCJM x3, street wnc/wncjm x3 + wn/w1n rip. 1, punteggi). Dati sul NAS
+  datasets_SINS/derived/{coda_windows,mdp_street_work}; setup docker/setup_lab_pc.sh (DDS solo localhost).
+  Prossimo: scegliere tra WN, WNC, WNCJM (CODa 0/10/16 + street), poi held-out 11-12 col profilo congelato.

@@ -42,6 +42,9 @@ services:
   jo-sim:
     volumes:
       - $MNT:/mnt/nas
+    environment:
+      # DDS only on this machine: on the laptop UDP write failures towards the LAN address dropped half the scans of some runs
+      - ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
 EOF
 ok "repo pronto; nel container il NAS sara' in /mnt/nas"
 
