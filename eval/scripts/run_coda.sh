@@ -11,7 +11,7 @@ for w in ${@:-w1 w2 w3}; do
   out=$D/runs/${TAG:-t0}_v2_coda$w
   [ -e $out.done ] && continue
   mkdir -p $D/runs
-  ENV=coda   # one profile for every CODa sequence (the GT now lists all vehicle classes, so no per-seq class list)
+  ENV=${ENV:-coda}   # one profile for every CODa sequence (the GT now lists all vehicle classes, so no per-seq class list)
   CAMS=front_camera; XB=""; XS=""; AC=""
   if [ -n "$STEREO" ]; then
     CAMS=front_camera,stereo_camera; XB=$D/coda${w}_stereo; XS=stereo_camera; AC="[front_camera, stereo_camera]"

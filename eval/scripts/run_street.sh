@@ -1,11 +1,11 @@
 #!/bin/bash
 # SINS on Marina di Pisa "street" (robot still on the kerb), inside the container: profile mdp_street (A) and
 # mdp_street_v1 (B = A + large-mover size-gate bypass V1), alternated, 3 repetitions. Real-time replay, 18.4 min each.
-# usage (container): bash /home/ros/bags/mdp/run_street.sh
+# usage (container): [PROFILES="p1 p2"] bash /home/ros/bags/mdp/run_street.sh
 D=/home/ros/bags/mdp; R=/home/ros/bags/replay
 mkdir -p $D/runs
 for rep in 1 2 3; do
-  for P in mdp_street mdp_street_v1; do
+  for P in ${PROFILES:-mdp_street mdp_street_v1}; do
     out=$D/runs/${P}_r${rep}
     [ -e $out.done ] && continue
     echo "$(date +%T) start $P rep $rep"
