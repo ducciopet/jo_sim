@@ -48,6 +48,13 @@ services:
 EOF
 ok "repo pronto; nel container il NAS sara' in /mnt/nas"
 
+# push da questo PC (Claude committa qui): identita' git + login GitHub con gh (codice nel browser, nessuna password salvata a mano)
+git config --global user.name >/dev/null || git config --global user.name "ducciopet"
+git config --global user.email >/dev/null || git config --global user.email "ducciopetreni00@gmail.com"
+command -v gh >/dev/null || sudo apt-get install -y -qq gh >/dev/null
+gh auth status >/dev/null 2>&1 || gh auth login --hostname github.com --git-protocol https --web
+gh auth setup-git && ok "GitHub: $(gh api user -q .login 2>/dev/null) puo' fare push (repo + sottomoduli)"
+
 step "4/8 Docker + GPU NVIDIA"
 command -v docker >/dev/null || sudo apt-get install -y -qq docker.io docker-compose-v2 >/dev/null
 sudo usermod -aG docker $USER
