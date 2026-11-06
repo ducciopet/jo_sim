@@ -1070,3 +1070,22 @@ tutto sotto di lui intorno al robot.
   (build, KWNr3 10_w4/w5, CODa KWNC/KWNCJM x3, street wnc/wncjm x3 + wn/w1n rip. 1, punteggi). Dati sul NAS
   datasets_SINS/derived/{coda_windows,mdp_street_work}; setup docker/setup_lab_pc.sh (DDS solo localhost).
   Prossimo: scegliere tra WN, WNC, WNCJM (CODa 0/10/16 + street), poi held-out 11-12 col profilo congelato.
+- 06/11 PC DEL LABORATORIO (i7-13650HX, RTX 4060 Laptop, 31 GB RAM, disco ~10-20 GB liberi, PC condiviso):
+  WN / WNC / WNCJM x3 rifatti tutti qui (tag LWN/LWNC/LWNCJM [r2|r3], street in eval/results/mdp_lab/), script
+  locale eval/scripts/analysis/lab_local.sh (non committato). lab_resume.sh fermato dopo KWNr3: replay dal NAS (CIFS,
+  1 Gb/s = 117 MB/s contro ~87 MB/s chiesti da una finestra CODa+stereo) perdeva scansioni (10_w4: 267/400), quindi
+  ogni finestra viene copiata in locale, girata 9 volte e cancellata. KWNr3_10_w4/w5 NON validi.
+  Latenza CODa su questo PC ~190 ms mediana (p90 340-400) contro 98 sul portatile: il ritardo nasce in dbscan_detector
+  (detections3d gia' a ~184 ms, YOLO 35-59 ms) e si accumula nelle parti affollate -> qui non tiene i 10 Hz su CODa
+  (profilo energetico "performance" durante le run). Street: 96 ms / p90 109, come il portatile.
+  Riproducibilita': LWN vs WN del portatile seq 0 60,1 vs 59,9; seq 10 33,2 vs 29,2; seq 16 70,0 vs 63,9; street 43,2 vs 44,3.
+  CODa moving only, media 3 rip. (rec/prec/MOTA, pooled per sequenza) [min-max MOTA]:
+    seq 0:  WN 83,3/78,4/60,1 [57-64]  WNC 84,8/83,4/67,8 [66-71]  WNCJM 48,8/74,5/34,7 [6-52]
+    seq 10: WN 63,9/68,5/33,2 [31-35]  WNC 61,2/69,8/34,0 [34-34]  WNCJM 46,3/66,2/22,1 [22-22]
+    seq 16: WN 74,3/95,1/70,0 [69-71]  WNC 72,8/95,3/68,6 [68-70]  WNCJM 58,2/94,3/54,2 [51-56]
+  Street 15 m (rec/prec/MOTA | rec veicoli, persone): WN 57,0/81,9/43,2 | 35,3 60,7;  WNC 54,5/83,1/42,5 | 32,0 58,3;
+    WNCJM 55,0/84,7/44,3 | 38,4 57,9.
+  WNCJM su CODa e' instabile e peggiore (seq 0 w1 r3 recall 0, w2 recall 29-46): J/M rompono i pedoni -> scartare o
+  limitare J/M ai veicoli. WNC: +7,7 MOTA su seq 0 (meno FP), pari su 10, -1,4 su 16, -0,7 street.
+  LWN w3 r1 aveva 176/400 tracce: rifatta (400/400), la vecchia e' LWN_w3_scartata_176su400.json.
+  Prossimo: decidere WN vs WNC (o C solo CODa), J/M solo per veicoli sulla street; poi held-out 11-12.
