@@ -62,6 +62,7 @@ class EvalConfig:
     t_start: float = None          # [s] relative to the first GT sample, optional
     t_end: float = None
     skip_missing_gt: bool = True   # skip frames where a GT track has a gap inside its span
+    frame_times: object = None     # optional array of times [s]: score only the grid frames nearest to them (CODa split)
     roi: tuple = None              # (xmin, xmax, ymin, ymax) in GT frame; predictions outside ignored
     label_mode: str = 'full'       # 'full' | 'dynamic_only' | 'merged' — see the module docstring
 
@@ -190,6 +191,11 @@ def evaluate(gt, pred, cfg=None):
         keep = np.array(keep, dtype=bool)
     else:
         keep = np.ones(len(grid), dtype=bool)
+    if cfg.frame_times is not None:
+        ft = np.sort(np.asarray(cfg.frame_times, float))
+        j = np.clip(np.searchsorted(ft, grid), 1, max(1, len(ft) - 1))
+        near = np.minimum(np.abs(grid - ft[j - 1]), np.abs(grid - ft[np.minimum(j, len(ft) - 1)]))
+        keep &= near <= 0.5 / cfg.rate_hz
     res = EvalResult(num_frames=int(keep.sum()), num_frames_skipped=int((~keep).sum()))
     grid = grid[keep]
     G = [g for g, k in zip(G, keep) if k]

@@ -21,6 +21,7 @@ usage: coda_eval.py --run <out bag> --gt <window>_gt.csv --odom <window>_odom [-
 """
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -173,6 +174,10 @@ def main():
                     'its labelled frame, is dropped (neither TP nor FP)')
     ap.add_argument('--extra-ignore-dist', type=float, default=0.3)
     ap.add_argument('--extra-ignore-dt', type=float, default=0.5)
+    ap.add_argument('--frames', default='all', choices=['all', 'training', 'validation', 'testing'],
+                    help="score only the annotated frames of this split of CODa's official per-frame split "
+                         "(metadata/<seq>.json ObjectTracking); 'testing' = frames never used to train the learned baselines")
+    ap.add_argument('--coda-root', default='/mnt/nas-imperatore/datasets_SINS/CODa')
     ap.add_argument('--out')
     a = ap.parse_args()
 
@@ -191,13 +196,21 @@ def main():
         pred = load_dynamic_points(a.run, topic, min_points=20) if ids is None else load_marker_boxes(a.run, topic, persistent_ids=ids)
     pred, n_far, n_ign = filter_pred(pred, ign, frames, odom, odom_ground_z(a.odom), a)
     res = {}
+    ftimes = None
+    if a.frames != 'all':
+        info = json.load(open(Path(a.gt).with_suffix('.json')))
+        meta = json.load(open(Path(a.coda_root) / 'metadata' / f"{info['seq']}.json"))['ObjectTracking'][a.frames]
+        split = {int(re.findall(r'_(\d+)\.json$', f)[0]) for f in meta}
+        ftimes = [t / 1e9 for f, t in zip(info['annotated_frames'], info['annotated_t_ns']) if int(f) in split]
+        gstats = dict(gstats, split=a.frames, split_frames=len(ftimes))
     for mode in ('full', 'merged', 'dynamic_only'):
-        r = evaluate(gt, pred, EvalConfig(match_dist=a.match_dist, label_mode=mode, skip_missing_gt=False))
+        r = evaluate(gt, pred, EvalConfig(match_dist=a.match_dist, label_mode=mode, skip_missing_gt=False,
+                                          frame_times=ftimes))
         res[mode] = r.to_dict()
     out = dict(run=a.run, topic=topic, gt=gstats, pred_dropped_out_of_range=n_far, pred_dropped_ignore=n_ign,
                config=vars(a), metrics=res)
     m, s, d = res['merged'], res['full'], res['dynamic_only']
-    dur_min = (frames[-1] - frames[0]) / 6e10
+    dur_min = (frames[-1] - frames[0]) / 6e10 * (1.0 if ftimes is None else len(ftimes) / len(frames))   # split: its share of the time
     print(f"{Path(a.run).name}: merged recall {m['tp'] / max(1, m['tp'] + m['fn']):.1%}  "
           f"FP/min {m['fp'] / dur_min:.1f}  IDF1 {m['idf1']:.1%}  IDSW {m['idsw']}  MOTA {m['mota']:.1%}  "
           f"MOTP {m['motp']:.2f} m | moving only: recall {d['tp'] / max(1, d['tp'] + d['fn']):.1%} FP/min {d['fp'] / dur_min:.1f} "
