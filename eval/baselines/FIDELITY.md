@@ -31,68 +31,82 @@ Conseguenza:
   circa 15% delle finestre, non usati in addestramento né in validazione. È lo stesso sottoinsieme per tutti. Va
   aggiunta in `eval/coda_eval.py` un'opzione `--frames testing`, con la lista dei fotogrammi da `metadata/<seq>.json`.
   Il punteggio sull'intera finestra resta come cifra secondaria, con la nota "CenterPoint/EagerMOT: train set".
-- [?] Verificare nel repo UniMT (TossherO) come sono stati costruiti `coda_infos_train/val.pkl`: se seguono lo split
-  ufficiale, i fotogrammi `testing` sono puliti. Se invece fondono train e val, serve comunque `testing`.
+- Il paper CODa conferma lo split "70%, 15%, 15% di ogni sequenza annotata". Nella pipeline ufficiale (coda-models)
+  il `val` usato durante l'addestramento carica il **test**: i fotogrammi `testing` non sono in addestramento, ma
+  possono essere serviti a scegliere il checkpoint. Da dichiarare nella tabella.
 
 ## 2. Schede
 
 ### Dynablox (Schmid et al., RA-L 2023) — LiDAR, geometrico, online
-- Paper [P]: dataset DOALS (Pfreundschuh et al. 2021; Ouster OS1-64, ambienti urbani e al chiuso, etichette di punti
-  dinamici su fotogrammi campione) più un dataset CARLA proprio. Metriche: IoU e precisione/recall per punto
-  (e per oggetto). Online in tempo reale su CPU, con pose da odometria/SLAM e nuvole **de-skew** (le demo DOALS usano
-  `lidar_undistortion`).
-- Config ufficiale: `dynablox_ros/config/motion_detector/default.yaml` (commit `44a1537`). Qui: sensore e frame
-  adattati (VLP-16 nel lab, OS1-128 su CODa), `max_range 25` su CODa (stesso raggio della valutazione).
-- Ingresso qui: odometria condivisa; nessun de-skew (tolta la dipendenza `lidar_undistortion`). Su CODa le nuvole
-  sono già de-skew dal dataset? [?] (le OS1 di CODa sono "3d_raw"; controllare se sono compensate).
-- Deviazioni:
-  1. Senza de-skew nelle sequenze con robot in moto [?];
-  2. `min_cluster_size` 20 sia su CODa sia nel lab: confrontare con `default.yaml` [?] (la nota chiedeva se è stato
-     cambiato);
-  3. patch di uscita per esportare l'ID del cluster (non cambia il rilevamento) [V].
-- Riproduzione (fase B): DOALS è pubblico (ETH, senza registrazione) [?]. Rifare l'IoU per punto di una sequenza.
+- Paper (arXiv 2304.10049, letto 06/11): DOALS, Ouster OS1-64 a 10 Hz, 8 sequenze in 4 ambienti; 10 fotogrammi
+  annotati per sequenza. Metrica: **IoU per punto** dei punti dinamici, media sui 10 fotogrammi. Tabella I:
+  **83,8%** a raggio pieno, **86,0%** entro 20 m (Station 87,3, Shopville 87,8, HG 86,0, Niederdorf 83,1).
+  Runtime 17 FPS (58 ms) su un NUC con CPU AMD 4800U. Parametri del paper: voxel 0,2 m, τ_s = 2, τ_w = 5,
+  τ_c = 20 (cluster minimo, in voxel), integrazione 20 m. La fonte delle pose su DOALS non è dichiarata; i dati
+  nuovi usano FAST-LIO2. Il de-skew non è dichiarato.
+- Config ufficiale `default.yaml` (main): `max_range 20`, `min_cluster_size 20`, `counter_to_reset 150`,
+  `temporal_buffer 2`, `burn_in_period 5`, voxel 0,2 [V, README]. Il nostro `motion_detector_coda.yaml` ha gli
+  stessi valori, tranne **`max_range 25`** (scelto per uguagliare il raggio di valutazione) [V].
+  Il `min_cluster_size 20` è quello del paper, non cambiato [V].
+- Ingresso qui: odometria condivisa (non FAST-LIO), nessun de-skew [V].
+- Deviazioni da dichiarare o correggere:
+  1. `max_range` 25 invece di 20: riportarlo a 20 (valore del paper e del default), oppure dichiararlo;
+  2. pose dall'odometria del dataset invece che da FAST-LIO2: nessuna correzione, si dichiara;
+  3. patch di uscita per l'ID del cluster (non cambia il rilevamento).
+- Riproduzione (fase B): DOALS (`download_doals_data.sh`, projects.asl.ethz.ch, registrazione da verificare),
+  script `evaluate_data.py` nel repo. Obiettivo: 86,0% di IoU entro 20 m (tolleranza pochi punti).
 
 ### M-detector (Wu et al., Nat. Commun. 2024) — LiDAR, geometrico, online
-- Paper [P]: KITTI, SemanticKITTI, nuScenes, Waymo, più dataset AVIA (Livox). Metrica: IoU per punto dell'etichetta
-  dinamica. Online a 10 Hz con odometria di FAST-LIO, una posa per scansione.
-- Config ufficiali per KITTI (64 linee), nuScenes (32), Waymo (64), AVIA. Qui `coda.yaml` parte da `nuscenes0.yaml`
-  (`dataset: 1`), con FOV e numero di punti dell'OS1-128 [V]. Per un LiDAR a 128 linee forse è più vicina la config
-  KITTI/Waymo: da decidere confrontando le risoluzioni verticali [?].
-- Ingresso qui: odometria condivisa, una posa per nuvola interpolata al timestamp (`make_input*.py`) [V].
-- Deviazioni:
-  1. A 1x perde metà delle scansioni da 131k punti e poi accoppia nuvole e pose sbagliate (recall 5,6% contro 43,0%
-     a 0,25x) [V]. Usare **0,25x** (dichiarato: "offline, rallentato 4x") e verificare che ogni nuvola abbia la sua
-     posa (`check_run.py` sulle coppie);
-  2. uscita a punti → DBSCAN comune (eps 0,5 m; min 5 punti nel lab, 20 su CODa) [V]: è un post-processing nostro
-     uguale per tutti i metodi a punti, da dichiarare;
-  3. patch solo di build (TBB) [V].
-- Riproduzione (fase B): dati e etichette degli autori (KITTI/SemanticKITTI pubblici; SemanticKITTI è già sul NAS in
-  `datasets_SINS/SemanticKITTI`). Rifare l'IoU su una sequenza SemanticKITTI con la config KITTI.
+- Paper (PMC10771495, letto in parte 06/11): KITTI, nuScenes, Waymo, AVIA-Indoor (119 sequenze, 51 min).
+  Metrica: IoU per punto "evento / non evento". Unico numero leggibile nel testo: **KITTI, modalità frame-out,
+  IoU 0,746**. Gli altri sono nella Fig. 5a, da leggere sul PDF [?]. Pose: **FAST-LIO2 per tutti i metodi**; le nuvole
+  entrano già compensate dal moto (topic `/cloud_registered_body`). Runtime su i7-10700: 87,3 ms per scansione
+  KITTI (periodo 100 ms), quindi appena in tempo reale.
+- Repo: config per kitti, nuscenes, waymo, avia, mid360; launch `detector_<dataset>.launch`, `cal_recall.launch`
+  per l'IoU; bag degli autori su Google Drive, dati del paper su Figshare (10.6084/m9.figshare.24481966).
+- Qui `coda.yaml` parte da `nuscenes0.yaml` (`dataset: 1`, 32 linee a 20 Hz) [V]. Per l'OS1-128 a 10 Hz è più
+  vicina la config KITTI (64 linee, 10 Hz, ~120k punti per scansione, come i 131k di CODa): **da rifare con base
+  kitti** e dichiarare.
+- Ingresso qui: odometria condivisa interpolata, una posa per nuvola, nuvola **non** compensata [V]. Nel paper le
+  nuvole arrivano compensate da FAST-LIO2: deviazione da correggere (de-skew con l'odometria) oppure da dichiarare.
+- A 1x su questo hardware perde metà delle scansioni da 131k punti (il paper stesso è a 87 ms su 100 ms per i 120k
+  di KITTI) [V]. Usare **0,25x**, dichiarato "offline, rallentato 4x", e verificare le coppie nuvola/posa.
+- Uscita a punti → DBSCAN comune (eps 0,5 m; min 5 punti nel lab, 20 su CODa): post-processing nostro, uguale per
+  tutti i metodi a punti, da dichiarare [V].
+- Riproduzione (fase B): KITTI frame-out 0,746. Servono le etichette degli autori (Figshare o Drive) e FAST-LIO2.
+  SemanticKITTI è già sul NAS, ma il paper **non** riporta un numero SemanticKITTI leggibile: usarlo solo se le
+  etichette degli autori coincidono con le classi "moving" di SemanticKITTI [?].
 
-### LV-DOT (Xu et al., 2025) — LiDAR + RGB-D + YOLO, online
-- Paper [P]: robot propri (LiDAR a basso numero di linee / Livox + RealSense D435i, al chiuso e all'aperto, su
-  Jetson). Metriche: precisione/recall di rilevamento, errore di posizione e velocità. Codice commit `449bf2c`.
-- Qui: nel lab sensori molto vicini a quelli del paper (VLP-16 + D435) [V]. Su CODa: depth della ZED (stereo,
-  960x540), LiDAR OS1-128, `ground/roof_height` di default, calibrazione per sequenza (`make_param_coda.py`) [V].
-- Deviazioni: su CODa quasi zero rilevazioni (recall 1-4%) [V]. Probabili cause, da verificare in quest'ordine [?]:
-  1. depth ZED stereo (rumorosa e senza `depth_scale` RealSense) invece di una RGB-D attiva;
-  2. 131k punti per scansione contro i ~20k del sensore per cui è tarato (downsampling, tempo di calcolo);
-  3. altezze pavimento/soffitto: con l'origine odom a terra, `ground_height 0.2` può tagliare i piedi.
-  Se resta fuori dalle sue condizioni, va **escluso da CODa** con motivazione ("nessuna RGB-D attiva in CODa"), come
-  già per JRDB.
-- Riproduzione (fase B): i dati del paper non sono pubblici [?]. Fedeltà = config upstream intatta sul lab.
+### LV-DOT (Xu et al., arXiv 2502.20607, 2025) — LiDAR + RGB-D + YOLO, online
+- Paper (letto 06/11): quadricottero con **Livox Mid-360 + RealSense D435i (RGB-D attiva)**, pose da Fast-LIO2,
+  Jetson Orin NX; valutazione **solo al chiuso** (7 scenari + 2 prove con motion capture, 635 fotogrammi annotati,
+  dataset non pubblico). KITTI/nuScenes scartati dagli autori perché all'aperto. Metriche: precisione/recall/F1 dei
+  box 3D dinamici a IoU 0,3/0,5/0,7. LV-DOT completo: **P 74,5% R 88,3% F1 0,794** (IoU 0,3); 0,764 (0,5); 0,641
+  (0,7). Tempi: LiDAR 8,3 ms, depth 10,2 ms, YOLO 34,2 ms. LiDAR ridotto a **N_max = 3000 punti** prima del DBSCAN.
+- Nel lab le condizioni sono vicine a quelle del paper: al chiuso, VLP-16 (16 linee, 360°) al posto del Mid-360,
+  D435 RGB-D attiva, odometria condivisa al posto di Fast-LIO2 [V]. Config upstream, solo I/O e altezze del
+  pavimento/soffitto adattate [V].
+- Su CODa è **fuori dalle condizioni del paper**: all'aperto, depth stereo ZED (non RGB-D attiva), OS1-128.
+  Recall 1-4% [V]. **Proposta: escluderlo da CODa e JRDB** (come già per JRDB), con la motivazione "il paper lo
+  valuta solo al chiuso con RGB-D attiva". In alternativa la modalità solo-LiDAR di LV-DOT (prevista dal README) si
+  potrebbe usare su CODa, ma resta all'aperto: decisione dell'utente.
+- Riproduzione (fase B): impossibile (dataset non pubblico). C'è solo il bag demo `corridor_demo.bag` (cmu.box.com),
+  senza etichette. Fedeltà = config upstream intatta + condizioni del lab vicine a quelle del paper.
 
 ### CenterPoint + SimpleTrack (UniMT, He et al. 2025) — appreso
-- CenterPoint (Yin et al., CVPR 2021): nuScenes/Waymo, mAP/NDS. Su CODa: pesi degli autori UniMT
-  (`centerpoint_coda_cfg.py`, mmdet3d, CenterHead standard, nessuna chiave mancante) [V]. SimpleTrack (Pang et al.,
-  ECCVW 2022): AMOTA/MOTA su nuScenes/Waymo, offline.
-- Qui: script upstream `infer.py` degli autori per CODa, soglia 0,1, SimpleTrack `coda_configs/diou.yaml` [V].
-- Deviazioni:
-  1. **contaminazione train** (sezione 1) [V];
-  2. classifica oggetti, non moto: tutte le tracce contano come "dinamiche" [V];
-  3. offline (frame dal manifest), dichiarato [V].
-- Riproduzione (fase B): mAP CenterPoint sullo split val CODa contro il numero di UniMT / del paper CODa [P].
-  Richiede `coda_infos_val.pkl` (script degli autori) e la valutazione mmdet3d.
+- Pesi CenterPoint CODa dal repo degli autori (TossherO/ros_packages), config `centerpoint_coda_cfg.py`, nessuna chiave
+  mancante [V]. Il repo non contiene la creazione dei `coda_infos_*.pkl`: quei nomi vengono dalla pipeline ufficiale
+  ut-amrl/coda-models, dove **`val` carica `coda_infos_test.pkl`** ("hack bc test split in coda is used as
+  validation"). Quindi anche i fotogrammi `testing` possono essere stati usati per scegliere il checkpoint [P].
+  Restano comunque mai visti in addestramento, e sono l'unico sottoinsieme non addestrato.
+- Paper CODa (arXiv 2309.13549, Tabella IV): CenterPoint (voxel) **AP_BEV 82,08 / AP_3D 76,92**, PV-RCNN 92,08 /
+  91,11; mAP su auto, pedoni, ciclisti, IoU 0,7/0,5/0,5, media easy/medium/hard, split **medium**, LiDAR 128 linee.
+  Questi pesi però sono di UniMT, non degli autori CODa: il loro numero non è dichiarato [?].
+- Qui: script upstream degli autori per CODa, soglia 0,1, SimpleTrack `coda_configs/diou.yaml` [V].
+- Deviazioni: contaminazione train (sezione 1); classifica oggetti, non moto (tutte le tracce "dinamiche"); offline.
+- Riproduzione (fase B): mAP sui fotogrammi `testing`/val CODa con la valutazione KITTI-style. Obiettivo: quello che
+  dichiara UniMT [?], altrimenti l'ordine di grandezza della Tabella IV (AP_3D ~77). Richiede l'immagine
+  `unimt-noetic` e i pesi (Google Drive degli autori, senza registrazione).
 
 ### EagerMOT (Kim et al., ICRA 2021) — tracker su rilevatori appresi
 - Paper [P]: KITTI (HOTA) e nuScenes (AMOTA), con PointGNN/CenterPoint 3D + rilevatori 2D. Codice `2792a76`,
@@ -105,6 +119,22 @@ Conseguenza:
 
 ### Xu et al. RGB-D (RA-L 2023) — solo lab (CODa non ha RGB-D attiva; JRDB non ha depth)
 - Solo per le 6 sequenze Qualisys, già fedeli (config upstream, I/O adattato) [V].
+
+## Riepilogo deviazioni (06/11)
+
+| Metodo | Dataset | Deviazione | Azione |
+|---|---|---|---|
+| Dynablox | CODa | `max_range` 25 invece di 20 (paper, default) | riportare a 20 |
+| Dynablox | JRDB | `max_range` 15 | dichiarare (raggio di valutazione 15 m) |
+| Dynablox | lab, JRDB | LiDAR a 16 linee: il paper è su OS1-64; LV-DOT stesso nota che Dynablox soffre con LiDAR radi | dichiarare |
+| Dynablox, M-detector | tutti | pose dall'odometria del dataset, non FAST-LIO2; nuvole non compensate | de-skew con l'odometria o dichiarare |
+| M-detector | CODa | config base nuScenes (32 linee, 20 Hz) per un OS1-128 a 10 Hz | rifare con base KITTI |
+| M-detector | CODa | 1x perde scansioni | 0,25x, dichiarato "offline 4x" |
+| M-detector | tutti | punti → DBSCAN comune (nostro) | dichiarare |
+| LV-DOT | CODa, JRDB | all'aperto, senza RGB-D attiva (paper: solo al chiuso, D435i) | escludere (proposta) |
+| CenterPoint, EagerMOT | CODa | ~70% dei fotogrammi valutati in training; `testing` forse usato come validazione | valutare sui fotogrammi `testing` |
+| CenterPoint, EagerMOT | tutti | classificano oggetti, non moto | tutte le tracce "dinamiche", dichiarare |
+| SINS | – | modalità solo camera non disponibile senza modifiche | decisione dell'utente |
 
 ## 3. Sensori: dataset × metodi, e SINS per modalità
 
