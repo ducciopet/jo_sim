@@ -1089,3 +1089,15 @@ tutto sotto di lui intorno al robot.
   limitare J/M ai veicoli. WNC: +7,7 MOTA su seq 0 (meno FP), pari su 10, -1,4 su 16, -0,7 street.
   LWN w3 r1 aveva 176/400 tracce: rifatta (400/400), la vecchia e' LWN_w3_scartata_176su400.json.
   Prossimo: decidere WN vs WNC (o C solo CODa), J/M solo per veicoli sulla street; poi held-out 11-12.
+- 06/11 PORTATILE, WNC vs WNCE (= WNC + lidar_eps_far 0,45 -> 0,7), CODa 0/10/16 x3 (tag KWNC/KWNCE [r2|r3]),
+  script eval/scripts/analysis/chain_e.sh. Street interrotta (l'utente porta via il portatile): solo mdp_street_wnc_r1.
+  Decisione 06/11: WNC profilo di riferimento, J/M scartate (niente regole per tipo di cluster).
+  CODa moving only, media 3 rip. (rec/prec/MOTA) [min-max MOTA]:
+    seq 0:  WNC 84,0/81,9/65,1 [61-68]  WNCE 78,4/81,8/60,2 [57-62]   (WN portatile 83,9/77,9/59,9)
+    seq 10: WNC 53,6/69,8/28,3 [26-30]  WNCE 53,3/70,6/29,1 [26-31]
+    seq 16: WNC 68,1/93,6/61,8 [61-63]  WNCE 61,6/93,1/55,2 [50-60]
+  WNC conferma sul portatile il guadagno su seq 0 (+5,2 MOTA vs WN). WNCE peggiore (-4,9 seq 0, -6,6 seq 16) e
+  rallenta DBSCAN: latenza tracce mediana CODa WNC ~200 ms (p90 400-1050), WNCE 377-575 ms (p90 1100-1700), con
+  scansioni perse (w1 497 vs 553). Nota: anche il portatile su CODa (128 linee + stereo) sta a ~200 ms, non 98:
+  i 98 ms (p90 112) valgono per la street (VLP-16). Il PC del laboratorio quindi su CODa e' come il portatile.
+  Prossimo: confermare con LWNCE (lab, CODa + street), poi held-out 11-12 col profilo congelato (WNC salvo sorprese).
