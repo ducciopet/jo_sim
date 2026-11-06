@@ -131,10 +131,10 @@ Conseguenza:
 | M-detector | CODa | config base nuScenes (32 linee, 20 Hz) per un OS1-128 a 10 Hz | rifare con base KITTI |
 | M-detector | CODa | 1x perde scansioni | 0,25x, dichiarato "offline 4x" |
 | M-detector | tutti | punti → DBSCAN comune (nostro) | dichiarare |
-| LV-DOT | CODa, JRDB | all'aperto, senza RGB-D attiva (paper: solo al chiuso, D435i) | escludere (proposta) |
+| LV-DOT | CODa, JRDB | all'aperto, senza RGB-D attiva (paper: solo al chiuso, D435i) | **escluso** (decisione utente 06/11) |
 | CenterPoint, EagerMOT | CODa | ~70% dei fotogrammi valutati in training; `testing` forse usato come validazione | valutare sui fotogrammi `testing` |
 | CenterPoint, EagerMOT | tutti | classificano oggetti, non moto | tutte le tracce "dinamiche", dichiarare |
-| SINS | – | modalità solo camera non disponibile senza modifiche | decisione dell'utente |
+| SINS | – | modalità solo camera non disponibile senza modifiche | da provare con bassa priorità (utente 06/11): ingresso alternativo dietro un flag spento di default, a fine lavoro |
 
 ## 3. Sensori: dataset × metodi, e SINS per modalità
 
