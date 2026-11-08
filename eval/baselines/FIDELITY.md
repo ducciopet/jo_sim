@@ -76,6 +76,17 @@ Conseguenza:
 - Riproduzione (fase B): KITTI frame-out 0,746. Servono le etichette degli autori (Figshare o Drive) e FAST-LIO2.
   SemanticKITTI è già sul NAS, ma il paper **non** riporta un numero SemanticKITTI leggibile: usarlo solo se le
   etichette degli autori coincidono con le classi "moving" di SemanticKITTI [?].
+- **Fase B, 08/11 – metrica riprodotta [V].** Figshare 10.6084/m9.figshare.24481966 (scaricato in
+  datasets_SINS/Mdetector_figshare) contiene per 20 sequenze KITTI le etichette per punto e le uscite di M-detector
+  (`predictions4..9`, frame-out, e `_origin`, point-out). Il paper calcola IoU = TP/(TP+FP+FN) sommando i punti di tutte
+  le sequenze. Con le stesse regole di `cal_recall_multi.cpp` (script `eval/baselines/mdetector/kitti_iou.py`):
+  frame-out 0,754 / 0,738 / 0,717 (predictions7 / 9 / 8), contro **0,746** del paper; point-out 0,58-0,61. La metrica e
+  le uscite pubblicate tornano entro 1 punto. Manca ancora la riproduzione *eseguendo* M-detector: servono le bag KITTI
+  degli autori (Google Drive `kitti/sequences.zip`), al momento bloccate da "troppi download" di Google. **Da scaricare a
+  mano dal browser** (vedi sezione 5).
+- **Config CODa rifatta [V]:** `coda_kitti.yaml` = `kitti0.yaml` con soli sensore, topic e ingombro del robot CODa.
+  `dataset: 1` invece di 0: nel codice 0 aggiunge solo le maschere fisse dell'auto KITTI e il flag intensità 666 di
+  KITTI, che su CODa non hanno senso. `fov_cut` è calcolato ma mai usato nel codice.
 
 ### LV-DOT (Xu et al., arXiv 2502.20607, 2025) — LiDAR + RGB-D + YOLO, online
 - Paper (letto 06/11): quadricottero con **Livox Mid-360 + RealSense D435i (RGB-D attiva)**, pose da Fast-LIO2,
@@ -171,6 +182,12 @@ cam0/cam1): va dichiarato, oppure LV-DOT va escluso da CODa.
 - I pesi UniMT/CenterPoint (Google Drive degli autori) non sono su questo PC [?]: vanno riscaricati sul NAS.
 
 ## 5. Prossimi passi
+
+Download da fare a mano (bloccati per gli accessi automatici, 08/11; non serve registrazione):
+- DOALS (Dynablox): ETH Research Collection https://doi.org/10.3929/ethz-c-000788171 (i vecchi link robotics.ethz.ch
+  non rispondono; il sito ETH risponde "Too Many Requests" agli script) → datasets_SINS/DOALS.
+- Bag KITTI di M-detector: https://drive.google.com/drive/folders/1ASNfrjZB7n9Q-nB4Pm2IwvArFWnTcFAj, file
+  `kitti/sequences.zip` ("troppi download" via script) → datasets_SINS/Mdetector_figshare/gdrive_kitti.
 
 1. Opzione `--frames testing` nel valutatore CODa e rivalutazione di tutte le run esistenti (economico, nessuna
    nuova run).
