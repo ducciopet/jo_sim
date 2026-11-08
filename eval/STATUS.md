@@ -1101,3 +1101,21 @@ tutto sotto di lui intorno al robot.
   scansioni perse (w1 497 vs 553). Nota: anche il portatile su CODa (128 linee + stereo) sta a ~200 ms, non 98:
   i 98 ms (p90 112) valgono per la street (VLP-16). Il PC del laboratorio quindi su CODa e' come il portatile.
   Prossimo: confermare con LWNCE (lab, CODa + street), poi held-out 11-12 col profilo congelato (WNC salvo sorprese).
+- 07/11 PC DEL LABORATORIO, LWNCE + held-out 11/12 (tag LWNCE, LHK = K0 coda, LHW = coda_wnc congelato, stereo, x3).
+  WNCE vs WNC, CODa moving only (rec/prec/MOTA) [min-max MOTA]:
+    seq 0:  WNC 84,8/83,4/67,8 [66-71]  WNCE 81,8/79,8/60,7 [58-65]
+    seq 10: WNC 61,2/69,8/34,0 [34-34]  WNCE 60,4/69,0/29,9 [27-31]
+    seq 16: WNC 72,8/95,3/68,6 [68-70]  WNCE 65,2/91,6/57,8 [57-58]
+  Street 15 m: WNC 54,5/83,1/42,5 | veicoli 32,0 persone 58,3;  WNCE 54,9/84,2/43,7 | veicoli 37,3 persone 57,9.
+  Latenza tracce mediana/p90: CODa WNC 194/355, WNCE 174/424 ms; street 96/109 vs 95/108.
+  DECISIONE: WNCE peggiore su tutte e 3 le sequenze CODa (-4 / -7 / -11 MOTA), aiuta solo i veicoli della street
+  (+1,2 MOTA, +5 recall veicoli) -> profilo congelato = WNC (coda_wnc / mdp_street_wnc). Conferma il portatile.
+  HELD-OUT (nessun parametro toccato guardando 11/12), moving only (rec/prec/MOTA) [min-max MOTA]:
+    seq 11: K0 60,9/77,9/41,8 [38-46]  WNC 61,2/79,5/43,5 [43-44]
+    seq 12: K0 36,7/71,1/19,8 [19-22]  WNC 38,8/68,9/19,6 [19-20]
+  Latenza tracce mediana/p90: seq 11 K0 169/448, WNC 169/388; seq 12 K0 222/501, WNC 225/523 ms.
+  Lettura: sulle sequenze mai viste WNC e' pari o appena meglio di K0 (+1,7 MOTA su 11, pari su 12) e piu' stabile
+  tra le ripetizioni; il grosso guadagno di seq 0 (+7,7) non si generalizza -> WNC non e' overfitting dannoso ma
+  nemmeno un salto. Seq 12 e' difficile per entrambi (recall ~37-39%). Finestre convertite salvate su NAS
+  derived/coda_windows (coda11_w1-3, coda12_w1-3). Profilo energetico tornato su balanced.
+  Prossimo: fasi B/C/D dei baseline (FIDELITY.md).
