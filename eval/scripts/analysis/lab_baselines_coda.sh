@@ -16,7 +16,7 @@ score() {  # method run tag window
     [ -e $res ] && continue
     python3 eval/coda_eval.py --method $1 --run $2 --gt bags/coda/coda$4_gt.csv --odom bags/coda/coda$4_odom \
       --frames $fr --out $res > /dev/null || echo "$(date +%T) SCORE FAIL $3 $4 $fr"
-    python3 -c "import json;d=json.load(open('$res'))['metrics']['dynamic_only'];print('$(date +%T) $3 $4 $fr moving rec %.1f prec %.1f MOTA %.1f'%(100*d['recall'],100*d['precision'],100*d['mota']))" 2>/dev/null
+    python3 -c "import json;d=json.load(open('$res'))['metrics']['dynamic_only'];print('$(date +%T) $3 $4 $fr moving tp %d fn %d fp %d MOTA %.1f'%(d['tp'],d['fn'],d['fp'],100*d['mota']))" 2>/dev/null
   done
 }
 powerprofilesctl set performance 2>/dev/null

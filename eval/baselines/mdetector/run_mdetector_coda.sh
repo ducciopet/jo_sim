@@ -11,10 +11,14 @@ D=$(cd $(dirname $0) && pwd); R=$(cd $D/../../.. && pwd); B=$R/bags; IN=$B/mdete
 mkdir -p $B/mdetector_tmp $B/mdetector_out
 [ -e $IN ] || python3 $D/make_input_coda.py $B/coda/$SEQ $IN
 rm -f $B/mdetector_out/$OUT.bag; mkdir -p $B/mdetector_out/${OUT}_logs
-docker run --rm --name mdetector_run -v $B:/bags -v $D:/jo mdetector-noetic:upstream bash -c "
+# leftover container from a hung run (ours, fixed name); watchdog: a dead master hangs play/record forever
+docker rm -f mdetector_run > /dev/null 2>&1 || true
+set +e
+timeout -k 30 ${RUN_TIMEOUT:-1800} docker run --rm --name mdetector_run -v $B:/bags -v $D:/jo mdetector-noetic:upstream bash -c "
   source /opt/ros/noetic/setup.bash && source /ws/devel/setup.bash
   roscore > /bags/mdetector_out/${OUT}_logs/roscore.log 2>&1 &
-  sleep 4; rosparam set use_sim_time true
+  for i in \$(seq 60); do rosparam list > /dev/null 2>&1 && break; sleep 1; done
+  rosparam set use_sim_time true || exit 3
   roslaunch /jo/run_mdetector_coda.launch cfg:=${CFG:-coda.yaml} > /bags/mdetector_out/${OUT}_logs/detector.log 2>&1 &
   sleep 12
   rosbag record -O /bags/mdetector_out/$OUT.bag /m_detector/point_out /m_detector/frame_out /odom_velodyne __name:=rec > /bags/mdetector_out/${OUT}_logs/rec.log 2>&1 &
@@ -22,6 +26,7 @@ docker run --rm --name mdetector_run -v $B:/bags -v $D:/jo mdetector-noetic:upst
   rosbag play --clock -q -r ${RATE:-1} /bags/mdetector_tmp/in_$SEQ.bag > /bags/mdetector_out/${OUT}_logs/play.log 2>&1
   sleep 3; rosnode kill /rec; sleep 2
 "
+RC=$?; docker rm -f mdetector_run > /dev/null 2>&1 || true; [ $RC = 0 ] || { echo "run failed rc=$RC"; exit $RC; }
 [ "$KEEP" = "--keep-input" ] || rm -f $IN
 touch $B/mdetector_out/$OUT.done
 echo "done $OUT"
