@@ -1119,3 +1119,25 @@ tutto sotto di lui intorno al robot.
   nemmeno un salto. Seq 12 e' difficile per entrambi (recall ~37-39%). Finestre convertite salvate su NAS
   derived/coda_windows (coda11_w1-3, coda12_w1-3). Profilo energetico tornato su balanced.
   Prossimo: fasi B/C/D dei baseline (FIDELITY.md).
+- 09/11 PC DEL LABORATORIO, fase D CODa: Dynablox e M-detector con le condizioni corrette dall'audit (FIDELITY.md) su
+  tutte le 15 finestre (tuning 0/10/16, held-out 11/12), 1 ripetizione (deterministici), script
+  eval/scripts/analysis/lab_baselines_coda.sh, risultati eval/results/coda/cmpF{a,t}_<metodo>_<finestra>.json
+  (a = tutti i fotogrammi annotati, t = solo fotogrammi 'testing' di CODa), bag su NAS derived/baselines_out.
+  Dynablox: max_range 20 (paper). M-detector: coda_kitti.yaml (soglie KITTI, sensore CODa), 0,25x dichiarato.
+  Moving only, pooled per sequenza (rec/prec/MOTA):
+    seq:          0                 10                16               11                12
+    SINS WNC      84,8/83,4/67,8    61,2/69,8/34,0    72,8/95,3/68,6   61,2/79,5/43,5    38,8/68,9/19,6
+    Dynablox 20m  87,5/12,3/-542    70,1/29,7/-100    66,1/74,6/40,6   68,5/48,6/-8,6    59,1/18,7/-207
+    (vecchio 25m  87,4/8,5/-852     76,1/28,5/-120    -                71,3/40,3/-39,3   60,1/15,7/-272)
+    M-det KITTI   79,7/8,9/-811     71,4/40,5/-93     72,7/65,2/-37    69,0/37,2/-108    54,1/29,2/-121
+    (vecchio nuScenes 0,25x seq 0: 79,9/17,5/-375; 1x: recall 10-30%, perde scansioni)
+  Solo fotogrammi 'testing' (~15%): stesso quadro (Dynablox seq 11 MOTA 0,7, seq 12 -201; M-det -100 / -906 su seq 0).
+  Lettura: con le condizioni del paper Dynablox migliora ovunque (meno falsi allarmi a 20 m). M-detector con la
+  base KITTI (scelta prima dei risultati perché il sensore è il più vicino) ha il doppio dei falsi allarmi della base
+  nuScenes su seq 0: si tiene KITTI come configurazione "fedele" e si riporta nuScenes come variante. In ogni caso
+  entrambi i baseline trovano molti pedoni (recall 54-88%) ma con precisione 9-75%: SINS resta l'unico con MOTA
+  positiva ovunque. Incidente: alle 00:17 il master ROS del container è morto e la catena è rimasta appesa 10 h;
+  aggiunti attesa del master, rimozione container rimasto e watchdog di 30 min (d8fa9b1).
+  Fase B: metrica M-detector riprodotta dalle uscite degli autori (0,754 vs 0,746); le etichette sono KITTI tracking
+  (non SemanticKITTI), servono le scansioni tracking o le bag degli autori. DOALS in download dal portatile;
+  pronto eval/baselines/dynablox/doals/ (immagine dynablox-noetic:doals + run_doals.sh, obiettivo 86,0 entro 20 m).
