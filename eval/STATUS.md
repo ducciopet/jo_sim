@@ -1228,3 +1228,14 @@ tutto sotto di lui intorno al robot.
     KB1 decay su frame YOLO nuovi 64,6/30,8/64,0 | 20/23 | -   KA gate fuori FOV 8 m/s 62,1/32,0/64,3 | 8/23 | 45,1, 34,4
     KJ tolleranza ingombro 61,1/29,9/71,5 | 18/18 | 46,4, 46,9 (persone prec 76,5->73,0).
   Lab stanotte (dalle 00:00, slot 23-24 libero): LB1, LV, LJ, LA x3 + strade x3, poi LLF (LiDAR-only col fix).
+- 09/11 sera, DIAGNOSI VEICOLI IN MOTO su CODa (richiesta utente; LFX/LHF, codice corretto). Recall veicoli moving
+  (GT solo veicoli, eval/results/coda_vehicle/): SINS ~6% in totale vs Dynablox/M-det ~40% (10_w4 16 vs 77/70; 16_w1 6 vs
+  51/55; 12_w2 7 vs 41/41; 12_w3 0,2 vs 43/35; 10_w5 53 vs 9/41). I cluster ci sono (82-96% entro 1 m, ma 2-4 pezzi
+  per veicolo). Dove si perde (eval/scripts/analysis/coda_vehicle_where.py, righe GT moving):
+    10_w4 (camion 5,5 m, 2 m/s): traccia interna vicina ma stato "static", non pubblicata 51-59%; pubblicata ma
+      centro 1-2,5 m fuori (box di un pezzo) 14-16%; nessuna traccia 9-13%.
+    16_w1 (auto 5,7 m/s): nessuna traccia entro 1 m 59-81% (associazione/inseguimento a velocità alta).
+    held-out 11/12: nessuna traccia 51-82%, interna "static" 17-40%.
+  Due cause, entrambe da testare con fix fisici commutabili: (1) la conferma del moto non scatta per veicoli lunghi
+  e frammentati (regola N: uscire dal punto di nascita di 0,5 ingombri = ~2,5 m per un camion; centro del pezzo che
+  salta) -> varianti LJ/LA di stanotte ne coprono una parte; (2) i veicoli veloci non vengono agganciati (gate).
