@@ -1208,3 +1208,23 @@ tutto sotto di lui intorno al robot.
   Lettura: SINS ha l'IoU "tutti" più alta su tutte le seq e domina sui pedoni (in moto e fermi); sui VEICOLI IN MOTO è
   peggiore dei baseline (2-18% vs 13-26%), e su seq 10 (molti veicoli) M-detector lo supera anche su "moving": conferma
   la richiesta dell'utente di migliorare il tracking dei veicoli.
+- 09/11 PORTATILE, STUDIO D/PD + DUE BUG (sins 5d0c8ea, root 7ef067c). Strumenti: eval/diagnostics/dpd_study/{funnel,pm_sep,cam_funnel}.py
+  (profilo diagnostico coda_dbg / mdp_street_dbg: CSV per traccia per tick con i flag delle regole).
+  BUG 1 tracker: senza calibrazione online (CODa, JRDB) il frame <camera>_refined non esiste -> nessuna camera usabile nel
+  tracker (tutto "fuori FOV", niente decay in FOV, niente fallback pixel LiDAR-only). Ora frame del camera_info.
+  BUG 2 dbscan: fused/clusters pubblicato DOPO le box -> voto punti v1 sui punti del tick precedente (44% "moto" a ogni velocita').
+  Tutti i numeri SINS CODa/JRDB precedenti (tuning, held-out, fase D, LiDAR-only) sono col bug: rifatti dal lab (LFX/LHF/LLF).
+  CODa 0/10/16 laptop 1 rip., moving MOTA prima->dopo 67,9->70,6 / 29,0->31,8 / 63,0->69,7; tutti 38,2->49,3 / 12,0->17,0 / 47,3->53,8.
+  Strada MOTA 41,7->43,3. NB rumore 1 rip. alto (lab LFX 0_w2: 42,3/54,4/46,0).
+  Imbuto dopo i fix (CODa): D ok 68,7% (non confermata 6,7, coasting con cluster 4,9, nessun cluster 4,5, disocclusione 3,0, C 1,9);
+  PD ok 25,7% (traccia ferma senza classe 22,8, non confermata 19,2, coasting con cluster 13,6). Strada veicoli: non confermata 31%
+  (45% fuori FOV), persone: disocclusione 9,4%.
+  Ramo camera (cam_funnel): YOLO vede il 23% (ZED) / 61% (stereo) dei pedoni nell'immagine; 10_w2 YOLO vuoto nel 46-50% dei frame;
+  primi ~2 s di ogni finestra senza YOLO (warm-up); foglia profondita' porta la classe al cluster solo 42% (ZED) / 9-24% (stereo),
+  la classe della traccia arriva soprattutto dal fallback pixel (ora funzionante); PD giusta quando YOLO manca: 6-8%.
+  Latenza YOLO frame->uscita: CODa 33-54 ms (p90 58-76), strada 190 ms (le maschere arrivano sempre dopo la fusione).
+  Misura moto punto-superficie (>=0,5 s, odom): AUC 0,95 vs KF 0,92 vs voto v1 0,53. Varianti 1 rip. (moving MOTA 0/10/16 | PD 10/16 | strada MOTA, rec veicoli):
+    DBF 70,6/31,8/69,7 | 13/18 | 43,3, 31,1   P1 (evidenza OR) 60,6/30,0/63,0: NO   KV veto 71,7/32,8/69,4 | 14/18 | 42,2, 29,9
+    KB1 decay su frame YOLO nuovi 64,6/30,8/64,0 | 20/23 | -   KA gate fuori FOV 8 m/s 62,1/32,0/64,3 | 8/23 | 45,1, 34,4
+    KJ tolleranza ingombro 61,1/29,9/71,5 | 18/18 | 46,4, 46,9 (persone prec 76,5->73,0).
+  Lab stanotte (dalle 00:00, slot 23-24 libero): LB1, LV, LJ, LA x3 + strade x3, poi LLF (LiDAR-only col fix).
