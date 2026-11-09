@@ -1182,3 +1182,29 @@ tutto sotto di lui intorno al robot.
   Coda per la notte (PC libero 23:00-24:00 per altri utenti, guardia lab_gate.sh + controllo carico a mezzanotte):
   IoU CODa -> sins 5d0c8ea (camera_info frame fallback, cluster prima delle detections3d) LFX tuning x3, LHF held-out x3,
   IoU, strada x3 -> varianti LB1, LV, LJ, LA (x3 + strada) -> LiDAR-only LLF x3 + IoU.
+- 09/11 sera, SINS rifatto sul codice corretto (sins 5d0c8ea: frame camera da camera_info senza calibrazione online;
+  cluster pubblicati prima delle detections3d), profilo coda (= WNC), x3, PC del laboratorio. QUESTI sono i numeri SINS
+  da usare per fase D e held-out (sostituiscono LWNC/LWNCP/LHW). Moving rec/prec/MOTA [min-max]; MOTA tutti; PD trovati/prec:
+    LFX  seq 0  85,2/81,5/65,7 [64,9-66,6]; tutti 51,9    (LWNCP x1 vecchio: 85,5/84,6/69,8; tutti 51,8)
+         seq 10 61,9/67,8/29,8 [29,2-30,4]; tutti 15,5    (30,7; 13,2)
+         seq 16 72,2/92,5/64,8 [62,9-66,1]; tutti 50,3    (64,5; 47,7)
+         PD 28,5% prec 46,8% (LWNCP 24,9/42,8)
+    LHF  seq 11 62,5/79,1/43,9 [41,2-47,9]; tutti 30,8    (LHW vecchio x3: 43,5; 28,9)
+         seq 12 40,5/70,2/21,8 [21,4-22,5]; tutti 17,9    (19,6; 12,7)
+         PD 47,7% prec 36,0% (LHW 45,3/32,7)
+    Strada mdp_street x3: 56,2/83,1/43,8 [43,4-44,1], veicoli recall 32,9, persone 60,1/76,2/40,2
+         (WNC vecchio 42,5 [40,6-44,0], veicoli 32,0).
+  Lettura: il fix migliora MOTA "tutti" ovunque (+2 / +2,6 / +1,9 / +5,2 su 10/16/11/12) e la PD; MOTA moving pari o
+  meglio tranne seq 0 (65,7 vs 69,8 della sola ripetizione LWNCP: dentro il rumore di seq 0, ±4 sul portatile).
+  Latenza tracce mediana/p90: LFX 179/329 ms; LHF 258/669 ms (pre 27,9 vs 24 ms: probabile carico di altri utenti sul PC
+  in quel momento, da ricontrollare); strada 94/107 ms.
+  IoU puntuale per etichetta (eval/results/coda_iou/, coda_point_iou.py; SINS = tutte le box pubblicate, media 3 rip.;
+  baseline 1 rip.). moving / moving pedoni / moving veicoli / pedoni fermi / veicoli fermi / tutti, in %:
+    seq 0   SINS 82,5/82,6/0,0/-/23,8/70,1      Dynablox 31,6/31,7/0,0/-/0,3/29,1    M-det 43,0/43,0/0,0/-/0,2/39,4
+    seq 10  SINS 41,4/61,8/4,2/0,8/10,8/31,4    Dynablox 29,8/21,5/13,5/0,2/0,0/25,8 M-det 51,0/42,7/26,2/0,1/0,7/40,1
+    seq 16  SINS 83,0/83,9/2,0/0,0/-/71,9       Dynablox 85,4/85,6/18,1/0,0/-/59,1   M-det 67,8/67,6/2,5/0,0/-/51,0
+    seq 11  SINS 70,2/76,7/13,4/27,6/26,0/42,7  Dynablox 78,5/82,4/22,2/15,6/7,9/35,4 M-det 40,4/39,9/4,3/3,1/1,2/23,9
+    seq 12  SINS 56,6/67,6/17,9/22,0/5,4/51,7   Dynablox 49,6/44,4/19,6/4,3/4,6/48,9 M-det 53,2/48,5/21,0/3,1/0,3/49,5
+  Lettura: SINS ha l'IoU "tutti" più alta su tutte le seq e domina sui pedoni (in moto e fermi); sui VEICOLI IN MOTO è
+  peggiore dei baseline (2-18% vs 13-26%), e su seq 10 (molti veicoli) M-detector lo supera anche su "moving": conferma
+  la richiesta dell'utente di migliorare il tracking dei veicoli.
