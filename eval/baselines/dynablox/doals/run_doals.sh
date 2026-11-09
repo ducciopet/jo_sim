@@ -13,13 +13,16 @@ for S in $SEQS; do
   name=$(echo $S | sed 's#/sequence_#_#')
   [ -e $OUT/$name.done ] && continue
   [ -e $ROOT/$S/bag.bag ] || { echo "$(date +%T) MISSING $S"; continue; }
+  # NAS replay drops data (as for CODa): copy the sequence locally, run, delete
+  L=$R/bags/doals_tmp; rm -rf $L; mkdir -p $L/$S && rsync -a $ROOT/$S/bag.bag $ROOT/$S/indices.csv $L/$S/ || { echo "$(date +%T) COPY FAIL $S"; continue; }
   docker rm -f dynablox_doals > /dev/null 2>&1
-  timeout -k 30 ${RUN_TIMEOUT:-1500} docker run --rm --name dynablox_doals -v $ROOT:/doals:ro -v $OUT:/out dynablox-noetic:doals bash -c "
+  timeout -k 30 ${RUN_TIMEOUT:-1500} docker run --rm --name dynablox_doals -v $L:/doals:ro -v $OUT:/out dynablox-noetic:doals bash -c "
     source /opt/ros/noetic/setup.bash && source /ws/devel/setup.bash
     roslaunch dynablox_ros run_experiment.launch bag_file:=/doals/$S/bag.bag evaluate:=true visualize:=false \
       eval_output_path:=/out/$name ground_truth_file:=/doals/$S/indices.csv > /out/${name}.log 2>&1
   "
   RC=$?; docker rm -f dynablox_doals > /dev/null 2>&1
+  rm -rf $L
   [ $RC = 0 ] && touch $OUT/$name.done
   echo "$(date +%T) $name rc=$RC"
 done
