@@ -1,0 +1,8 @@
+# coda (WNC) + fusion without waiting: the LiDAR tick is published at once with the camera results already in;
+# a camera result that arrives late joins the next scan (stamp tolerance 0.15 s instead of 0.08; clouds are in odom)
+base: coda
+files:
+  dbscan_detector.yaml:
+    dbscan_detector_node:
+      fusion_timeout_sec: 0.001
+      fusion_stamp_tolerance: 0.15
