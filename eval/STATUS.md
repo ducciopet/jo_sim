@@ -1141,3 +1141,35 @@ tutto sotto di lui intorno al robot.
   Fase B: metrica M-detector riprodotta dalle uscite degli autori (0,754 vs 0,746); le etichette sono KITTI tracking
   (non SemanticKITTI), servono le scansioni tracking o le bag degli autori. DOALS in download dal portatile;
   pronto eval/baselines/dynablox/doals/ (immagine dynablox-noetic:doals + run_doals.sh, obiettivo 86,0 entro 20 m).
+- 09/11 PC DEL LABORATORIO, A/B latenza fusione (profili coda_fz0/mdp_street_fz0: fusion_timeout_sec 0,001 +
+  stamp_tolerance 0,15; coda_fz30/mdp_street_fz30: timeout 0,03; base WNC = 0,12). CODa 0/10/16 (9 finestre) x3,
+  strada x3, controllo LWNCP = WNC rifatto oggi x1. Finestre 10_w1/10_w4/10_w5 rifatte (latenza falsata dal batch IoU
+  in parallelo; vecchi json *_skewed). Moving only rec/prec/MOTA medi su 3 rip. [MOTA min-max]:
+    profilo   seq 0                    seq 10                   seq 16                   PD trov./prec  lat. med/p90
+    LWNCP x1  85,5/84,6/69,8           61,9/68,3/30,7           70,6/93,4/64,5           24,9/42,8      173/375 ms
+    FZ30 x3   86,1/83,5/68,8 [68-70]   59,4/68,8/29,9 [29-31]   70,4/93,7/64,3 [62-68]   20,5/41,1      143/350 ms
+    FZ0 x3    86,1/79,6/63,7 [62-66]   60,0/67,8/28,2 [27-29]   69,5/91,0/60,1 [59-61]   26,1/40,3      103/280 ms
+  PD per ripetizione: FZ30 10,4 / 24,4 / 26,6% (una ripetizione crolla), FZ0 26,5 / 25,7 / 26,2%.
+  Strada (tot rec/prec/MOTA; recall veicoli; recall persone; latenza med/p90):
+    WNC  54,5/83,1/42,5 [40,6-44,0]; 32,0; 58,3; 96/109 ms
+    FZ0  54,7/83,3/42,7 [41,2-44,0]; 32,2; 58,5;  6/19 ms
+    FZ30 54,2/82,8/42,0 [41,7-42,2]; 30,3; 58,3; 37/50 ms
+  Tempi per stadio (mediane da det.log, det_timing.py): pre / dbscan LiDAR / attesa camere / camere per tick:
+  CODa LWNCP 23,4/19,6/70,0/2,7; FZ30 24,0/20,3/38,8/1,8; FZ0 23,9/20,2/4,9/3,1. Strada WNC attesa 94,9, FZ0 10,1,
+  FZ30 39,6 (camere per tick ~0: sulla strada la fusione arriva quasi sempre dopo).
+  DECISIONE (criterio utente: latenza giu', MOTA moving non peggio di ~1 punto su ogni seq e sulla strada, PD CODa non
+  peggiore): NESSUN PROFILO VINCE, resta WNC (fusion_timeout_sec 0,12).
+  - FZ0 dimezza la latenza mediana su CODa (173 -> 103 ms) ma perde 6,1 / 2,5 / 4,4 punti di MOTA su seq 0/10/16:
+    con timeout ~0 la box camera del tick arriva al tick dopo e il tracker vede classi/box in ritardo.
+  - FZ30 resta dentro ~1 punto (-1,0 / -0,8 / -0,2, strada -0,5) e toglie 30 ms di mediana, ma la PD peggiora
+    (20,5 vs 24,9%, con una ripetizione a 10,4%) e la recall veicoli sulla strada scende 32,0 -> 30,3.
+  Sulla strada FZ0 e' pari a WNC (42,7 vs 42,5) con latenza 6 ms: la strada non usa davvero le camere in tempo.
+  SCOPERTA durante l'A/B: le run LWNC del 06/11 (riferimento SINS CODa 0/10/16 nella tabella fase D) hanno girato
+  SENZA camere in fusione (camere per tick 0,0 in tutti i 27 log, pre 45 ms invece di 24, PD trovati 0-5%): quel
+  giorno la macchina era piu' lenta e nessuna immagine arrivava entro 0,12 s. Anche le LWN del 05/11 (0,0). Le LWNCE
+  (07/11), le held-out LHW/LHK e le LWNCP di oggi hanno le camere (2,6-2,8 per tick).
+  Conseguenze: (1) i numeri SINS su 0/10/16 della fase D sono in pratica "SINS senza camere" (MOTA 67,8/34,0/68,6);
+  con le camere (LWNCP x1) 69,8/30,7/64,5 e PD 24,9%. (2) Il confronto WNC vs WNCE (07/11) era sbilanciato (WNC
+  senza camere, WNCE con): ricontrollato con LWNCP, WNC resta avanti su tutte e tre le seq (69,8/30,7/64,5 vs
+  60,7/29,9/57,8), la decisione WNC regge. (3) Da rifare: LWNCP r2/r3 sulle 9 finestre (dopo la coda di oggi), poi la
+  tabella fase D e l'IoU SINS su 0/10/16 vanno presi da LWNCP, non da LWNC.
