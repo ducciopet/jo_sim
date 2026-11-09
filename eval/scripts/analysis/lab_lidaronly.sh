@@ -23,7 +23,6 @@ for w in ${WINDOWS:-w1 w2 w3 10_w1 10_w2 10_w3 10_w4 10_w5 16_w1 11_w1 11_w2 11_
     python3 eval/coda_eval.py --run bags/coda/runs/LLO${r}_v2_coda$c --gt bags/coda/coda${c}_gt.csv --odom bags/coda/coda${c}_odom \
       --out eval/results/coda/LLO${r}_$w.json 2>&1 | tail -1 | cut -c1-200 || echo "$(date +%T) SCORE FAIL LLO$r $w"
     lat "LLO$r $w" /home/ros/bags/coda/runs/LLO${r}_v2_coda$c
-    rm -rf bags/coda/runs/LLO${r}_v2_coda$c
   done
   rm -rf bags/coda/coda$c; ln -sfn /mnt/nas/datasets_SINS/derived/coda_windows/coda$c bags/coda/coda$c
 done
