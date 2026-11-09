@@ -5,8 +5,8 @@
 D=/home/ros/bags/mdp; R=/home/ros/bags/replay
 mkdir -p $D/runs
 # lab PC reservations: same rule as eval/scripts/analysis/lab_gate.sh, file bags/lab_blackout (epochs)
-lab_gate(){ local f=/home/ros/bags/lab_blackout s e; [ -f $f ] || return 0; read s e < $f
-  while n=$(date +%s); [ $((n + $1)) -gt $s ] && [ $n -lt $e ]; do sleep 60; done; }
+lab_gate(){ local f=/home/ros/bags/lab_blackout s e; [ -f $f ] || return 0
+  while read s e < $f; n=$(date +%s); [ $((n + $1)) -gt $s ] && [ $n -lt $e ]; do sleep 60; done; }
 for rep in 1 2 3; do
   for P in ${PROFILES:-mdp_street mdp_street_v1}; do
     out=$D/runs/${P}_r${rep}
