@@ -1,8 +1,9 @@
 #!/bin/bash
 # At the end of a lab PC reservation (bags/lab_blackout), before our chains resume: measure the load from OTHER users
 # (ours is paused by lab_gate): CPU utilisation over 2 min from /proc/stat, 1-min loadavg, GPU compute processes.
-# Busy (CPU > 30%, or loadavg > cores/2, or any GPU compute process) -> postpone the end of the blackout by 15 min
-# and check again. Every check is logged in bags/lab_watchdog.txt. Never touches other processes.
+# Busy = CPU > 30%, or loadavg > cores/2, or any GPU compute process. POSTPONE=1 postpones the end of the blackout by
+# 15 min and checks again; default (user, 09/11): measure and log only, our runs resume at the end of the slot anyway.
+# Every check is logged in bags/lab_watchdog.txt. Never touches other processes.
 cd $(dirname $0)/../../..; F=bags/lab_blackout; W=bags/lab_watchdog.txt
 read s e < $F; while [ $(date +%s) -lt $((e - 150)) ]; do sleep 30; done
 half=$(( $(nproc) / 2 ))
@@ -13,7 +14,7 @@ while :; do
   gpu=$(nvidia-smi --query-compute-apps=pid,process_name --format=csv,noheader 2>/dev/null | tr '\n' ';')
   busy=0; [ $cpu -gt 30 ] && busy=1; awk -v l=$la -v h=$half 'BEGIN{exit !(l>h)}' && busy=1; [ -n "$gpu" ] && busy=1
   echo "$(date '+%F %T') check: cpu ${cpu}% (2 min), loadavg ${la} (half cores ${half}), gpu [${gpu:-free}] -> $([ $busy = 1 ] && echo BUSY || echo FREE)" >> $W
-  [ $busy = 0 ] && { echo "$(date '+%F %T') resume" >> $W; break; }
+  [ $busy = 0 ] || [ "${POSTPONE:-0}" != 1 ] && { echo "$(date '+%F %T') resume" >> $W; break; }
   read s e < $F; ne=$(( $(date +%s) + 900 )); echo "$s $ne" > $F
   echo "$(date '+%F %T') blackout postponed to $(date -d @$ne +%T)" >> $W
   while [ $(date +%s) -lt $((ne - 150)) ]; do sleep 30; done
