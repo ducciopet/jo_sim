@@ -4,6 +4,7 @@
 # Resumable: a run whose result json exists is skipped. env CODA="TAG profile;..." STREET="profiles" pick the runs, WINDOWS="w1 11_w2 ..." the CODa windows, STREET=none skips the street. REPS="_" = first repetition only (default "_ r2 r3").
 # Needs eval/scripts/analysis/lat_*.py copied into bags/replay.
 cd $(dirname $0)/../../..
+source eval/scripts/analysis/lab_gate.sh   # lab PC reservations (bags/lab_blackout)
 export PATH=$HOME/.venvs/sins_eval/bin:$PATH
 N=/mnt/nas-imperatore/datasets_SINS/derived; LAT=eval/results/lab_latency.txt
 lat(){ echo "$1 $(docker exec jo_sim_sins bash -lc "source /opt/ros/jazzy/setup.bash; source /home/ros/local_install/setup.bash; python3 /home/ros/bags/replay/lat_tracks.py $2" 2>/dev/null | tail -1)" | tee -a $LAT
@@ -12,7 +13,7 @@ CODA=${CODA:-"LWN coda_wn;LWNC coda_wnc;LWNCJM coda_wncjm"}; P=${STREET:-"mdp_st
 powerprofilesctl set performance
 # new profiles need their cfg generated and installed in the container, or the launch fails on a missing yaml
 for pr in $(echo "$CODA" | tr ';' '\n' | awk '{print $2}') ${P/none/}; do python3 eval/configs/sins/make_cfg.py $pr > /dev/null || exit 1; done
-docker exec jo_sim_sins bash -lc 'source /opt/ros/jazzy/setup.bash; cd /home/ros && colcon build --packages-select sins --symlink-install --install-base /home/ros/local_install --cmake-args -DCUDAToolkit_ROOT=/usr/local/cuda' > /dev/null || { echo BUILD FAILED; exit 1; }
+lab_gate 900; docker exec jo_sim_sins bash -lc 'source /opt/ros/jazzy/setup.bash; cd /home/ros && colcon build --packages-select sins --symlink-install --install-base /home/ros/local_install --cmake-args -DCUDAToolkit_ROOT=/usr/local/cuda' > /dev/null || { echo BUILD FAILED; exit 1; }
 for pr in $(echo "$CODA" | tr ';' '\n' | awk '{print $2}') ${P/none/}; do docker exec jo_sim_sins test -f /home/ros/local_install/sins/share/sins/cfg/$pr/preprocessing.yaml || { echo "cfg $pr NOT INSTALLED"; exit 1; }; done
 for w in ${WINDOWS:-w1 w2 w3 10_w1 10_w2 10_w3 10_w4 10_w5 16_w1}; do
   case $w in *_*) c=$w ;; *) c=0_$w ;; esac
@@ -20,7 +21,7 @@ for w in ${WINDOWS:-w1 w2 w3 10_w1 10_w2 10_w3 10_w4 10_w5 16_w1}; do
   echo "$(date +%T) window $w copied, $(df -h --output=avail / | tail -1) free"
   for r in ${REPS:-_ r2 r3}; do r=${r#_}; IFS=";" read -ra CP <<< "$CODA"; for p in "${CP[@]}"; do set -- $p
     [ -e eval/results/coda/$1${r}_$w.json ] && continue
-    echo "$(date +%T) $1$r $w"; ENV=$2 STEREO=1 bash eval/scripts/coda_ab.sh $1$r $w
+    lab_gate 420; echo "$(date +%T) $1$r $w"; ENV=$2 STEREO=1 bash eval/scripts/coda_ab.sh $1$r $w
     lat "$1$r $w" /home/ros/bags/coda/runs/$1${r}_v2_coda$c
   done; done
   for d in coda$c coda${c}_stereo; do rm -rf bags/coda/$d; ln -sfn /mnt/nas/datasets_SINS/derived/coda_windows/$d bags/coda/$d; done
