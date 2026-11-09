@@ -1,7 +1,7 @@
 #!/bin/bash
 # Phase B: reproduce Dynablox on DOALS exactly as the upstream README ("Running and Evaluating an Experiment"):
 # run_experiment.launch with the upstream default.yaml, evaluate:=true, the sequence's indices.csv as ground truth,
-# real-time playback (player_rate 1), Ouster deskew by lidar_undistortion. Then upstream evaluate_data.py over all
+# real-time playback (player_rate 1), Ouster deskew by lidar_undistortion. USER must be set: the launch defaults use $(env USER). Then upstream evaluate_data.py over all
 # outputs. Paper target (RA-L 2023, Table I): object IoU 86.0% within 20 m (default.yaml evaluates 0.5-20 m).
 # DOALS layout (download_doals_data.sh): <root>/<scene>/sequence_<n>/bag.bag + indices.csv
 # usage: run_doals.sh <DOALS root, host path> [scene/sequence_n ...]   log/output: bags/dynablox_doals/
@@ -16,7 +16,7 @@ for S in $SEQS; do
   # NAS replay drops data (as for CODa): copy the sequence locally, run, delete
   L=$R/bags/doals_tmp; rm -rf $L; mkdir -p $L/$S && rsync -a $ROOT/$S/bag.bag $ROOT/$S/indices.csv $L/$S/ || { echo "$(date +%T) COPY FAIL $S"; continue; }
   docker rm -f dynablox_doals > /dev/null 2>&1
-  timeout -k 30 ${RUN_TIMEOUT:-1500} docker run --rm --name dynablox_doals -v $L:/doals:ro -v $OUT:/out dynablox-noetic:doals bash -c "
+  timeout -k 30 ${RUN_TIMEOUT:-1500} docker run --rm --name dynablox_doals -e USER=root -v $L:/doals:ro -v $OUT:/out dynablox-noetic:doals bash -c "
     source /opt/ros/noetic/setup.bash && source /ws/devel/setup.bash
     roslaunch dynablox_ros run_experiment.launch bag_file:=/doals/$S/bag.bag evaluate:=true visualize:=false \
       eval_output_path:=/out/$name ground_truth_file:=/doals/$S/indices.csv > /out/${name}.log 2>&1
