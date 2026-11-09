@@ -55,6 +55,15 @@ Conseguenza:
   3. patch di uscita per l'ID del cluster (non cambia il rilevamento).
 - Riproduzione (fase B): DOALS (`download_doals_data.sh`, projects.asl.ethz.ch, registrazione da verificare),
   script `evaluate_data.py` nel repo. Obiettivo: 86,0% di IoU entro 20 m (tolleranza pochi punti).
+- RIPRODOTTO (09/11, PC del laboratorio): immagine `dynablox-noetic:doals` (upstream + lidar_undistortion + ouster_ros
+  ROS1 v0.10.0), `eval/baselines/dynablox/doals/run_doals.sh`: run_experiment.launch con default.yaml upstream,
+  ground truth indices.csv, riproduzione a velocità reale, 10 fotogrammi valutati per sequenza (8/8 complete), poi
+  `evaluate_data.py` degli autori. IoU di oggetto entro 20 m, riprodotto vs paper (Tab. I):
+    Station    86,7 (87,1 / 86,3)  vs 87,3     Shopville  87,5 (86,4 / 88,6)  vs 87,8
+    Hauptgeb.  85,7 (89,2 / 82,1)  vs 86,0     Niederdorf 83,1 (76,4 / 89,8)  vs 83,1
+    Tutte      85,7 ± 9,1 (precisione 95,6, recall 89,3)  vs 86,0
+  Scarto 0,3 punti in totale, massimo 0,6 per scena: la nostra build e la pipeline di valutazione sono fedeli. Risultati
+  in bags/dynablox_doals/ (evaluate.txt, scores.csv per sequenza).
 
 ### M-detector (Wu et al., Nat. Commun. 2024) — LiDAR, geometrico, online
 - Paper (PMC10771495, letto in parte 06/11): KITTI, nuScenes, Waymo, AVIA-Indoor (119 sequenze, 51 min).

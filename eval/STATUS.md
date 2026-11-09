@@ -1173,3 +1173,12 @@ tutto sotto di lui intorno al robot.
   senza camere, WNCE con): ricontrollato con LWNCP, WNC resta avanti su tutte e tre le seq (69,8/30,7/64,5 vs
   60,7/29,9/57,8), la decisione WNC regge. (3) Da rifare: LWNCP r2/r3 sulle 9 finestre (dopo la coda di oggi), poi la
   tabella fase D e l'IoU SINS su 0/10/16 vanno presi da LWNCP, non da LWNC.
+- 09/11 sera, fase B Dynablox RIPRODOTTO su DOALS (8 sequenze, condizioni upstream, evaluate_data.py degli autori):
+  IoU di oggetto entro 20 m 85,7 ± 9,1% vs 86,0% del paper (Station 86,7/87,3, Shopville 87,5/87,8, Hauptgebaeude
+  85,7/86,0, Niederdorf 83,1/83,1). Dettagli in FIDELITY.md. Il primo lancio era fallito perché la launch upstream
+  usa $(env USER) e il container non lo imposta (corretto in run_doals.sh).
+  Nota: su CODa lo stesso Dynablox (20 m) ha precisione moving 12-75%: il divario non viene dalla build ma dal dominio
+  (campus affollato, pedoni lenti e fermi, sensore 128 canali).
+  Coda per la notte (PC libero 23:00-24:00 per altri utenti, guardia lab_gate.sh + controllo carico a mezzanotte):
+  IoU CODa -> sins 5d0c8ea (camera_info frame fallback, cluster prima delle detections3d) LFX tuning x3, LHF held-out x3,
+  IoU, strada x3 -> varianti LB1, LV, LJ, LA (x3 + strada) -> LiDAR-only LLF x3 + IoU.
