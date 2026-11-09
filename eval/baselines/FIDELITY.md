@@ -84,6 +84,12 @@ Conseguenza:
   le uscite pubblicate tornano entro 1 punto. Manca ancora la riproduzione *eseguendo* M-detector: servono le bag KITTI
   degli autori (Google Drive `kitti/sequences.zip`), al momento bloccate da "troppi download" di Google. **Da scaricare a
   mano dal browser** (vedi sezione 5).
+- **Piano B (SemanticKITTI) non praticabile [V, 09/11].** Le 20 sequenze Figshare hanno 154, 233, 144, 314, 297, 270,
+  800, 390, 803, 294, 373, 78, 340, 106, 376, 209, 145, 339, 1059, 837 fotogrammi: coincidono una per una con il
+  **KITTI tracking training** 0000 e 0002-0020 (manca 0001, 447 fotogrammi), non con KITTI odometry/SemanticKITTI
+  (seq 00 = 4541 scansioni). Le etichette per punto vanno sulle scansioni del tracking, che non sono sul NAS
+  (`data_tracking_velodyne.zip`, ~35 GB, dal sito KITTI, che chiede un'email prima di dare i link). Strade rimaste:
+  `kitti/sequences.zip` degli autori (Drive, quota) oppure il download KITTI tracking fatto dall'utente.
 - **Config CODa rifatta [V]:** `coda_kitti.yaml` = `kitti0.yaml` con soli sensore, topic e ingombro del robot CODa.
   `dataset: 1` invece di 0: nel codice 0 aggiunge solo le maschere fisse dell'auto KITTI e il flag intensità 666 di
   KITTI, che su CODa non hanno senso. `fov_cut` è calcolato ma mai usato nel codice.
