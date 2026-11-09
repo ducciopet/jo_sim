@@ -11,7 +11,12 @@ Data di stesura: 2026-10-13.
 
 ## 1. Venue e calendario
 
-**Raccomandazione: RA-L con opzione IROS 2027.**
+> **Aggiornamento 09/11/2026: la rivista scelta è Elsevier *Image and Vision Computing* (IVC).** Le specifiche
+> (formato, lunghezza, revisione) sono in un progetto Claude dell'utente e vanno riportate qui. Il testo sotto su
+> RA-L/IROS è superato e resta solo come storico; vanno rivisti in particolare la struttura (§5, scritta per 8 pagine
+> RA-L), il video e la regola sulla doppia cieca.
+
+**(Superato) Raccomandazione: RA-L con opzione IROS 2027.**
 
 - La deadline di ICRA 2027 (metà settembre 2026) è già passata. IROS 2027 avrà la deadline
   presumibilmente a inizio marzo 2027, e RA-L con opzione IROS chiude di solito qualche giorno prima.
