@@ -1,7 +1,7 @@
 #!/bin/bash
 # Lab PC (06/11): WN / WNC / WNCJM x3 on CODa 0+10+16 and Marina di Pisa street, all on this machine.
 # Disk is short and NAS replay drops scans, so each CODa window is copied locally, run 9 times, then removed.
-# Resumable: a run whose result json exists is skipped. env CODA="TAG profile;..." STREET="profiles" pick the runs, WINDOWS="w1 11_w2 ..." the CODa windows, STREET=none skips the street.
+# Resumable: a run whose result json exists is skipped. env CODA="TAG profile;..." STREET="profiles" pick the runs, WINDOWS="w1 11_w2 ..." the CODa windows, STREET=none skips the street. REPS="_" = first repetition only (default "_ r2 r3").
 # Needs eval/scripts/analysis/lat_*.py copied into bags/replay.
 cd $(dirname $0)/../../..
 export PATH=$HOME/.venvs/sins_eval/bin:$PATH
@@ -18,7 +18,7 @@ for w in ${WINDOWS:-w1 w2 w3 10_w1 10_w2 10_w3 10_w4 10_w5 16_w1}; do
   case $w in *_*) c=$w ;; *) c=0_$w ;; esac
   for d in coda$c coda${c}_stereo; do [ -L bags/coda/$d ] && rm bags/coda/$d; rsync -a $N/coda_windows/$d/ bags/coda/$d/; done
   echo "$(date +%T) window $w copied, $(df -h --output=avail / | tail -1) free"
-  for r in "" r2 r3; do IFS=";" read -ra CP <<< "$CODA"; for p in "${CP[@]}"; do set -- $p
+  for r in ${REPS:-_ r2 r3}; do r=${r#_}; IFS=";" read -ra CP <<< "$CODA"; for p in "${CP[@]}"; do set -- $p
     [ -e eval/results/coda/$1${r}_$w.json ] && continue
     echo "$(date +%T) $1$r $w"; ENV=$2 STEREO=1 bash eval/scripts/coda_ab.sh $1$r $w
     lat "$1$r $w" /home/ros/bags/coda/runs/$1${r}_v2_coda$c
