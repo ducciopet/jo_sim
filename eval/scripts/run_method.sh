@@ -15,7 +15,7 @@ source /opt/ros/jazzy/setup.bash; source /home/ros/local_install/setup.bash
 DIR=$(dirname $0); rm -rf $OUT; LOG=${OUT}_logs; rm -rf $LOG; mkdir -p $LOG
 DUR=$(python3 -c "import yaml;print(int(yaml.safe_load(open('$BAG/metadata.yaml'))['rosbag2_bagfile_information']['duration']['nanoseconds']/1e9)+3)")
 if [ -n "$ADAPTER" ]; then
-  python3 $DIR/realsense_bag_adapter.py --ros-args -p use_sim_time:=true ${ADAPTER_CAMS:+-p "camera_names:=$ADAPTER_CAMS"} > $LOG/adapter.log 2>&1 &
+  python3 $DIR/realsense_bag_adapter.py --ros-args -p use_sim_time:=true ${ADAPTER_CAMS:+-p "camera_names:=$ADAPTER_CAMS"} $ADAPTER_ARGS > $LOG/adapter.log 2>&1 &
 fi
 if [ -n "$STEREO" ]; then
   python3 $DIR/stereo_depth_node.py --ros-args -p use_sim_time:=true -p camera:=$STEREO > $LOG/stereo.log 2>&1 &

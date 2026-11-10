@@ -51,6 +51,8 @@ class RealsenseBagAdapter(Node):
         self.cameras = list(self.declare_parameter('camera_names', ['front_camera']).value)
         self.jpeg_quality = int(self.declare_parameter('jpeg_quality', 95).value)
         self.depth_scale = float(self.declare_parameter('depth_scale', 1000.0).value)  # raw units per meter (RealSense: mm)
+        # deproject every s-th pixel in u and v (as the RealSense decimation filter, magnitude s): 1 = every pixel
+        self.cloud_stride = max(1, int(self.declare_parameter('cloud_stride', 1).value))
 
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
@@ -125,8 +127,12 @@ class RealsenseBagAdapter(Node):
             self.get_logger().error(f'unsupported depth encoding {msg.encoding}', throttle_duration_sec=5.0)
             return
         d = np.frombuffer(msg.data, dtype=np.uint16).reshape(msg.height, msg.step // 2)[:, :msg.width]
+        st = self.cloud_stride
+        if st > 1:
+            d = d[::st, ::st]
         v, u = np.nonzero(d)
         z = d[v, u].astype(np.float32) / self.depth_scale
+        v, u = v * st, u * st                      # back to full-resolution pixel coordinates
         x = (u.astype(np.float32) - K[0, 2]) * z / K[0, 0]
         y = (v.astype(np.float32) - K[1, 2]) * z / K[1, 1]
         pts = np.stack([x, y, z], axis=1).astype(np.float32)
