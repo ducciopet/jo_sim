@@ -50,11 +50,12 @@ class Probe(Node):
                 cls = get_message(tp)
             except Exception:
                 continue
-            pubs = self.get_publishers_info_by_topic(name)
-            durable = any(p.qos_profile.durability == DurabilityPolicy.TRANSIENT_LOCAL for p in pubs)
-            best = any(p.qos_profile.reliability == ReliabilityPolicy.BEST_EFFORT for p in pubs)
-            qos = QoSProfile(history=HistoryPolicy.KEEP_LAST, depth=50,
-                             reliability=ReliabilityPolicy.BEST_EFFORT if best else ReliabilityPolicy.RELIABLE,
+            pubs = [p for p in self.get_publishers_info_by_topic(name) if p.node_name != 'topic_probe']
+            if not pubs:
+                continue          # subscribe once a publisher exists (its QoS is known then)
+            # BEST_EFFORT matches reliable and best-effort publishers; TRANSIENT_LOCAL only if every publisher is latched
+            durable = all(p.qos_profile.durability == DurabilityPolicy.TRANSIENT_LOCAL for p in pubs)
+            qos = QoSProfile(history=HistoryPolicy.KEEP_LAST, depth=50, reliability=ReliabilityPolicy.BEST_EFFORT,
                              durability=DurabilityPolicy.TRANSIENT_LOCAL if durable else DurabilityPolicy.VOLATILE)
             self.subs[name] = self.create_subscription(cls, name, lambda m, n=name, t=tp: self.cb(n, t, m), qos, raw=True)
         if time.time() > self.t_end:
