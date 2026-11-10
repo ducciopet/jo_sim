@@ -1371,3 +1371,18 @@ Strada mdp_street_sy: MOTA 42.7 [42.5-42.9] (lt2 43.3), veicoli 32.0 (31.2), per
 Strada: vj MOTA 46.3, veicoli 44.5, persone 39.4 | vjsy 47.2 [46.4-48.6], veicoli 44.2, persone 40.5 | vjsye 46.6 [45.9-47.6], veicoli 49.9 prec 9.2, persone 37.9.
 - VJSY e VJSYE confermano su held-out (seq 11 +1.5/+1.7 moving, MOTA tutti +2.1/+4.1, PD +4/+6), seq 12 moving pari (VJSYE −0.4). Latenza −20 ms rispetto a LHS.
 - VJSYE: più veicoli (CODa +2.7, strada +5.7), persone in strada −2.6.
+
+## 10/11 M / MF (coda_vjsyem / coda_vjsyemf, base vjsye), x3, stride 2, STEREO=1 (root 693feee / sins 758189b)
+
+| tag | moving MOTA | MOTA tutti | PD trov/prec | veic. CODa | latenza med/p90 |
+|---|---|---|---|---|---|
+| LVE tuning 0/10/16 | 71.3/37.4/73.6 | 54.8/18.6/58.8 | 34.7/45.7 | 25.3 | 69/115 |
+| LVM tuning | 71.7/35.6/66.3 | 50.7/19.4/51.6 | 32.3/44.1 | 19.0 | 75/121 |
+| LVMF tuning | 69.5/34.9/65.8 | 47.9/17.8/51.0 | 31.6/43.7 | 28.3 | 75/123 |
+| LHVE held-out 11/12 | 48.4/22.8 | 35.0/18.1 | 56.7/36.5 | 6.0 | 72/118 |
+| LHVM held-out | 48.9/22.0 | 32.6/16.4 | 53.5/34.7 | 6.7 | 75/124 |
+| LHVMF held-out | 48.9/23.0 | 33.1/15.5 | 55.5/33.7 | 6.7 | 75/124 |
+
+Strada: vjsye 46.6 / veicoli 49.9 / persone 37.9 | vjsyem 42.6 / 45.1 / 34.9 | vjsyemf 43.2 / 46.1 / 35.3.
+- Log (ultima riga "fused leaves"): CODa 10_w1 motion-compensated 580 (M) / 549 (MF), fragments merged 0 / 45; strada 5237 / 5259, merged 0 / 3. Scan-leaf in strada 137-138 ms mediana.
+- M e MF perdono su tuning (seq 16 −7.3/−7.8 moving), held-out (MOTA tutti −2/−3) e strada (−3.4/−4.0). Restano spenti.
