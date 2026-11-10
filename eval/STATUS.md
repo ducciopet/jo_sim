@@ -1342,3 +1342,17 @@ taglio geometrico con foglie tardive (punto 5, corretto in 232a110). In verifica
 
 Strada mdp_street_vj: MOTA 46.3 [45.7-46.7] (mdp_street 43.8), veicoli 44.5 prec 8.7 (32.9/6.9), persone 39.4 (40.2); latenza 93/107.
 - VJ: migliora tutto su CODa tuning (+6.0/+1.6/+2.8 moving, MOTA tutti +2.3/+3.5/+2.3, PD +1.8, veicoli +3.5) e in strada (+2.5 MOTA, veicoli +11.6), persone in strada −0.8.
+
+## 10/11 SY (coerenza temporale camere, root 31868e9 / sins 8599702), x3, stride 2, STEREO=1
+
+| tag | moving MOTA | MOTA tutti | PD trov/prec | latenza med/p90 | fusion wait |
+|---|---|---|---|---|---|
+| LL3b (coda_lt3, stesso build) tuning 0/10/16 | 63.1/33.1/64.5 | 46.5/16.2/50.2 | 31.3/45.7 | 74/114 | 32.1 |
+| LSY (coda_sy) tuning 0/10/16 | 66.3/33.8/71.2 | 46.5/15.4/56.4 | 33.0/46.2 | 53/103 | 21.2 |
+| LHL3 held-out 11/12 | 47.2/24.7 | 31.8/20.8 | 51.2/35.3 | 71/117 | 33.1 |
+| LHSY held-out 11/12 | 46.0/23.9 | 31.8/20.0 | 50.8/37.0 | 68/116 | 27.2 |
+
+Strada mdp_street_sy: MOTA 42.7 [42.5-42.9] (lt2 43.3), veicoli 32.0 (31.2), persone 39.3 (40.2); latenza ~0/9 ms.
+- Log SY: leaf sync gap front 24 ms / stereo 0. Fused scan-leaf mediana 64 ms su CODa tuning, 33 sulle held-out, 231 ms in strada. Late class-only per run: 113 tuning, 400 held-out, 1540 strada. Calibrazione ICP pubblicata in strada.
+- SY: guadagno su tuning (seq 16 +6.7 moving), NON confermato su held-out (−1.2/−0.8, entro i range). In strada pari o peggio: le foglie arrivano quasi sempre tardi (YOLO ~230 ms).
+- Disco 10/11: run obsolete (pre-fix) e diagnostiche già decise spostate su NAS derived/coda_runs_archive e mdp_runs_archive (KWN, LOCw4, PERFw4, LFZ0/30, LWNC/P, LHW, LHK, LLO, strada fz0/fz30/wn/wnc/wnce/wncjm).
