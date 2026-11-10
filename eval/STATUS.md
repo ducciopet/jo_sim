@@ -1239,3 +1239,22 @@ tutto sotto di lui intorno al robot.
   Due cause, entrambe da testare con fix fisici commutabili: (1) la conferma del moto non scatta per veicoli lunghi
   e frammentati (regola N: uscire dal punto di nascita di 0,5 ingombri = ~2,5 m per un camion; centro del pezzo che
   salta) -> varianti LJ/LA di stanotte ne coprono una parte; (2) i veicoli veloci non vengono agganciati (gate).
+
+## 10/11 notte, lab PC: varianti x3 sul codice corretto (sins 5d0c8ea), CODa tuning 0/10/16 + strada
+
+Riferimento LFX (profilo coda) / mdp_street. Moving MOTA 0/10/16 | MOTA tutti 0/10/16 | PD trovati/prec | strada MOTA/recall veicoli | recall veicoli in moto CODa tuning (GT solo veicoli, dynamic_only) | latenza tracce med/p90 ms.
+
+| tag | moving MOTA | MOTA tutti | PD | strada | veic. CODa | latenza |
+|---|---|---|---|---|---|---|
+| LFX | 65.7/29.8/64.8 | 51.9/15.5/50.3 | 28.5/46.8 | 43.8/32.9 | 20.8 | 179/329 |
+| LB1 (b1) | 65.6/31.0/64.0 | 44.3/12.6/49.9 | 28.3/42.0 | 43.4/31.2 | 18.3 | 174/300 |
+| LV (v) | 74.3/33.3/68.2 | 50.5/16.6/52.0 | 27.3/44.2 | 44.3/31.5 | 18.3 | 153/242 |
+| LJ (j) | 65.4/28.9/65.9 | 46.1/12.8/51.9 | 29.0/43.1 | 45.5/47.1 | 20.4 | 178/380 |
+| LA (a) | 62.7/33.4/65.9 | 44.3/16.7/50.9 | 28.4/42.8 | 45.0/35.5 | 14.0 | 145/179 |
+
+- LV: unica che migliora la MOTA moving su tutte e 3 le sequenze (+8.6/+3.5/+3.4), MOTA tutti alla pari, latenza più bassa.
+- LJ: migliore in strada sui veicoli (recall +14), ma neutra o peggio su CODa e persone in strada −2.5.
+- B1 e A abbassano la MOTA tutti su seq 0 (~−7.6) e la precisione PD. A ha la latenza migliore.
+- Nessuna variante risolve i veicoli in moto su CODa (14-21%).
+- Ripartenza 00:00 dopo lo slot 23-24: check CPU 5%, load 1.8, GPU libera (bags/lab_watchdog.txt).
+- In coda: LLF (LiDAR-only, codice corretto), poi lavoro latenza LFS/LL3 + mdp_street_lt2 (root 429c390, sins 7e0ce44).
