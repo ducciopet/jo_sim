@@ -1332,3 +1332,13 @@ Età (sonda, CODa 10_w2 coda_sy): LiDAR fused 79/123, tracce 96/140 ms; stereo S
 Strada coda_sy: tracce 7/10 ms (nessuna attesa), foglie 199/226 ms dallo stamp.
 1 run strada (con sonda attiva, confondente): MOTA 40.3 vs lt2 44.6, veicoli 25.2 vs 34.2 → causa probabile il
 taglio geometrico con foglie tardive (punto 5, corretto in 232a110). In verifica; x3 sul lab (sy_chain).
+
+## 10/11 LVJ (coda_vj = V + J), x3 tuning + strada, harness stride 2 (sins a0b33f8)
+
+| tag | moving MOTA 0/10/16 | MOTA tutti 0/10/16 | PD trov/prec | veic. CODa | latenza med/p90 |
+|---|---|---|---|---|---|
+| LFS (coda) | 65.7/32.9/64.4 | 44.6/15.0/49.7 | 31.3/44.2 | 15.5 | 74/146 |
+| LVJ (coda_vj) | 71.7/34.5/67.2 | 46.9/18.5/52.0 | 33.1/44.2 | 19.0 | 79/154 |
+
+Strada mdp_street_vj: MOTA 46.3 [45.7-46.7] (mdp_street 43.8), veicoli 44.5 prec 8.7 (32.9/6.9), persone 39.4 (40.2); latenza 93/107.
+- VJ: migliora tutto su CODa tuning (+6.0/+1.6/+2.8 moving, MOTA tutti +2.3/+3.5/+2.3, PD +1.8, veicoli +3.5) e in strada (+2.5 MOTA, veicoli +11.6), persone in strada −0.8.
