@@ -1273,3 +1273,14 @@ Riferimento LFX (profilo coda) / mdp_street. Moving MOTA 0/10/16 | MOTA tutti 0/
 - MOTA moving: alla pari o migliore senza camere (seq 10 +5.9, 16 +3.6, 11 +1.7). MOTA "tutti" su seq 10 31.4 vs 15.5: le camere su seq 10 aggiungono molti FP.
 - IoU "all" più alta con le camere (fermi riconosciuti); IoU moving simile.
 - Latenza tracce LLF 125/126 ms (med/p90) vs 179/329 (LFX) e 258/669 (LHF).
+
+## 10/11 mattina: latenza (root 06a21ae, sins a0b33f8), x3, STEREO=1, adattatore cloud_stride 2
+
+| tag | moving MOTA 0/10/16 | MOTA tutti 0/10/16 | PD trov/prec | veic. CODa | latenza tracce med/p90 | fusion wait |
+|---|---|---|---|---|---|---|
+| LFX (coda, harness vecchio) | 65.7/29.8/64.8 | 51.9/15.5/50.3 | 28.5/46.8 | 20.8 | 179/329 | 71.0 |
+| LFS (coda, stride 2) | 65.7/32.9/64.4 | 44.6/15.0/49.7 | 31.3/44.2 | 15.5 | 74/146 | 42.3 |
+| LL3 (coda_lt3, stride 2) | 64.6/32.9/64.1 | 46.5/16.7/49.9 | 32.1/46.6 | 14.5 | 68/104 | 29.8 |
+
+Strada: mdp_street_lt2 MOTA 43.3 [42.4-44.6] (mdp_street 43.8), veicoli 31.2 (32.9), persone 40.2 (=); latenza tracce ~0/9 ms vs 94/107 (wait 0.2 ms, cam/tick 0: il YOLO della strada non arriva mai in tempo).
+- LL3 vs LFS: stessa accuratezza (entro rumore), p90 146 → 104 ms. Lo stride 2 da solo porta la mediana 179 → 74 ms.
