@@ -1356,3 +1356,18 @@ Strada mdp_street_sy: MOTA 42.7 [42.5-42.9] (lt2 43.3), veicoli 32.0 (31.2), per
 - Log SY: leaf sync gap front 24 ms / stereo 0. Fused scan-leaf mediana 64 ms su CODa tuning, 33 sulle held-out, 231 ms in strada. Late class-only per run: 113 tuning, 400 held-out, 1540 strada. Calibrazione ICP pubblicata in strada.
 - SY: guadagno su tuning (seq 16 +6.7 moving), NON confermato su held-out (−1.2/−0.8, entro i range). In strada pari o peggio: le foglie arrivano quasi sempre tardi (YOLO ~230 ms).
 - Disco 10/11: run obsolete (pre-fix) e diagnostiche già decise spostate su NAS derived/coda_runs_archive e mdp_runs_archive (KWN, LOCw4, PERFw4, LFZ0/30, LWNC/P, LHW, LHK, LLO, strada fz0/fz30/wn/wnc/wnce/wncjm).
+
+## 10/11 VJSY / VJSYE x3, stride 2, STEREO=1 (build root 693feee / sins 758189b, M/MF spenti = identico al richiesto)
+
+| tag | moving MOTA | MOTA tutti | PD trov/prec | veic. CODa (moving rec.) | latenza med/p90 |
+|---|---|---|---|---|---|
+| LVJ tuning 0/10/16 | 71.7/34.5/67.2 | 46.9/18.5/52.0 | 33.1/44.2 | 19.0 | 79/154 |
+| LVS (coda_vjsy) tuning | 72.0/37.5/73.5 | 54.1/20.0/57.9 | 34.5/46.7 | 22.6 | 71/117 |
+| LVE (coda_vjsye) tuning | 71.3/37.4/73.6 | 54.8/18.6/58.8 | 34.7/45.7 | 25.3 | 69/115 |
+| LHS held-out 11/12 | 46.7/23.2 | 30.9/18.0 | 50.8/34.1 | 3.7 | 96/169 |
+| LHVS held-out | 48.2/24.5 | 33.0/18.3 | 54.9/35.1 | 5.5 | 74/119 |
+| LHVE held-out | 48.4/22.8 | 35.0/18.1 | 56.7/36.5 | 6.0 | 72/118 |
+
+Strada: vj MOTA 46.3, veicoli 44.5, persone 39.4 | vjsy 47.2 [46.4-48.6], veicoli 44.2, persone 40.5 | vjsye 46.6 [45.9-47.6], veicoli 49.9 prec 9.2, persone 37.9.
+- VJSY e VJSYE confermano su held-out (seq 11 +1.5/+1.7 moving, MOTA tutti +2.1/+4.1, PD +4/+6), seq 12 moving pari (VJSYE −0.4). Latenza −20 ms rispetto a LHS.
+- VJSYE: più veicoli (CODa +2.7, strada +5.7), persone in strada −2.6.
