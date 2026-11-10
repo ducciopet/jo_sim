@@ -1294,3 +1294,41 @@ Strada: mdp_street_lt2 MOTA 43.3 [42.4-44.6] (mdp_street 43.8), veicoli 31.2 (32
 | LHV (coda_v) | 62.0/82.2/47.2, 31.7 | 42.6/71.4/24.1, 18.9 | 51.9/34.7 | 3.9 | 96/170 |
 
 - V su held-out: +0.5 / +0.9 di MOTA moving, entro il rumore (range LHS 45.2-48.3 / 22.5-24.2). Il +8.6 su seq 0 del tuning non si conferma: guadagno piccolo ma coerente, nessun peggioramento.
+
+## 10/11 portatile: coerenza temporale camere + audit del workflow (sins c65e6c6 → fbb2445 → 232a110, root 3a1025b)
+
+Verifiche:
+- Stamp camere del robot corretti: imbardata da immagini (phase correlation) vs giroscopio su mdp_slopes, sfasamento
+  front +5 ms / back +20 ms (corr 0.95), mentre l'arrivo è 164 / 214 ms dopo lo stamp → ritardo reale di
+  compressione/trasporto (topic compressed/zstd/compressedDepth), non offset di orologio. Strada: robot fermo
+  (odometria e IMU piatte), verifica non possibile lì.
+- Stamp colore vs profondità: lab D435 identici (30 Hz, arrivo ~40 ms); strada identici 77% / 1 frame (10 Hz, ~150 ms);
+  CODa front (ZED) mai uguali, ~42 ms (7.6 Hz); CODa stereo identici.
+- Parametri: tutte le chiavi YAML (outdoor, coda_sy, mdp_street_sy, indoor) sono dichiarate dai nodi
+  (eval/diagnostics/workflow_audit/param_audit.py).
+- Topic (sonda su tutti i topic, eval/diagnostics/workflow_audit/topic_probe.py + probe_report.py).
+
+Difetti trovati (tutti corretti con opzioni, default = comportamento precedente, accese in coda_sy / mdp_street_sy):
+1. Foglie YOLO costruite all'arrivo della profondità con le box dell'immagine PRECEDENTE (CODa stereo 100 ms, front
+   130 ms; stesso frame 0-1%). → yolo_leaf_sync: foglie dal frame YOLO più vicino in stamp, decise quando nessuno può
+   essere più vicino (stereo 0 ms, front ~40 ms = minimo possibile). Maschera dello stesso frame della detection.
+2. Profondità portata nel globale con la posa dell'ultimo scan, non del suo stamp → camera_pose_at_stamp
+   (preprocessing) e pose_at_stamp (static_structures, anche per lo scan LiDAR).
+3. Strada: la camera front usa il percorso immagine allineata, che NON costruiva foglie → su strada foglie mai
+   esistite (classe solo dal fallback pixel). → yolo_leaf_aligned_path.
+4. Strada: calibration_icp in ascolto su /…/aligned_depth_to_color/image_raw/zstd (nessun publisher, il bag è
+   compressedDepth) → ICP mai eseguita, TF iniziale dopo 7 s. → depth_transport_from_preprocessing (launch).
+5. Foglie arrivate dopo la fusione del loro scan scartate → fusion_late_leaves_max_age (entrano nello scan dopo, la
+   fusione non le aspetta); una foglia tardiva dà solo la classe, nessun taglio geometrico (punti vecchi).
+6. Fallback pixel del tracker e test "in FOV dell'immagine YOLO" (decadimento classe) con posa attuale e posizione
+   attuale su box 2D vecchie (strada ~190 ms) → yolo2d_time_compensation (posa camera allo stamp dell'immagine via TF,
+   traccia riportata indietro con la velocità KF).
+7. Punti LiDAR oltre la profondità nelle foglie presi dall'ultimo scan → scan più vicino al frame.
+8. Trigger profondità/scan: aspettava un frame successivo allo scan anche quando quello precedente era già il più
+   vicino (front CODa p90 155 ms) → depth_trigger_early (29/75 ms).
+Benigni: gseg3d_* disattivato da cfg (publisher senza messaggi); iscrizione a depth/image_rect_raw/compressedDepth
+(percorso "fase 2" mai pubblicato); wall_markers ~25 Hz (una pubblicazione per sorgente).
+Età (sonda, CODa 10_w2 coda_sy): LiDAR fused 79/123, tracce 96/140 ms; stereo SGBM+deproiezione harness 59 ms.
+Strada coda_sy: tracce 7/10 ms (nessuna attesa), foglie 199/226 ms dallo stamp.
+1 run strada (con sonda attiva, confondente): MOTA 40.3 vs lt2 44.6, veicoli 25.2 vs 34.2 → causa probabile il
+taglio geometrico con foglie tardive (punto 5, corretto in 232a110). In verifica; x3 sul lab (sy_chain).
