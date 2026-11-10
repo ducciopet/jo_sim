@@ -1284,3 +1284,13 @@ Riferimento LFX (profilo coda) / mdp_street. Moving MOTA 0/10/16 | MOTA tutti 0/
 
 Strada: mdp_street_lt2 MOTA 43.3 [42.4-44.6] (mdp_street 43.8), veicoli 31.2 (32.9), persone 40.2 (=); latenza tracce ~0/9 ms vs 94/107 (wait 0.2 ms, cam/tick 0: il YOLO della strada non arriva mai in tempo).
 - LL3 vs LFS: stessa accuratezza (entro rumore), p90 146 → 104 ms. Lo stride 2 da solo porta la mediana 179 → 74 ms.
+
+## 10/11 held-out 11/12, stesso harness (stride 2, STEREO=1, codice a0b33f8), x3: LHV (coda_v) vs LHS (coda)
+
+| tag | s11 moving rec/prec/MOTA, tutti | s12 moving rec/prec/MOTA, tutti | PD trov/prec | veic. in moto (11/12) | latenza med/p90 |
+|---|---|---|---|---|---|
+| LHF (vecchio harness) | 62.5/79.1/43.9, 30.8 | 40.5/70.2/21.8, 17.9 | 47.7/36.0 | 3.5 | 258/669 |
+| LHS (coda) | 62.8/80.6/46.7, 30.9 | 42.4/70.5/23.2, 18.0 | 50.8/34.1 | 3.7 | 96/169 |
+| LHV (coda_v) | 62.0/82.2/47.2, 31.7 | 42.6/71.4/24.1, 18.9 | 51.9/34.7 | 3.9 | 96/170 |
+
+- V su held-out: +0.5 / +0.9 di MOTA moving, entro il rumore (range LHS 45.2-48.3 / 22.5-24.2). Il +8.6 su seq 0 del tuning non si conferma: guadagno piccolo ma coerente, nessun peggioramento.
