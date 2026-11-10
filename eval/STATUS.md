@@ -1258,3 +1258,18 @@ Riferimento LFX (profilo coda) / mdp_street. Moving MOTA 0/10/16 | MOTA tutti 0/
 - Nessuna variante risolve i veicoli in moto su CODa (14-21%).
 - Ripartenza 00:00 dopo lo slot 23-24: check CPU 5%, load 1.8, GPU libera (bags/lab_watchdog.txt).
 - In coda: LLF (LiDAR-only, codice corretto), poi lavoro latenza LFS/LL3 + mdp_street_lt2 (root 429c390, sins 7e0ce44).
+
+## 10/11 LLF: SINS LiDAR-only sul codice corretto (profilo coda, no camere) x3, 15 finestre, vs LFX/LHF (tutti i sensori)
+
+| seq | LFX/LHF moving rec/prec/MOTA, tutti | LLF moving rec/prec/MOTA, tutti | IoU any moving / all: full → LiDAR-only |
+|---|---|---|---|
+| 0 | 85.2/81.5/65.7, 51.9 | 82.5/82.0/64.2, 34.8 | 82.5/70.1 → 82.1/64.4 |
+| 10 | 61.9/67.8/29.8, 15.5 | 61.0/71.2/35.7, 31.4 | 41.4/31.4 → 47.0/31.2 |
+| 16 | 72.2/92.5/64.8, 50.3 | 72.6/95.2/68.4, 47.0 | 83.0/71.9 → 87.1/58.3 |
+| 11 | 62.5/79.1/43.9, 30.8 | 57.5/83.2/45.6, 34.1 | 70.2/42.7 → 67.8/23.9 |
+| 12 | 40.5/70.2/21.8, 17.9 | 35.0/71.3/20.4, 19.2 | 56.6/51.7 → 49.9/43.7 |
+
+- PD trovati: LiDAR-only 0 (tuning) / 2.4 (held-out) contro 28.5 / 47.7. Gli oggetti fermi (PD) vengono dalle camere.
+- MOTA moving: alla pari o migliore senza camere (seq 10 +5.9, 16 +3.6, 11 +1.7). MOTA "tutti" su seq 10 31.4 vs 15.5: le camere su seq 10 aggiungono molti FP.
+- IoU "all" più alta con le camere (fermi riconosciuti); IoU moving simile.
+- Latenza tracce LLF 125/126 ms (med/p90) vs 179/329 (LFX) e 258/669 (LHF).
