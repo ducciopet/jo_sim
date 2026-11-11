@@ -1386,3 +1386,16 @@ Strada: vj MOTA 46.3, veicoli 44.5, persone 39.4 | vjsy 47.2 [46.4-48.6], veicol
 Strada: vjsye 46.6 / veicoli 49.9 / persone 37.9 | vjsyem 42.6 / 45.1 / 34.9 | vjsyemf 43.2 / 46.1 / 35.3.
 - Log (ultima riga "fused leaves"): CODa 10_w1 motion-compensated 580 (M) / 549 (MF), fragments merged 0 / 45; strada 5237 / 5259, merged 0 / 3. Scan-leaf in strada 137-138 ms mediana.
 - M e MF perdono su tuning (seq 16 −7.3/−7.8 moving), held-out (MOTA tutti −2/−3) e strada (−3.4/−4.0). Restano spenti.
+
+## 11/11 G (fusione frammenti a livello tracker, track_fragment_merge, default off; base vjsye), x3, stride 2, STEREO=1
+
+| tag | moving MOTA 0/10/16 | MOTA tutti | PD trov/prec | veic. CODa | latenza med/p90 |
+|---|---|---|---|---|---|
+| LVE | 71.3/37.4/73.6 | 54.8/18.6/58.8 | 34.7/45.7 | 25.3 | 69/115 |
+| LVG | 69.4/38.1/73.2 | 45.9/18.0/58.2 | 34.6/41.7 | 25.1 | 52/93 |
+
+Strada: vjsye 46.6 / veicoli 49.9 prec 9.2 / persone 37.9 | vjsyeg 46.8 [44.7-48.1] / 50.2 prec 8.9 / 38.0.
+- Log merge: CODa 10_w1 253 fusioni ogni 50 tick (costo mediana 2.3 ms, max 3.9); strada 36 ogni 50 tick (totale 7835, costo 0.10 ms).
+- spawn_reasons strada (run dbg): spawn su veicoli annotati 305 con G contro 285 senza; matched_other 29.5% contro 21.1%. G non riduce le nascite accanto a tracce esistenti.
+- G perde su tuning (seq 0 MOTA tutti −8.9, PD prec −4.0): fonde troppo su CODa (pedoni vicini). Strada pari. Held-out NON lanciato. Resta spento.
+- Codice: commit sins 130ec7d solo locale sul PC lab (push negato: niente diritti di scrittura su ducciopet/sins da qui). Patch su NAS claude_handoff/sins_G_130ec7d.patch. Puntatore del submodule non aggiornato.
