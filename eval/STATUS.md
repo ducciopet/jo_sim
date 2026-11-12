@@ -1425,3 +1425,23 @@ regolarità dei passi, `min_coverage` 0.8 / `min_obs` 5, veto occlusione, veto p
 - F (0.5 / 0.3): fonde pedoni affiancati, seq 0 recall in moto −10 / −8. Non adottabile.
 - PD F1 seq 16 bimodale (~30 / ~43) anche con R: da verificare con x3, non attribuito a R.
 - Candidata: R5 (vjsyer5) da confermare x3 sul lab (tuning, held-out 11-12, strada). Veicoli: cercare un criterio diverso dal tempo (es. classe YOLO veicolo).
+
+## 12/11 pomeriggio: frammentazione dei veicoli (laptop, x1)
+
+Misura (strada, R10): auto in 1 pezzo 62%, 2 pezzi 23%, >=3 9%; pezzi 100% solo LiDAR (nessuna classe YOLO); tipico:
+corpo 2.7 m + pezzo d'estremità ~1 m alto 0.4 m a 1.5 m lungo l'asse. Passaggi visibili 4.0 s (mediana) ma traccia
+sull'auto 1.6 s (68% < 2.4 s): la prova di moto non riempie la finestra per le rinascite, non per la velocità delle auto.
+
+| profilo | CODa moving MOTA 0/10/16 | strada rec/prec/MOTA | veicoli rec | persone MOTA |
+|---|---|---|---|---|
+| vjsye / vjsyecsv | 69.8/34.2/72.8 | 62.5/83.1/48.7 | 48.1 | 41.0 |
+| R5 | 71.8/32.0/71.3 | 65.7/79.8/47.5 | 51.9 | 38.4 |
+| R9 = R5 + storia del percorso ereditata (`track_travel_proof_inherit_min_dist` 1.0) | 66.4/35.1/72.9 | 66.6/79.2/47.3 | 54.9 | 37.2 |
+| R10 = R9 + velocità ereditata | 69.7/33.4/69.5 | 67.0/79.1/47.4 | 55.5 | 37.1 |
+| R11 = R9 + F ancorata (`fragment_merge_anchor_min_length` 2.0) | 61.5/34.4/73.6 | 66.2/77.5/44.8 | 52.7 | 35.2 |
+| R12 = R9 + gruppi a moto coerente (`track_motion_group_ticks` 4) | 57.1/31.5/69.5 | 66.4/83.5/51.2 | 55.1 | 41.8 |
+| **R12P** = R12 + veto due persone YOLO | 67.2/30.2/70.5 (IDF1 seq 0 83.2) | 66.5/82.9/50.6 | 56.1 | 40.7 |
+
+- F ancorata: anche muri/siepi/file di auto parcheggiate sono ancore allungate; pedoni fusi (seq 0 recall −9). Spenta.
+- Gruppi: costo 0.01-0.09 ms/tick (max 0.14); 0.05 gruppi/tick in strada, 0.13-0.25 su CODa. Senza veto fondono coppie di pedoni (seq 0 recall −9).
+- R12P: strada +1.9 MOTA sul riferimento (+3.3 su R9), CODa 2-4 punti sotto il riferimento su tutte e tre le seq (singola run): da confermare x3.
