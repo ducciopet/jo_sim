@@ -1,0 +1,12 @@
+# coda_vjsyer (R, permissive proof: >= 1 m or 1 own length) + occlusion edges: an object seen through a gap
+# (both side edges occluded) cannot prove motion by its path. Tests whether the occlusion veto alone replaces R2's limits.
+base: coda_vjsyer
+files:
+  dbscan_detector.yaml:
+    dbscan_detector_node:
+      occlusion_edge_check: true
+      occlusion_edge_min_angle_deg: 1.0
+      occlusion_edge_range_margin: 0.5
+  tracker.yaml:
+    tracker_node:
+      track_travel_proof_occlusion_veto: true

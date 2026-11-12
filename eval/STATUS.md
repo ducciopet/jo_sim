@@ -1399,3 +1399,29 @@ Strada: vjsye 46.6 / veicoli 49.9 prec 9.2 / persone 37.9 | vjsyeg 46.8 [44.7-48
 - spawn_reasons strada (run dbg): spawn su veicoli annotati 305 con G contro 285 senza; matched_other 29.5% contro 21.1%. G non riduce le nascite accanto a tracce esistenti.
 - G perde su tuning (seq 0 MOTA tutti −8.9, PD prec −4.0): fonde troppo su CODa (pedoni vicini). Strada pari. Held-out NON lanciato. Resta spento.
 - Codice: commit sins 130ec7d solo locale sul PC lab (push negato: niente diritti di scrittura su ducciopet/sins da qui). Patch su NAS claude_handoff/sins_G_130ec7d.patch. Puntatore del submodule non aggiornato.
+
+## 12/11 R (prova di moto dal percorso), F (fusione frammenti a scala oggetto), bordi d'occlusione — laptop, x1, STEREO=1, base vjsye
+
+Codice (sins, default tutto spento): tracker `track_travel_proof_*` (finestra, lunghezze-corpo, min_dist, rettilineità,
+regolarità dei passi, `min_coverage` 0.8 / `min_obs` 5, veto occlusione, veto point-shift); detector
+`fragment_merge_gap_ratio` (F, 0.15 ms/scan) e `occlusion_edge_check` (0.3-0.4 ms/scan, ~38% oggetti CODa con entrambi i bordi occlusi).
+
+| profilo | CODa moving MOTA 0/10/16 | strada rec/prec/MOTA | veicoli rec | persone MOTA |
+|---|---|---|---|---|
+| vjsye (LVE) / vjsyecsv | 69.8/34.2/72.8 | 62.5/83.1/48.7 | 48.1 | 41.0 |
+| R (build vecchia, 3 oss., no copertura) | 28.7/13.0/70.0 | 73.9/76.9/49.6 | 66.6 | 36.2 |
+| R rifatta sulla build attuale (vjsyer0) | — | 67.0/79.3/48.0 | 51.8 | 39.0 |
+| R2 (min 2 m, regolarità) | 68.5/27.9/73.8 | — | — | — |
+| R4 = R2 + occlusione | 66.5/33.0/73.7 | 64.8/80.1/47.2 | 50.2 | 38.5 |
+| R2 + F(0.3) (r3g) | 62.4/34.4/73.5 | 65.1/80.0/47.4 | 50.6 | 38.7 |
+| **R5 = R + occlusione** | **71.8/32.0/71.3** | 65.7/79.8/47.5 | 51.9 | 38.4 |
+| R6 = R5 senza regolarità | 67.8/32.8/73.2 | 65.8/79.8/47.4 | 51.3 | 38.5 |
+| R7 = R5, copertura 0, 3 oss., no regolarità | 63.8/28.6/68.7 | 71.4/76.0/46.5 | 65.9 | 33.0 |
+| R8 = R5, copertura 0.4 | 62.0/31.4/70.7 | 68.1/79.2/48.4 | 57.4 | 37.6 |
+
+- Il guadagno veicoli di R viene dalla prova rapida (copertura bassa); la stessa rapidità fa passare oggetti statici che "scivolano": compromesso lineare, nessun punto intermedio buono su entrambi.
+- Occlusione: cura i FP di R su CODa (pezzi di muro visti attraverso varchi, seq 10; righe di oggetti statici, seq 0). Non è lei a togliere i veicoli in strada (14.7% dei pezzi veicolo con entrambi i bordi occlusi).
+- Veto point-shift (R3): toglie i veicoli visti di lato (51) -> parametro, default off.
+- F (0.5 / 0.3): fonde pedoni affiancati, seq 0 recall in moto −10 / −8. Non adottabile.
+- PD F1 seq 16 bimodale (~30 / ~43) anche con R: da verificare con x3, non attribuito a R.
+- Candidata: R5 (vjsyer5) da confermare x3 sul lab (tuning, held-out 11-12, strada). Veicoli: cercare un criterio diverso dal tempo (es. classe YOLO veicolo).
