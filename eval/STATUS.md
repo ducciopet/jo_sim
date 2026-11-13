@@ -1487,3 +1487,9 @@ Risultati in eval/results/coda/cam/. SINS = run LVE_v2 (riferimento, portatile, 
 - Nel campo della camera DeepFusionMOT non crolla più (seq 10 in moto MOTA 16.5, vicino a SINS 22.7).
 - Tutti gli oggetti: seq 0 i baseline vedono il 7-8% (oggetti fermi di classi che CenterPoint non ha: scooter, bici
   parcheggiate...); seq 10 i baseline battono SINS (37.8 contro −2.1), SINS ha precisione 50 sugli oggetti fermi.
+- Falsi PD di SINS in seq 10 (camera): 542 righe su 768, 66 tracce; due tracce di w1 = 46%. Sovrapposte all'immagine
+  ZED (eval/diagnostics/pd_fp_coda10/): sono pickup parcheggiati veri (oggetti capaci di moto, nessuna struttura
+  fissa). Contano FP perché (a) il box SINS copre solo il muso visibile e il centro cade 2-3 m dal centro GT (match a
+  1 m), (b) in parte dei frame CODa non annota quei pickup. 43% dei falsi PD è a 1-3 m da un pickup/furgone annotato.
+  Nessuna violazione della regola "solo oggetti capaci di moto"; il problema è l'estensione del box dei veicoli grandi
+  visti di fronte (stesso tema della frammentazione).
