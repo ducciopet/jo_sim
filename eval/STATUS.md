@@ -1445,3 +1445,22 @@ sull'auto 1.6 s (68% < 2.4 s): la prova di moto non riempie la finestra per le r
 - F ancorata: anche muri/siepi/file di auto parcheggiate sono ancore allungate; pedoni fusi (seq 0 recall −9). Spenta.
 - Gruppi: costo 0.01-0.09 ms/tick (max 0.14); 0.05 gruppi/tick in strada, 0.13-0.25 su CODa. Senza veto fondono coppie di pedoni (seq 0 recall −9).
 - R12P: strada +1.9 MOTA sul riferimento (+3.3 su R9), CODa 2-4 punti sotto il riferimento su tutte e tre le seq (singola run): da confermare x3.
+
+## 13/11 DeepFusionMOT (Wang et al., RA-L/IROS 2022) su CODa tuning, portatile
+
+Codice upstream 8f4e2d7 in eval/baselines/deepfusionmot_src (fusione 3D-2D, associazione a 4 livelli, KF, gestione
+tracce e parametri KITTI invariati). Adattatore eval/baselines/deepfusionmot/: ingressi multi-classe (car, pedestrian,
+cyclist) dagli stessi box di EagerMOT (CenterPoint CODa 3D, score > 0.3) + YOLO della camera frontale ZED di una run
+SINS (LVE); tracking nel frame odom (niente compensazione oxts), cyclist coi parametri pedestrian (upstream non lo
+configura). Riproduzione su KITTI NON fatta: download dei file KITTI tracking (calib/oxts/label) negato dal classificatore.
+
+| CODa, solo oggetti in moto | finestre | recall | precisione | MOTA |
+|---|---|---|---|---|
+| DeepFusionMOT seq 0 | 3 | 0.6 | 5.1 | −10.0 |
+| DeepFusionMOT seq 10 | 5 | 16.7 | 61.8 | 6.3 |
+| EagerMOT seq 0 / 10 (pedoni, stessi box 3D) | 3 / 5 | 91.1 / 79.9 | 70.5 / 58.9 | – |
+
+- Per progetto DeepFusionMOT pubblica solo tracce confermate dalla camera: una traccia vista solo dal LiDAR per 3 frame
+  passa a "Reactivate" e non esce. Su KITTI la GT è solo nel campo della camera; su CODa la GT è a 360° e la ZED frontale
+  vede poche persone (seq 0 w1: 53 box persona in 600 frame). Da riportare anche la metrica nel solo campo della camera.
+- Costo: 2-56 ms/frame (cresce con il numero di oggetti, seq 10 w4 affollata).

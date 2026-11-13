@@ -43,7 +43,7 @@ BASELINES = {'dynablox': ('/motion_detector/visualization/clusters', True),
              'mdetector': ('/m_detector/point_out', None)}
 # offline methods writing CSV tracks (t_ns, id, label, x, y, z, l, w, h, yaw, score; odom frame, id -1 = empty frame):
 # no motion state, every track counts as 'dynamic' (as UniMT/EagerMOT in the lab)
-CSV_METHODS = ('simpletrack', 'eagermot')
+CSV_METHODS = ('simpletrack', 'eagermot', 'deepfusionmot')
 
 
 def load_csv_tracks(path):
