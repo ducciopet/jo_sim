@@ -4,6 +4,7 @@
 # CODa tuning 0/10/16 (LVE2/LVR5/LVR12P), held-out 11/12 (LHVE2/LHVR5/LHVR12P), Marina di Pisa street.
 # Code: sins b190b06 / jo_sim c0e1f9e (pulled below). Resumable like lab_local.sh (the street call has no CODa windows, its CODA only names an installed profile).
 cd $(dirname $0)/../../..
+export ADAPTER_ARGS="-p cloud_stride:=2"   # same harness as LVJ/LVE/LVG (RealSense-style camera-cloud decimation)
 git pull -q && git submodule update -q sins || { echo "PULL FAILED"; exit 1; }
 git -C sins log --oneline -1
 CODA="LVE2 coda_vjsye2;LVR5 coda_vjsyer5;LVR12P coda_vjsyer12p" STREET=none bash eval/scripts/analysis/lab_local.sh
