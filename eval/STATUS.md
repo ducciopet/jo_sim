@@ -1459,8 +1459,15 @@ configura). Riprodotto su KITTI tracking training (Car): HOTA 77.86, AssA 80.60,
 | DeepFusionMOT seq 0 | 3 | 0.6 | 5.1 | −10.0 |
 | DeepFusionMOT seq 10 | 5 | 16.7 | 61.8 | 6.3 |
 | EagerMOT seq 0 / 10 (pedoni, stessi box 3D) | 3 / 5 | 91.1 / 79.9 | 70.5 / 58.9 | – |
+| EagerMOT multi-classe seq 0 (stessi ingressi di DeepFusionMOT) | 3 | 91.6 | 65.3 | 42.5 |
+| EagerMOT multi-classe seq 10 | 5 | 87.5 | 56.7 | 19.6 |
 
 - Per progetto DeepFusionMOT pubblica solo tracce confermate dalla camera: una traccia vista solo dal LiDAR per 3 frame
   passa a "Reactivate" e non esce. Su KITTI la GT è solo nel campo della camera; su CODa la GT è a 360° e la ZED frontale
   vede poche persone (seq 0 w1: 53 box persona in 600 frame). Da riportare anche la metrica nel solo campo della camera.
 - Costo: 2-56 ms/frame (cresce con il numero di oggetti, seq 10 w4 affollata).
+- EagerMOT multi-classe (eval/baselines/eagermot/run_eagermot_coda_mc.py): car/pedestrian/bicycle con NUSCENES_BEST_PARAMS
+  upstream invariati, ingressi = bags/deepfusionmot_out/in_coda*.json (identici a DeepFusionMOT). Uscite in
+  bags/eagermot_mc_out, risultati EMMC_*.json. Seq 0: rispetto alla versione solo pedoni stessa recall, precisione
+  −5 (auto e ciclisti in più), IDF1 72.2 (vs 75.4). Seq 10: IDF1 63.8, IDSW 47. Costo 6-12 ms/frame. Sotto SINS
+  riferimento (MOTA 71.3 / 37.4) ma molto sopra DeepFusionMOT, che scarta le tracce non confermate dalla camera.
