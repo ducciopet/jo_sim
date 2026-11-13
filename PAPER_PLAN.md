@@ -11,6 +11,9 @@ Data di stesura: 2026-10-13.
 
 ## 1. Venue e calendario
 
+> **Aggiornamento 13/11/2026: la rivista scelta è Elsevier *Robotics and Autonomous Systems* (RAS)**, non più IVC;
+> il manoscritto in `~/Desktop/SINS_paper` segue già la Guide for Authors di RAS. La nota del 09/11 qui sotto resta come storico.
+>
 > **Aggiornamento 09/11/2026: la rivista scelta è Elsevier *Image and Vision Computing* (IVC).** Le specifiche
 > (formato, lunghezza, revisione) sono in un progetto Claude dell'utente e vanno riportate qui. Il testo sotto su
 > RA-L/IROS è superato e resta solo come storico; vanno rivisti in particolare la struttura (§5, scritta per 8 pagine
