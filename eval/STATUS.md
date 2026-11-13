@@ -1452,7 +1452,7 @@ Codice upstream 8f4e2d7 in eval/baselines/deepfusionmot_src (fusione 3D-2D, asso
 tracce e parametri KITTI invariati). Adattatore eval/baselines/deepfusionmot/: ingressi multi-classe (car, pedestrian,
 cyclist) dagli stessi box di EagerMOT (CenterPoint CODa 3D, score > 0.3) + YOLO della camera frontale ZED di una run
 SINS (LVE); tracking nel frame odom (niente compensazione oxts), cyclist coi parametri pedestrian (upstream non lo
-configura). Riproduzione su KITTI NON fatta: download dei file KITTI tracking (calib/oxts/label) negato dal classificatore.
+configura). Riprodotto su KITTI tracking training (Car): HOTA 77.86, AssA 80.60, MOTA 87.45 contro il paper (test) 75.46 / 80.06 / 84.63 (FIDELITY.md).
 
 | CODa, solo oggetti in moto | finestre | recall | precisione | MOTA |
 |---|---|---|---|---|

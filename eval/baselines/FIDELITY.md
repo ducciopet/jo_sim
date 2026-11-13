@@ -209,3 +209,20 @@ Download da fare a mano (bloccati per gli accessi automatici, 08/11; non serve r
 2. Verifiche [?] sul de-skew CODa, `min_cluster_size` upstream e config M-detector per 128 linee.
 3. Run di controllo SINS solo LiDAR (configurazione, nessuna modifica al codice).
 4. Fase B: M-detector su SemanticKITTI (dati già sul NAS), Dynablox su DOALS, CenterPoint mAP su CODa val.
+
+## DeepFusionMOT (13/11/2026)
+
+Riprodotto sul suo dataset. Codice upstream 8f4e2d7, config/kitti.yaml invariato, rilevazioni degli autori nel
+repository (PointRCNN 3D + RRC 2D, Car), valutazione con la TrackEval inclusa upstream (split training, 21 sequenze).
+Driver: eval/baselines/deepfusionmot/run_kitti_fidelity.py (uguale a main.py; numero di frame letto dagli oxts invece
+che dalle immagini, che il tracker non usa; moduli di disegno sostituiti da stub perché importano torch; alias numpy
+np.float/np.int/np.bool ripristinati per la TrackEval vecchia). Dati: datasets_SINS/KITTI_tracking (calib, oxts, label_02).
+
+| KITTI tracking, Car | HOTA | AssA | MOTA | IDSW |
+|---|---|---|---|---|
+| paper (test, server ufficiale) | 75.46 | 80.06 | 84.63 | 84 |
+| nostra esecuzione (training, 21 seq) | 77.86 | 80.60 | 87.45 | 68 |
+
+Il paper riporta solo il test set (etichette non pubbliche); sul training i numeri sono coerenti (AssA quasi identica,
+HOTA +2.4 come atteso su sequenze dove il rilevatore è più preciso). Output completo: deepfusionmot/kitti_training_eval.txt.
+Velocità qui 30 FPS sul portatile (paper ~110 FPS sulla loro macchina).
