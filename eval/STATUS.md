@@ -1471,3 +1471,19 @@ configura). Riprodotto su KITTI tracking training (Car): HOTA 77.86, AssA 80.60,
   bags/eagermot_mc_out, risultati EMMC_*.json. Seq 0: rispetto alla versione solo pedoni stessa recall, precisione
   −5 (auto e ciclisti in più), IDF1 72.2 (vs 75.4). Seq 10: IDF1 63.8, IDSW 47. Costo 6-12 ms/frame. Sotto SINS
   riferimento (MOTA 71.3 / 37.4) ma molto sopra DeepFusionMOT, che scarta le tracce non confermate dalla camera.
+
+Metrica nel solo campo della camera (coda_eval.py --camera-only --cam-json bags/eagermot_out/in_coda<w>.json): GT con
+in_fov falso ignorata (anche se in moto), predizioni proiettate con lo stesso criterio di coda_to_bag.in_camera_fov
+(centro nell'immagine ZED sinistra, > 0.5 m davanti); verificato: 100% di accordo col flag in_fov su 7675 box GT.
+Risultati in eval/results/coda/cam/. SINS = run LVE_v2 (riferimento, portatile, 1 run).
+
+| solo camera | in moto seq 10: rec / prec / MOTA / IDF1 | tutti gli oggetti seq 0 | tutti gli oggetti seq 10 |
+|---|---|---|---|
+| SINS riferimento | 63.9 / 61.8 / 22.7 / 56.0 | 67.1 / 78.4 / 41.1 / 58.5 | 55.6 / 50.3 / −2.1 / 45.0 |
+| EagerMOT multi-classe | 83.1 / 44.6 / −20.5 / 55.9 | 7.6 / 70.6 / 4.4 / 13.7 | 86.8 / 64.6 / 37.8 / 69.5 |
+| DeepFusionMOT | 42.0 / 62.3 / 16.5 / 50.1 | 7.7 / 93.8 / 7.2 / 14.3 | 43.2 / 88.6 / 37.3 / 57.4 |
+
+- Seq 0 in camera ha solo 27 righe GT in moto: non significativa per gli oggetti in moto.
+- Nel campo della camera DeepFusionMOT non crolla più (seq 10 in moto MOTA 16.5, vicino a SINS 22.7).
+- Tutti gli oggetti: seq 0 i baseline vedono il 7-8% (oggetti fermi di classi che CenterPoint non ha: scooter, bici
+  parcheggiate...); seq 10 i baseline battono SINS (37.8 contro −2.1), SINS ha precisione 50 sugli oggetti fermi.

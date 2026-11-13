@@ -98,7 +98,9 @@ def build_gt(gt_csv, odom, a):
     hidden = np.array([ann.at[(t, i), 'npts'] < a.min_pts for t, i in zip(gt['t_ns'], gt['track_id'])], bool)
     # a still object can only be told from static structure through the camera's semantics: outside its view
     # it is ignored (moving objects count everywhere)
-    if not a.pd_everywhere:
+    if a.camera_only:   # camera-view evaluation: every object outside the camera image is ignored
+        hidden |= np.array([not ann.at[(t, i), 'fov'] for t, i in zip(gt['t_ns'], gt['track_id'])], bool)
+    elif not a.pd_everywhere:
         hidden |= np.array([not ann.at[(t, i), 'fov'] for t, i in zip(gt['t_ns'], gt['track_id'])], bool) & \
             (gt['state'] != 'dynamic').to_numpy()
     rd = robot_dist(gt, odom)
@@ -114,6 +116,22 @@ def build_gt(gt_csv, odom, a):
     return make_tracks(keep.to_dict('records') + empty), ign, frames, stats
 
 
+def in_camera_view(obj, cam_json):
+    """Prediction centres projecting inside the camera image (in front of it, > 0.5 m), with the camera pose of the
+    nearest frame of cam_json (EagerMOT's CODa input: per-frame T_cam_odom of the ZED left camera, K, image size)."""
+    cam = json.load(open(cam_json))
+    K, (h, w) = np.array(cam['K']), cam['img_shape']
+    ct = np.array([f['t'] for f in cam['frames']])
+    T = np.array([f['T_cam_odom'] for f in cam['frames']])
+    t = obj['t_ns'].to_numpy() / 1e9
+    k = np.clip(np.searchsorted(ct, t), 1, len(ct) - 1)
+    k = np.where(np.abs(ct[k - 1] - t) < np.abs(ct[k] - t), k - 1, k)
+    p = np.einsum('nij,nj->ni', T[k, :3, :3], obj[['x', 'y', 'z']].to_numpy(float)) + T[k, :3, 3]
+    z = np.maximum(p[:, 2], 1e-6)
+    uv = (p @ K.T)[:, :2] / z[:, None]
+    return (p[:, 2] > 0.5) & (uv[:, 0] >= 0) & (uv[:, 0] < w) & (uv[:, 1] >= 0) & (uv[:, 1] < h)
+
+
 def filter_pred(pred, ign, frames, odom, odom_z, a):
     obj = objects(pred).copy()
     if obj.empty:
@@ -122,6 +140,8 @@ def filter_pred(pred, ign, frames, odom, odom_z, a):
     far = (rd > a.range) | (rd < a.min_range)
     # above any annotated agent (tree canopies, roofs): not an obstacle for a ground robot
     far |= obj['z'].to_numpy() - np.interp(obj['t_ns'].to_numpy() / 1e9, odom_z[:, 0], odom_z[:, 1]) > a.max_height
+    if a.camera_only:   # same criterion as the GT's in_fov (coda_to_bag.in_camera_fov): centre in the image, > 0.5 m ahead
+        far |= ~in_camera_view(obj, a.cam_json)
     # nearest annotated time for each prediction row; ignore objects are only known there
     ft = frames / 1e9
     t = obj['t_ns'].to_numpy() / 1e9
@@ -166,6 +186,9 @@ def main():
     ap.add_argument('--max-height', type=float, default=2.5, help='predictions centred higher above the robot ground')
     ap.add_argument('--min-pts', type=int, default=1)
     ap.add_argument('--pd-everywhere', action='store_true', help='score still objects outside the camera view too')
+    ap.add_argument('--camera-only', action='store_true', help='score only the camera view (GT in_fov, predictions '
+                    'projected with --cam-json): the condition of camera-confirmed trackers (DeepFusionMOT, KITTI)')
+    ap.add_argument('--cam-json', help='per-frame camera pose json (bags/eagermot_out/in_coda<w>.json)')
     ap.add_argument('--dyn-speed', type=float, default=0.3)
     ap.add_argument('--match-dist', type=float, default=1.0)
     ap.add_argument('--extra-ignore', help='CSV t_ns,x,y[,..] of points of objects the GT does not annotate (JRDB: '
@@ -180,6 +203,8 @@ def main():
     ap.add_argument('--coda-root', default='/mnt/nas-imperatore/datasets_SINS/CODa')
     ap.add_argument('--out')
     a = ap.parse_args()
+    if a.camera_only and not a.cam_json:
+        ap.error('--camera-only needs --cam-json')
 
     odom = load_odometry(a.odom)
     gt, ign, frames, gstats = build_gt(a.gt, odom, a)
