@@ -1493,3 +1493,17 @@ Risultati in eval/results/coda/cam/. SINS = run LVE_v2 (riferimento, portatile, 
   1 m), (b) in parte dei frame CODa non annota quei pickup. 43% dei falsi PD è a 1-3 m da un pickup/furgone annotato.
   Nessuna violazione della regola "solo oggetti capaci di moto"; il problema è l'estensione del box dei veicoli grandi
   visti di fronte (stesso tema della frammentazione).
+
+## 13/11 Verdetto lab_r12p (lab PC, x3, stride 2): riferimento vs R5 vs R12P
+
+| profilo | CODa tuning moving 0/10/16 | held-out moving 11/12 | strada MOTA tot | veicoli moving rec CODa tun / held-out / strada |
+|---|---|---|---|---|
+| **riferimento V+J+SY+E** | **71.0/37.7/72.9** | **48.7/22.4** | 47.2 [46.4-48.4] | 26.7 / 6.8 / 48.1 |
+| R5 | 64.9/35.5/73.2 | 46.2/19.7 | 46.0 | 31.1 / 9.5 / 47.5 |
+| R12P | 56.4/31.0/72.5 | 44.5/17.6 | **50.4** [50.0-50.8] | 26.1 / 10.9 / **55.5** |
+
+- Riferimento riprodotto (10/11: 71.3/37.4/73.6). Latenza invariata (~71/105 ms CODa).
+- R5 peggiora ovunque tranne la recall veicoli CODa. R12P vince in strada (+3.2 MOTA, +7.4 veicoli, range non
+  sovrapposti) ma perde 14.6 punti sulla seq 0 e 2-5 punti sulle held-out.
+- Decisione: resta il riferimento come profilo del paper; R5 e R12P scartati. La frammentazione dei veicoli si
+  affronta sull'estensione del box (vedi falsi PD seq 10: pickup visti di muso), non con la prova di percorso.
