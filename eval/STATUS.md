@@ -1507,3 +1507,24 @@ Risultati in eval/results/coda/cam/. SINS = run LVE_v2 (riferimento, portatile, 
   sovrapposti) ma perde 14.6 punti sulla seq 0 e 2-5 punti sulle held-out.
 - Decisione: resta il riferimento come profilo del paper; R5 e R12P scartati. La frammentazione dei veicoli si
   affronta sull'estensione del box (vedi falsi PD seq 10: pickup visti di muso), non con la prova di percorso.
+
+## 16/11 Valutazione e2 (approvata dall'utente) e diagnosi DBG2 (lab)
+
+Diagnosi FP/FN del lab (eval/diagnostics/lab_fp/, LVE2 x3, solo tuning + strada):
+- FP in moto CODa: 85% senza nulla di annotato vicino; M-detector/Dynablox vedono un mover nel 55-84% di questi casi
+  (5 m più in là: 4-17%) -> persone vere non annotate: in 0_w1, 10_w3, 10_w4 la GT finisce a ~20 m (p99 19.5-22 m).
+- L'ignore dell'operatore (box < 1.2 m) con raggio 1 m cancellava i pedoni che camminano accanto al robot.
+- Strada: precisione veicoli 9% = tutte le predizioni (persone incluse) confrontate con la sola GT veicoli.
+Valutazione e2 (coda_eval de7c96c): CODa --range 20 m; box < --min-range ignorati solo se il centro della predizione è
+dentro il box; --ignore-gt per le viste per classe in strada (vehicle ignora le persone annotate e viceversa).
+Rivalutazione: eval/scripts/analysis/rescore_e2.sh -> eval/results/coda_e2, mdp_e2; JRDB coda_compare --jrdb --e2.
+Baseline CODa e2 (portatile), moving MOTA seq 0 / 10 / 11 / 12: CenterPoint+SimpleTrack 36.5/19.9/−10.4/26.7,
+EagerMOT pedoni 56.2/35.6/32.4/23.7, EagerMOT multi-classe 46.3/32.9/–/–, DeepFusionMOT −10.0/7.4/–/–,
+M-detector −23.8/−11.1/−10.8/−5.2, Dynablox e LV-DOT molto negativi (come prima). Seq 16: nessuna baseline (da fare).
+SINS: rivalutazione delle run lab in corso sul lab.
+
+DBG2 (coda_vjsye2dbg / mdp_street_vjsye2dbg x1): tracce in moto (KF >= 0.8 m/s) tenute "static", prima regola che
+fallisce. Pedoni fuori FOV CODa (359 righe): debounce 41%, disocclusione 27%, C 24%. Veicoli strada (421 righe):
+debounce 40%, C 21%, disocclusione 19%, size gate 15% (tracce vecchie). C e debounce colpiscono tracce giovani
+(età mediana 0.4-1.1 s) perché le tracce rinascono: 2-3 tracce per oggetto in moto. Prova: lab_inherit.sh,
+track_inherit_motion_dist I1 1.0 m/1.0 s, I2 0.6 m/0.5 s (C2 del 04/11, scartato allora su profilo/valutazione vecchi).
