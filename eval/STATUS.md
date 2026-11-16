@@ -1528,3 +1528,7 @@ fallisce. Pedoni fuori FOV CODa (359 righe): debounce 41%, disocclusione 27%, C 
 debounce 40%, C 21%, disocclusione 19%, size gate 15% (tracce vecchie). C e debounce colpiscono tracce giovani
 (età mediana 0.4-1.1 s) perché le tracce rinascono: 2-3 tracce per oggetto in moto. Prova: lab_inherit.sh,
 track_inherit_motion_dist I1 1.0 m/1.0 s, I2 0.6 m/0.5 s (C2 del 04/11, scartato allora su profilo/valutazione vecchi).
+SINS e2 (lab, x3, media): tuning moving MOTA 0/10/16 LVE2 73.4/52.1/77.4 (R5 68.0/50.4/77.9, R12P 58.4/46.6/77.3),
+MOTA tutti 58.9/38.5/61.0; held-out moving 11/12 LHVE2 54.5/34.1 (R5 52.0/32.5, R12P 50.9/30.8), tutti 40.1/31.0;
+strada vjsye2 MOTA 47.2, veicoli rec 47.8 prec 43.4, persone rec 64.5 prec 80.5 MOTA 47.5 (R12P 50.4, veicoli 55.2).
+Verdetto invariato con e2: riferimento tenuto. (risultati eval/results/coda_e2, mdp_e2, commit lab 6ad23bb)
