@@ -11,10 +11,14 @@ state from speed as for the lab (DYNAMIC above --dyn-speed over a 1 s centred di
   - still objects (POTENTIALLY_DYNAMIC) outside the camera image are ignored the same way (only the camera's
     semantics can tell a parked bike from a bollard; --pd-everywhere scores them too); moving ones count everywhere;
   - predictions centred more than --max-height above the ground under the robot are dropped (canopies, roofs);
-  - range: GT and predictions farther than --range from the robot (odometry) are dropped, the same radius as the
-    dataset's SINS profile (cfg/coda lidar_range_x/y); so are GT and predictions closer than --min-range: the
-    operator holding the robot walks ~0.9 m behind the LiDAR (fixed offset, 6 cm std), annotated as a Pedestrian in
-    some windows and not in others, and seen there only in a 0.7 m band of the OS1's vertical field of view.
+  - range: GT and predictions farther than --range (20 m) from the robot (odometry) are dropped: in several CODa
+    windows the annotations stop at ~20 m, beyond it real movers are unannotated. So are GT and predictions closer
+    than --min-range: the operator holding the robot walks ~0.9 m behind the LiDAR (fixed offset, 6 cm std),
+    annotated as a Pedestrian in some windows and not in others, and seen there only in a 0.7 m band of the OS1's
+    vertical field of view. A prediction is ignored on such a near box only if its centre lies inside the box (a
+    pedestrian walking beside the robot is scored); on hidden / out-of-range objects within --ignore-dist.
+  - --ignore-gt: a class view (e.g. the street vehicles) scored against the whole GT: predictions on objects of the
+    other classes are ignored the same way, so they are neither true nor false positives of this class.
 Both GT and predictions are in the odom frame of the window's own odometry bag.
 
 usage: coda_eval.py --run <out bag> --gt <window>_gt.csv --odom <window>_odom [--out metrics.json]
@@ -80,7 +84,7 @@ def build_gt(gt_csv, odom, a):
     raw = pd.read_csv(gt_csv, keep_default_na=False)
     frames = np.unique(raw['t_ns'].to_numpy())
     obj = raw[raw['track_id'] != EMPTY_FRAME_ID].copy()
-    for c in ('x', 'y', 'z', 'yaw'):
+    for c in ('x', 'y', 'z', 'yaw', 'l', 'w'):
         obj[c] = obj[c].astype(float)
     obj['npts'] = obj['npts'].astype(int)
     ped = obj
@@ -104,8 +108,13 @@ def build_gt(gt_csv, odom, a):
         hidden |= np.array([not ann.at[(t, i), 'fov'] for t, i in zip(gt['t_ns'], gt['track_id'])], bool) & \
             (gt['state'] != 'dynamic').to_numpy()
     rd = robot_dist(gt, odom)
-    far = (rd > a.range) | (rd < a.min_range)
-    ign = gt[hidden | far][['t_ns', 'x', 'y']]
+    near = rd < a.min_range
+    far = (rd > a.range) | near
+    # ignore regions: hidden or beyond range -> a disc of --ignore-dist; closer than --min-range (the operator behind
+    # the robot) -> only the box itself, so a pedestrian walking beside the robot is still scored
+    ign = gt[(hidden | far)][['t_ns', 'x', 'y', 'yaw']].assign(near=near[hidden | far])
+    ign['l'] = [ann.at[(t, i), 'l'] for t, i in zip(gt['t_ns'][hidden | far], gt['track_id'][hidden | far])]
+    ign['w'] = [ann.at[(t, i), 'w'] for t, i in zip(gt['t_ns'][hidden | far], gt['track_id'][hidden | far])]
     keep = gt[~hidden & ~far]
     # every annotated frame stays on the grid (an annotated frame with nobody to find is an empty GT frame)
     empty = [dict(t_ns=int(t), track_id=EMPTY_FRAME_ID) for t in frames if t not in set(keep['t_ns'])]
@@ -147,11 +156,19 @@ def filter_pred(pred, ign, frames, odom, odom_z, a):
     t = obj['t_ns'].to_numpy() / 1e9
     k = np.clip(np.searchsorted(ft, t), 1, len(ft) - 1)
     near_t = np.where(np.abs(ft[k - 1] - t) < np.abs(ft[k] - t), frames[k - 1], frames[k])
-    by_t = {tt: g[['x', 'y']].to_numpy() for tt, g in ign.groupby('t_ns')}
+    if 'near' not in ign:
+        ign = ign.assign(near=False, l=0.0, w=0.0, yaw=0.0)
+    by_t = {tt: g[['x', 'y', 'near', 'l', 'w', 'yaw']].to_numpy(float) for tt, g in ign.groupby('t_ns')}
     hit = np.zeros(len(obj), bool)
     for j, (tt, x, y) in enumerate(zip(near_t, obj['x'], obj['y'])):
         p = by_t.get(tt)
-        if p is not None and np.min(np.hypot(p[:, 0] - x, p[:, 1] - y)) < a.ignore_dist:
+        if p is None:
+            continue
+        dx, dy = x - p[:, 0], y - p[:, 1]
+        c, s = np.cos(p[:, 5]), np.sin(p[:, 5])
+        in_box = (np.abs(c * dx + s * dy) <= p[:, 3] / 2) & (np.abs(-s * dx + c * dy) <= p[:, 4] / 2)
+        disc = np.hypot(dx, dy) < a.ignore_dist
+        if np.any(np.where(p[:, 2] > 0, in_box, disc)):
             hit[j] = True
     if getattr(a, 'extra_ignore', None):
         ex = pd.read_csv(a.extra_ignore)
@@ -180,7 +197,9 @@ def main():
     ap.add_argument('--odom', required=True)
     ap.add_argument('--topic', default=None)
     ap.add_argument('--method', default='sins', choices=['sins', *BASELINES, *CSV_METHODS])
-    ap.add_argument('--range', type=float, default=25.0)
+    # 20 m: in several CODa windows the annotations stop at ~20 m (p99 of the GT range 19.5-22 m in 0_w1, 10_w3, 10_w4),
+    # so beyond it real movers are unannotated and would count as false positives
+    ap.add_argument('--range', type=float, default=20.0)
     ap.add_argument('--ignore-dist', type=float, default=1.0)
     ap.add_argument('--min-range', type=float, default=1.2)
     ap.add_argument('--max-height', type=float, default=2.5, help='predictions centred higher above the robot ground')
@@ -189,6 +208,8 @@ def main():
     ap.add_argument('--camera-only', action='store_true', help='score only the camera view (GT in_fov, predictions '
                     'projected with --cam-json): the condition of camera-confirmed trackers (DeepFusionMOT, KITTI)')
     ap.add_argument('--cam-json', help='per-frame camera pose json (bags/eagermot_out/in_coda<w>.json)')
+    ap.add_argument('--ignore-gt', help='a GT CSV of the OTHER classes (e.g. the street persons when scoring the vehicle '
+                    'GT): predictions on those objects are ignored, so a class view is scored against the whole GT')
     ap.add_argument('--dyn-speed', type=float, default=0.3)
     ap.add_argument('--match-dist', type=float, default=1.0)
     ap.add_argument('--extra-ignore', help='CSV t_ns,x,y[,..] of points of objects the GT does not annotate (JRDB: '
@@ -208,6 +229,10 @@ def main():
 
     odom = load_odometry(a.odom)
     gt, ign, frames, gstats = build_gt(a.gt, odom, a)
+    if a.ignore_gt:
+        other = objects(build_gt(a.ignore_gt, odom, argparse.Namespace(**{**vars(a), 'min_pts': 0, 'pd_everywhere': True,
+                                                                         'camera_only': False, 'range': 1e9}))[0])
+        ign = pd.concat([ign, other[['t_ns', 'x', 'y', 'yaw']].assign(near=False, l=0.0, w=0.0)], ignore_index=True)
     if a.method == 'sins':
         pred, frame_id, topic = load_obstacles(a.run, a.topic)
         if frame_id not in ('odom', ''):
