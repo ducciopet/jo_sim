@@ -72,8 +72,10 @@ def main():
     ap.add_argument('--pano', action='store_true')
     ap.add_argument('--heldout', action='store_true')
     ap.add_argument('--seq10', action='store_true', help='CODa seq 10 (tuning), SINS runs H1*')
+    ap.add_argument('--e2', action='store_true', help='16/11 evaluation: results in results/<ds>_e2')
     a = ap.parse_args()
-    ds = 'jrdb' if a.jrdb else 'coda'
+    ds = ('jrdb' if a.jrdb else 'coda') + ('_e2' if a.e2 else '')
+    (E / f'results/{ds}').mkdir(exist_ok=True)
     wins = a.windows or ((JRDB_TUNE if a.tune else JRDB_SEQS) if a.jrdb else (CODA_HELDOUT if a.heldout else CODA_TUNE10 if a.seq10 else ['w1', 'w2', 'w3']))
     sfx = ('H' if a.heldout else 'S10' if a.seq10 else '') + ('T' if a.tune else '') + ('pano' if a.pano else '')
     methods = dict(METHODS_JRDB, SINS=SINS_TUNE) if a.tune else (METHODS_JRDB if a.jrdb else METHODS)

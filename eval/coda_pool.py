@@ -12,6 +12,7 @@ import numpy as np
 
 RES = Path(__file__).resolve().parent / 'results'
 DATASETS = {'coda': ('coda', '_*w[0-9].json', 10.0), 'jrdb': ('jrdb', '_*.json', 15.0)}
+DATASETS.update({k + '_e2': (v[0] + '_e2', *v[1:]) for k, v in list(DATASETS.items())})   # 16/11 evaluation (rescore_e2.sh)
 
 
 def pool(tag, dataset='coda'):
