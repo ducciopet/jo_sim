@@ -1532,3 +1532,20 @@ SINS e2 (lab, x3, media): tuning moving MOTA 0/10/16 LVE2 73.4/52.1/77.4 (R5 68.
 MOTA tutti 58.9/38.5/61.0; held-out moving 11/12 LHVE2 54.5/34.1 (R5 52.0/32.5, R12P 50.9/30.8), tutti 40.1/31.0;
 strada vjsye2 MOTA 47.2, veicoli rec 47.8 prec 43.4, persone rec 64.5 prec 80.5 MOTA 47.5 (R12P 50.4, veicoli 55.2).
 Verdetto invariato con e2: riferimento tenuto. (risultati eval/results/coda_e2, mdp_e2, commit lab 6ad23bb)
+
+## 16/11 sera: verdetto lab_inherit (lab PC, x3, e2, commit lab 9b51e91)
+Moto ereditato alla rinascita della traccia (track_inherit_motion_dist/_age), I1 1.0 m/1.0 s, I2 0.6 m/0.5 s, vs LVE2.
+| profilo | moving MOTA 0/10/16 | MOTA tutti 0/10/16 | PD found/prec | veicoli moving rec | IDSW |
+| LVE2 | 73.4/52.1/77.4 | 58.9/38.5/61.0 | 37.7/57.1 | 27.5 [20.6-34.0] | 207 |
+| LVI1 | 72.6/52.5/78.2 | 52.2/37.5/61.4 | 36.8/55.5 | 32.4 [24.4-39.2] | 225 |
+| LVI2 | 70.9/52.7/79.1 | 54.3/38.8/62.6 | 37.7/57.4 | 32.3 [27.9-38.1] | 224 |
+Strada MOTA / veicoli rec,prec / persone rec,prec,MOTA: vjsye2 47.2 / 47.8,43.4 / 64.5,80.5,47.5; i1 45.9 / 48.7,42.4 /
+64.7,79.0,45.9; i2 45.0 / 50.4,42.1 / 63.9,78.1,44.5. Latenza CODa med/p90 LVE2 71/105, I1 53/100, I2 52/99 ms (LVE2
+girato in un'altra sessione con carico diverso: delta non attribuibile); strada invariata.
+Verdetto: nessuno dei due promosso. +5 recall veicoli e +0.4..1.7 moving su 10/16, ma -4.6/-6.6 MOTA tutti su seq 0,
++17 IDSW, strada -1.3/-2.2 MOTA e -1.5/-2.4 precisione persone. Held-out non lanciato. track_inherit resta off.
+Recall veicoli CODa e2: eval/scripts/analysis/coda_vehicle_e2.sh (GT veicoli + marker frame vuoti, il resto --ignore-gt;
+finestre 0_w1 10_w1 10_w3 10_w4 10_w5 16_w1), tabella agg_e2.py; R5/R12P ricalcolati. rescore_e2.sh ora esporta il venv
+del lab (dentro lab_inherit era fallito per pandas mancante; ri-scorato a mano).
+Prossimo candidato per il difetto "tracce in moto tenute statiche": ridurre le rinascite alla radice (associazione /
+coasting delle tracce in moto) invece di ereditare lo stato; poi size gate veicoli via classe YOLO o percorso.

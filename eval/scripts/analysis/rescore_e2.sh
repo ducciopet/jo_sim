@@ -6,7 +6,8 @@
 #   street SINS runs: STREET="mdp_street_vjsye2_r1 ..." (bags/mdp/runs/<run>)  -> mdp_e2/<run>{,_vehicle,_person}.json
 #   CSV/bag baselines on CODa: BASE="eagermot:bags/eagermot_mc_out/eagermot_coda{c}.csv:EMMC ..." (method:template:tag)
 cd $(dirname $0)/../../..
-command -v python3 >/dev/null; mkdir -p eval/results/coda_e2 eval/results/mdp_e2
+[ -d $HOME/.venvs/sins_eval/bin ] && export PATH=$HOME/.venvs/sins_eval/bin:$PATH  # lab venv (pandas)
+mkdir -p eval/results/coda_e2 eval/results/mdp_e2
 cw(){ case $1 in *_*) echo $1 ;; *) echo 0_$1 ;; esac; }
 for w in ${WINDOWS:-w1 w2 w3 10_w1 10_w2 10_w3 10_w4 10_w5 16_w1}; do c=$(cw $w)
   for t in $TAGS; do r=bags/coda/runs/${t}_v2_coda$c; o=eval/results/coda_e2/${t}_$w.json
