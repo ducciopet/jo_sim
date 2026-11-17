@@ -13,6 +13,7 @@ EagerMOT inputs for one CODa window (host python), same JSON as export_inputs.py
 usage: export_inputs_coda.py <window e.g. w1> <SINS run e.g. C5_v2_coda0_w1>   -> bags/eagermot_out/in_coda0_<w>.json
 """
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -30,6 +31,11 @@ def stamp(h):
     return h.stamp.sec + h.stamp.nanosec * 1e-9
 
 
+def has_topic(bag, topic):
+    with AnyReader([bag], default_typestore=typestore()) as r:
+        return any(c.topic == topic for c in r.connections)
+
+
 def main():
     w, run = sys.argv[1], sys.argv[2]
     w = w if '_' in w else f'0_{w}'   # bare w<k> = seq 0, else <seq>_w<k>
@@ -38,22 +44,27 @@ def main():
     dets3d = [(t * 1e-9, [dict(x=r.x, y=r.y, z=r.z, l=r.l, w=r.w, h=r.h, yaw=r.yaw, score=r.score, cls=r.label)
                           for r in g.itertuples() if r.id == -1 and isinstance(r.label, str) and r.score > 0.3])
               for t, g in d3.groupby('t_ns')]
+    # camera: the ZED (front_camera) where CODa ships it, else the stereo pair's left camera (seq 16: no ZED archive,
+    # SINS runs on stereo_camera, its static TF and camera_info in the <window>_stereo bag)
+    stereo = B / 'coda' / f'coda{w}_stereo'
+    cam = os.environ.get('CAM') or ('stereo_camera' if stereo.exists() and not has_topic(B / 'coda' / f'coda{w}', '/front_camera/camera/color/camera_info') else 'front_camera')
+    bags = [B / 'coda' / f'coda{w}'] + ([stereo] if cam == 'stereo_camera' else [])
     statics, K, size = {}, None, None
-    with AnyReader([B / 'coda' / f'coda{w}'], default_typestore=typestore()) as r:
-        for c, t, raw in r.messages([c for c in r.connections if c.topic in ('/tf_static', '/front_camera/camera/color/camera_info')]):
+    with AnyReader(bags, default_typestore=typestore()) as r:
+        for c, t, raw in r.messages([c for c in r.connections if c.topic in ('/tf_static', f'/{cam}/camera/color/camera_info')]):
             m = r.deserialize(raw, c.msgtype)
             if c.topic == '/tf_static':
                 for tr in m.transforms:
                     statics[(tr.header.frame_id, tr.child_frame_id)] = T_of(tr.transform.translation, tr.transform.rotation)
             elif K is None:
                 K, size = np.array(m.k).reshape(3, 3).tolist(), (int(m.height), int(m.width))
-    T_base_cam = statics[('base_link', 'velodyne')] @ statics[('velodyne', 'front_camera_depth_optical_frame')] @ \
-        statics[('front_camera_depth_optical_frame', 'front_camera_color_optical_frame')]
+    T_base_cam = statics[('base_link', 'velodyne')] @ statics[('velodyne', f'{cam}_depth_optical_frame')] @ \
+        statics[(f'{cam}_depth_optical_frame', f'{cam}_color_optical_frame')]
     dets2d = []
     with AnyReader([B / 'coda' / 'runs' / run], default_typestore=typestore()) as r:
         # semantic-seg runs (older profiles) or instance-seg runs (heldout-v5); never an empty list (= every message)
-        conns = [c for c in r.connections if c.topic == '/yolo_semantic_seg/front_camera/detections'] or \
-            [c for c in r.connections if c.topic == '/yolo_seg_track/front_camera/detections']
+        conns = [c for c in r.connections if c.topic == f'/yolo_semantic_seg/{cam}/detections'] or \
+            [c for c in r.connections if c.topic == f'/yolo_seg_track/{cam}/detections']
         assert conns, 'no YOLO detections topic in ' + run
         for c, t, raw in r.messages(conns):
             m = r.deserialize(raw, c.msgtype)

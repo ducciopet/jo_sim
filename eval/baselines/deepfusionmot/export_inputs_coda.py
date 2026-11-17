@@ -44,7 +44,10 @@ def main():
     by_t = {t * 1e-9: g for t, g in d3.groupby('t_ns')}
     dets2d = []
     with AnyReader([B / 'coda' / 'runs' / run], default_typestore=typestore()) as r:
+        # the ZED (front_camera), or the stereo pair's left camera where CODa has no ZED (seq 16)
+        # (one camera only: runs with the stereo pair as second camera publish both topics)
         conns = [c for c in r.connections if c.topic == '/yolo_seg_track/front_camera/detections'] or \
+            [c for c in r.connections if c.topic == '/yolo_seg_track/stereo_camera/detections'] or \
             [c for c in r.connections if c.topic == '/yolo_semantic_seg/front_camera/detections']
         assert conns, 'no front-camera YOLO detections in ' + run
         for c, t, raw in r.messages(conns):
