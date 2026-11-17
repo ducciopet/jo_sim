@@ -38,3 +38,28 @@ on average. Residual gap = FN on the STANDING person: 1950 ~70 FN in 5 of 6 lab_
      1.0 m point ~0.4 box heights above the box centre (height reference to check: odom z = base_link, ground_height -0.3;
      online calibration puts the camera 0.19 m lower than the URDF).
   5. YOLO-3D association diagnosis (CODa first: still vehicles, two cameras, per-camera ByteTrack ids; then lab 1950).
+
+## 2. A/B carrier + A on CODa (9 tuning windows) and street, x3, e3 all frames (20:27)
+agg: `python3 eval/scripts/analysis/agg_e3.py LXI,LXC,LXA "" mdp_street_vjsye2i2pl,mdp_street_vjsye2i2pc,mdp_street_vjsye2i2pca`
+(columns per seq 0 / 10 / 16; PD found / precision; vehicle recall = coda_vehicle_e3 dynamic_only)
+
+| | MOTA moving 0 / 10 / 16 | MOTA all 0 / 10 / 16 | PD found / prec | vehicle rec | IDSW | lat med / p90 |
+|---|---|---|---|---|---|---|
+| LXI = I2P | 80.1 / 64.2 / 80.1 | 59.4 / 51.4 / 63.3 | 35.9 / 61.4 | 24.2 [22.7-26.2] | 200 | 98 / 151 |
+| LXC = + carrier | 80.2 / 65.2 / 81.2 | 56.6 / 51.2 / 61.5 | 29.3 / 56.3 | 29.0 [24.1-34.3] | 162 | 93 / 154 |
+| LXA = + carrier + A | 79.2 / 66.2 / 81.3 | 58.5 / 55.3 / 62.7 | 31.1 / 61.2 | 32.2 [23.0-41.0] | 150 | 96 / 169 |
+
+Street (e3): MOTA | vehicle rec / prec | person rec / prec / MOTA
+- I2P (i2pl): 50.1 [49.6-50.7] | 44.0 / 43.5 | 64.8 / 84.0 / 51.0
+- + carrier: 50.4 [49.4-51.9] | 44.5 / 44.1 | 64.4 / 84.7 / 51.2
+- + carrier + A: 51.0 [49.6-51.7] | 47.7 / 42.7 | 65.4 / 84.0 / 51.3
+- street latency from lat_tracks reads -2 / 10 ms: the street measure is broken (not comparable), to check.
+
+Reading:
+- A (veto only for unclassified tracks) is the useful fix: seq 10 MOTA all +3.9 (51.4 -> 55.3), moving +2.0, vehicles
+  +8 (24 -> 32), IDSW -50 (200 -> 150), street +0.9 MOTA / +3.7 vehicle recall.
+- carrier ALONE costs on CODa: PD found 35.9 -> 29.3 and MOTA all seq 0 -2.8 / seq 16 -1.8 (fragments of a still object
+  with a live carrier stay unclassified, as decided; on CODa the anchor was ALSO giving classes to legitimate pieces).
+  With A the loss shrinks (seq 0 -0.9, seq 16 -0.6) but PD found stays -4.8.
+- Net LXA vs I2P on the primary metric (MOTA all): -0.9 / +3.9 / -0.6 (seq 0 is noisy: 50-60 range across reps before).
+- Lab: carrier is what fixes lab_u (see section 1). A trade-off to decide: carrier helps the lab, A helps CODa and street.
