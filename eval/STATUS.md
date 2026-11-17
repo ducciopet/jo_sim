@@ -1589,3 +1589,16 @@ inherit-guard d3400bc) pushato su ducciopet/sins main il 17/11 come 2e8e003 (ste
   datasets_SINS/derived/lab_qualisys (37 GB, verificate).
 - Nuovo dataset richiesto dall'utente: SiT (Bae et al., NeurIPS 2023), già sul NAS in /mnt/nas-imperatore/GT/SiT
   (sola lettura).
+
+## 17/11 pomeriggio: dataset definitivi, rischio sulla metrica nativa, pagine aggiornate
+- Utente: dataset del paper = laboratorio, CODa, strada di Marina di Pisa. SiT (7 scene convertite in
+  datasets_SINS/derived/sit, da NON cancellare) e CrowdBot (tracce = uscita AB3DMOT/DR-SPAAM, non annotate a mano)
+  non entrano. Nessun dataset pubblico con LiDAR + RGB-D + tracce annotate a mano.
+- RISCHIO: con la metrica nativa (MOTA tutti) in e2/all-frames i tracker con CenterPoint battono SINS su CODa seq 10
+  (EMMC 51.9, EM 42.7, ST 40.9 vs SINS I2P 39.9), 11 (ST 44.9 vs 40.3) e 12 (ST 37.3 vs 30.5); causa principale: box di
+  SINS sui veicoli grandi (fermi) decentrati di 1.5-3 m. CenterPoint ha visto ~70% di quei frame: decide il confronto
+  --frames testing in e3 (chiesto al lab insieme alla coda baseline).
+- Lab: floor_source = camera|lidar (static_structures_node, default camera) approvato; prova suolo a tre braccia
+  (grid / planes-lidar / planes-camera) x3 su CODa tuning + street dopo lab_unified.
+- Pagine aggiornate (punto della situazione, Come funziona, A confronto, Baseline); tolti video/figure CODa vecchi
+  (pre-fix 9/11) e la sezione JRDB; video nuovi richiesti al lab (NAS claude_handoff/media).
