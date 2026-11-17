@@ -1668,3 +1668,9 @@ I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
   i baseline con uscite locali (veicoli e3 di ST/EMMC/DFM sul laptop). Lab fa DBX/MDET e3 + veicoli dopo la strada
   (~20:00). Decisioni del 16-17/11 mandate alla sessione paper (solo informazione). Passaggio di consegne riscritto
   (claude_account_backup/sins_handoff/LEGGIMI_PRIMA.md).
+- 17/11 sera, utente: "fai partire il PC del lab sulle cose da modificare". Mandato al lab (codice ora, build dopo la
+  catena): M track_yolo_id_per_camera (id ByteTrack per camera), P3 track_class_keep_while_2d_alive, P4
+  track_class_decay_visible_only (occlusione z-buffer), P2 yolo_mask_merge_fragments (pezzi nella stessa maschera,
+  mai tra maschere diverse), P5 track_vehicle_extent_prior (dimensioni medie nuScenes, box allungato lungo il raggio).
+  A/B cumulativa x3: CODa+street base I2P+carrier+A, +M+P3+P4, +P2+P5; lab solo regressione. Criterio: CODa vs
+  baseline, metrica nativa all+testing. Coda lab: A/B in corso, DBX/MDET e3, audit, build+A/B, prova suolo.
