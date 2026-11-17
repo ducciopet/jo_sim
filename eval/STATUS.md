@@ -1623,3 +1623,9 @@ I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
   Secondo problema: FN della persona ferma in lab_u (1947 34-47 s): detection LiDAR-only 'L' (solo gambe) senza classe
   YOLO nel tick -> decay in FOV in 3 tick -> statica; indoor la tiene PD. In diagnosi (replay lifecycle).
   Video nuovi su NAS claude_handoff/media (CODa 10_w1/0_w1 I2P, lab_u 1947/1950), messi nelle pagine.
+- Ritardo del D in lab_u (lab, d_delay.py, 1947 x1): 32 tick non-D contro 10 indoor; 12 dal veto punto-superficie su
+  una persona CLASSIFICATA (pm_frac 0.07-0.42, 0.4-0.6 m/s), ~13 dal debounce azzerato dopo il veto, ~5 senza
+  corroborazione, 2 sotto soglia. Causa: corroboration_all porta le classificate sul ramo dei blob, veto compreso; a
+  1.5 m il VLP-16 vede le gambe, una sempre in appoggio. Fix (A) approvato: veto solo per tracce senza classe
+  dinamica (corpo articolato), default off. A/B cumulativa x3: lab indoor / lab_u+carrier / +A; CODa 9 + street
+  I2P / +carrier / +A. Poi prova suolo.
