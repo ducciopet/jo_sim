@@ -1549,3 +1549,25 @@ finestre 0_w1 10_w1 10_w3 10_w4 10_w5 16_w1), tabella agg_e2.py; R5/R12P ricalco
 del lab (dentro lab_inherit era fallito per pandas mancante; ri-scorato a mano).
 Prossimo candidato per il difetto "tracce in moto tenute statiche": ridurre le rinascite alla radice (associazione /
 coasting delle tracce in moto) invece di ereditare lo stato; poi size gate veicoli via classe YOLO o percorso.
+
+## 17/11: CORREZIONE del verdetto lab_inherit + I2P promosso (lab PC, commit lab 2546080..aa83d11)
+Il verdetto del 16/11 sera (I1/I2 non promossi) era viziato: LVE2 x3 del 13/11 è stato girato in un'altra sessione.
+Stesso build (sins 2766387), stessa config, stesso container, ma la latenza per finestra è bimodale (circa 50 o circa
+75 ms) e cambia l'esito: LVE2 13/11 seq 0 tutti 58.9, veicoli 27.5; rigirato il 17/11 (LVE2L x3) 53.3, veicoli 21.9.
+LEZIONE DI METODO: sul lab il riferimento va girato sempre nella STESSA catena del candidato (alternato o in coda), mai
+riusato da un'altra sessione. Seq 0 è rumore (REF MOTA tutti 50.3-60.2 tra ripetizioni): decide seq 10.
+Diagnosi lifecycle (eval/diagnostics/lab_rebirth): sugli oggetti in moto i cambi di track sono soprattutto tracce
+parallele (frammentazione: A prende un pezzo, l'altro fa nascere B; 65-100% dei casi), non rinascite (48/705 CODa).
+Candidati, tutti contro il riferimento della stessa catena:
+- A2 track_absorb_pieces: neutro (IDSW -36, street -2.0). Scartato. (Il VA del laptop 12/11 era x1, valutazione vecchia.)
+- I2 eredità 0.6 m/0.5 s: CODa meglio, ma street -1.8 (FP persone +11%: pezzi statici vicino a un passante ereditano
+  il moto al primo tick).
+- I2P = I2 + track_inherit_motion_probation 0.5 s / _ratio 0.5 (dopo 0.5 s l'erede deve essersi spostato di almeno
+  0.5 x velocità ereditata x tempo, altrimenti lo stato ereditato è revocato). Parametri fissati a priori.
+- I2SP = I2P + controllo dimensione del donatore: veicoli 16.8 (le auto si rompono in pezzi diversi). Scartato.
+I2P x3: seq 10 moving +2.7, tutti +3.9 (range separati); seq 16 pari; veicoli 30.2 vs 21.9; PD prec 57.8 vs 53.8; IDSW
+pari; street MOTA 46.1 vs 46.8 (range sovrapposti). Held-out 11/12 (alternato con LHE2L x3): moving 53.6/34.3 vs
+53.3/33.5, tutti 40.3/30.5 vs 39.7/28.4, PD 61.0/37.5 vs 61.5/36.2, IDSW 285 vs 292. Latenza med/p90 56/94 vs 64/100
+(bimodale, nessun costo misurabile).
+Verdetto: I2P (profili coda_vjsye2i2p / mdp_street_vjsye2i2p) nuovo riferimento, appena il codice (branch lab
+inherit-guard d3400bc, base 2766387) è su ducciopet/sins e il puntatore del submodule è aggiornato.
