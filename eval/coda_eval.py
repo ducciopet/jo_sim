@@ -116,10 +116,19 @@ def build_gt(gt_csv, odom, a):
     ign['l'] = [ann.at[(t, i), 'l'] for t, i in zip(gt['t_ns'][hidden | far], gt['track_id'][hidden | far])]
     ign['w'] = [ann.at[(t, i), 'w'] for t, i in zip(gt['t_ns'][hidden | far], gt['track_id'][hidden | far])]
     keep = gt[~hidden & ~far]
+    if a.ignore_undefined:
+        # annotated rows gt_tracks could not label (first/last ~0.5 s of a track, gaps): motion state undefined, so
+        # they are ignored regions (disc of --ignore-dist), never silently removed (a prediction on them is no FP)
+        lab = set(zip(gt['t_ns'], gt['track_id']))
+        und = ped[[(t, i) not in lab for t, i in zip(ped['t_ns'], ped['track_id'])]]
+        ign = pd.concat([ign, und[['t_ns', 'x', 'y', 'yaw', 'l', 'w']].assign(near=False)], ignore_index=True)
+        n_undef = len(und)
+    else:
+        n_undef = 0
     # every annotated frame stays on the grid (an annotated frame with nobody to find is an empty GT frame)
     empty = [dict(t_ns=int(t), track_id=EMPTY_FRAME_ID) for t in frames if t not in set(keep['t_ns'])]
     stats = dict(annotated_frames=len(frames), pedestrians=len(bodies), gt_rows=len(keep),
-                 ignored_hidden=int((hidden & ~far).sum()), out_of_range=int(far.sum()),
+                 ignored_hidden=int((hidden & ~far).sum()), ignored_undefined=n_undef, out_of_range=int(far.sum()),
                  dynamic_rows=int((keep['state'] == 'dynamic').sum()),
                  rows_by_class=keep.assign(c=[cls[i] for i in keep['track_id']]).groupby('c').size().to_dict())
     return make_tracks(keep.to_dict('records') + empty), ign, frames, stats
@@ -210,6 +219,8 @@ def main():
     ap.add_argument('--cam-json', help='per-frame camera pose json (bags/eagermot_out/in_coda<w>.json)')
     ap.add_argument('--ignore-gt', help='a GT CSV of the OTHER classes (e.g. the street persons when scoring the vehicle '
                     'GT): predictions on those objects are ignored, so a class view is scored against the whole GT')
+    ap.add_argument('--ignore-undefined', action='store_true', help='17/11 evaluation (e3): annotated rows whose motion '
+                    'state is undefined (track ends, gaps) become ignored regions instead of being dropped')
     ap.add_argument('--dyn-speed', type=float, default=0.3)
     ap.add_argument('--match-dist', type=float, default=1.0)
     ap.add_argument('--extra-ignore', help='CSV t_ns,x,y[,..] of points of objects the GT does not annotate (JRDB: '

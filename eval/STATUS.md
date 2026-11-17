@@ -1571,3 +1571,21 @@ pari; street MOTA 46.1 vs 46.8 (range sovrapposti). Held-out 11/12 (alternato co
 (bimodale, nessun costo misurabile).
 Verdetto: I2P (profili coda_vjsye2i2p / mdp_street_vjsye2i2p) nuovo riferimento. Codice (branch lab
 inherit-guard d3400bc) pushato su ducciopet/sins main il 17/11 come 2e8e003 (stesso contenuto), puntatore del submodule aggiornato.
+
+## 17/11: decisioni dell'utente sulla valutazione (e3) + controllo FP non annotati (lab 6d634fa)
+- Controllo FP (eval/diagnostics/fp_unannotated): il 70% degli FP in moto entro 20 m cadeva su righe GT che gt_tracks
+  scarta (primi/ultimi ~0.5 s di ogni track, buchi > 0.3 s: velocità indefinita) mentre il frame resta in griglia.
+  Residuo verificato a vista (36): 25 strutture statiche, 7 pezzi di oggetti annotati, 2 fantasmi, 2 incerti, 0 pedoni
+  o veicoli non annotati. Il GT CODa non ha buchi significativi.
+- e3 = e2 + coda_eval.py --ignore-undefined: le righe con stato di moto indefinito diventano regioni ignorate (disco
+  --ignore-dist), per tutti i metodi. Esempio EagerMOT-MC 0_w1: 145 righe, FP 95 -> 81, moving MOTA 52.8 -> 56.0.
+- Impostazione del paper (utente): CODa non annota lo stato di moto, quindi la metrica PRINCIPALE è quella nativa
+  (MOTA su tutti gli oggetti annotati delle classi mobili); il moving MOTA / D-PD è analisi secondaria con la regola di
+  derivazione dichiarata (velocità dai box, +-0.5 s, soglia 0.3 m/s) e un controllo di sensibilità sulla soglia.
+- Profilo unico (lab): tabella eval/diagnostics/unified_profile/diff_indoor_vs_i2p.tsv confermata (47 scala/sensore
+  restano indoor, 41 comportamento prendono I2P, altezze minime per classe = prior fisici, una sola lista di classi
+  dinamiche). Suolo: lab planes; CODa/street grid oggi, proposta all'utente planes ovunque con verifica x3. GT lab:
+  solo person, predizioni non-person NON associate ignorate (associazione prima). Bag Qualisys copiate su
+  datasets_SINS/derived/lab_qualisys (37 GB, verificate).
+- Nuovo dataset richiesto dall'utente: SiT (Bae et al., NeurIPS 2023), già sul NAS in /mnt/nas-imperatore/GT/SiT
+  (sola lettura).
