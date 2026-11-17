@@ -13,7 +13,7 @@ export ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-77}
 export ROS_AUTOMATIC_DISCOVERY_RANGE=${ROS_AUTOMATIC_DISCOVERY_RANGE:-LOCALHOST}
 source /opt/ros/jazzy/setup.bash; source /home/ros/local_install/setup.bash
 DIR=$(dirname $0); rm -rf $OUT; LOG=${OUT}_logs; rm -rf $LOG; mkdir -p $LOG
-DUR=$(python3 -c "import yaml;print(int(yaml.safe_load(open('$BAG/metadata.yaml'))['rosbag2_bagfile_information']['duration']['nanoseconds']/1e9)+3)")
+DUR=$(python3 -c "import yaml;print(int(yaml.safe_load(open('$BAG/metadata.yaml'))['rosbag2_bagfile_information']['duration']['nanoseconds']/1e9)+15)")  # +15 s: guard against a hung play only; +3 cut the last ~2 s of CODa windows on the laptop (17/11)
 if [ -n "$ADAPTER" ]; then
   python3 $DIR/realsense_bag_adapter.py --ros-args -p use_sim_time:=true ${ADAPTER_CAMS:+-p "camera_names:=$ADAPTER_CAMS"} $ADAPTER_ARGS > $LOG/adapter.log 2>&1 &
 fi
