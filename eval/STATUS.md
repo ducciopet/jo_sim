@@ -1602,3 +1602,16 @@ inherit-guard d3400bc) pushato su ducciopet/sins main il 17/11 come 2e8e003 (ste
   (grid / planes-lidar / planes-camera) x3 su CODa tuning + street dopo lab_unified.
 - Pagine aggiornate (punto della situazione, Come funziona, A confronto, Baseline); tolti video/figure CODa vecchi
   (pre-fix 9/11) e la sezione JRDB; video nuovi richiesti al lab (NAS claude_handoff/media).
+
+## 17/11 sera: lab_unified (lab 909ecb2, eval/diagnostics/lab_unified): il profilo unico PERDE sul laboratorio
+6 sequenze x3 alternate, GT solo person: MOTA full indoor 97.9/98.4/97.3 vs lab_u 85.2/83.5/85.4; IDF1 98.9/99.2/92.0
+vs 90.4/87.3/80.8; FP 15/3/10 vs 276/334/211; FN 46/42/66 vs 136/141/195; IDSW 0/2/1 vs 16/3/16; MOTA dynamic_only
+90.5/92.0/89.9 vs 86.0/84.8/84.6. Latenza per scan 90.5/117.5 vs 78/100 ms. YOLO26s-seg 640 px 17.2/20.2 ms per frame
+(box detector indoor 6.4/7.6).
+FP = tracce PD "person" a 2-7 m dall'unica persona (1947, 1950, persona ferma davanti a porte a vetri): la classe
+arriva a un cluster LiDAR che non e' la persona. Ipotesi: percorso yolo_leaf_lidar_beyond_depth prende i punti LiDAR
+dietro la persona dentro la stessa maschera (oltre il vetro), class anchor 5 s li tiene.
+Chiesto al lab: verifica del percorso della classe, poi fix fisico switchable "una maschera = un oggetto"
+(yolo_leaf_one_object_per_mask: se la maschera ha gia' un oggetto da profondita', beyond_depth non assegna altri
+cluster; altrimenti solo il cluster piu' vicino), A/B x3 lab (indoor / lab_u / lab_u+fix) + CODa/street (I2P vs
+I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
