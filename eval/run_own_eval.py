@@ -30,7 +30,7 @@ import numpy as np
 
 from harness.gt_mocap import fit_alignment, gt_tracks, tracks_to_mocap
 from harness.metrics import EvalConfig, evaluate
-from harness.ros_io import load_mocap, load_obstacles, load_odometry
+from harness.ros_io import load_mocap, load_obstacles, load_odometry, load_track_classes
 from harness.tracks import write_tracks
 
 REPO = Path(__file__).resolve().parents[1]
@@ -81,6 +81,10 @@ def main():
     ap.add_argument('--t-base-jo', type=float, nargs=2, default=[0.0, 0.0], metavar=('X', 'Y'),
                     help="robot rigid body origin in base_link [m]; only used if the data can't observe it "
                          '(robot never rotates), see harness/gt_mocap.fit_alignment')
+    ap.add_argument('--annotated-classes', nargs='+', default=None,
+                    help="classes the Qualisys GT annotates (the lab: person). After the association with all predictions, "
+                         "an UNMATCHED prediction whose class published on /sins/tracker/tracks is set and not in this list "
+                         "is ignored (no FP); matched ones and predictions without a class count as usual. Off by default")
     args = ap.parse_args()
 
     runs, out = Path(args.runs), Path(args.out)
@@ -124,6 +128,9 @@ def main():
             pred_odom, frame_id, topic = load_obstacles(run)
             if frame_id and frame_id != 'odom':
                 raise ValueError(f'{run}: obstacles in frame {frame_id}, expected odom')
+            if args.annotated_classes:
+                cl = load_track_classes(run)
+                pred_odom['class'] = [cl.get((t, i), '') for t, i in zip(pred_odom['t_ns'], pred_odom['track_id'])]
             pred = tracks_to_mocap(pred_odom, align['T_mocap_odom'][s], align['delta'][s])
             seq_dir = out / s
             (seq_dir / method).mkdir(parents=True, exist_ok=True)
@@ -136,7 +143,8 @@ def main():
                     (seq_dir / 'gt').mkdir(parents=True, exist_ok=True)
                     write_tracks(gt, seq_dir / 'gt' / 'tracks.csv')
                 for m in args.label_modes:
-                    cfg = EvalConfig(match_dist=args.match_dist, roi=roi, t_start=args.t_start, label_mode=m)
+                    cfg = EvalConfig(match_dist=args.match_dist, roi=roi, t_start=args.t_start, label_mode=m,
+                                     annotated_classes=args.annotated_classes)
                     per_mode[m][thr] = evaluate(gt, pred, cfg).to_dict()
             for m in args.label_modes:
                 summaries[m]['methods'][method]['per_seq'][s] = {str(k): v for k, v in per_mode[m].items()}
@@ -151,7 +159,7 @@ def main():
                 'method_git_at_eval': git_state(REPO / METHOD_REPO.get(method, '.')),
                 'eval_git': git_state(REPO),
                 'eval_config': {'match_dist': args.match_dist, 'roi': roi, 'dyn_speed': args.dyn_speed,
-                                't_start': args.t_start},
+                                't_start': args.t_start, 'annotated_classes': args.annotated_classes},
                 'alignment': {'T_mocap_odom': align['T_mocap_odom'][s], 'delta': align['delta'][s],
                               'T_base_JO': align['T_base_JO'], 'rms_xy': align['rms_xy'][s],
                               't_base_JO_observable': align['t_base_JO_observable']},

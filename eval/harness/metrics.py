@@ -65,6 +65,11 @@ class EvalConfig:
     frame_times: object = None     # optional array of times [s]: score only the grid frames nearest to them (CODa split)
     roi: tuple = None              # (xmin, xmax, ymin, ymax) in GT frame; predictions outside ignored
     label_mode: str = 'full'       # 'full' | 'dynamic_only' | 'merged' — see the module docstring
+    # Classes the GT annotates (e.g. {'person'} on the lab): a prediction whose published class (pred column 'class')
+    # is set and NOT in it is ignored when, after the association with ALL predictions, it stays unmatched (no FP,
+    # not counted in num_pred / IDF1). Matched ones count as usual (a person classified wrong stays a TP).
+    # Predictions without a class are unaffected. None = off.
+    annotated_classes: object = None
 
 
 @dataclass
@@ -86,6 +91,7 @@ class EvalResult:
     state_precision: dict = field(default_factory=dict)  # pred_state -> on matched pairs
     state_f1: dict = field(default_factory=dict)
     fp_by_state: dict = field(default_factory=dict)      # unmatched predictions per predicted state
+    num_pred_ignored_class: int = 0                      # unmatched predictions ignored by cfg.annotated_classes
     mcc: float = float('nan')
     latencies: list = field(default_factory=list)        # dicts: gt_id, t, from, to, latency (nan = censored)
     latency_mean: dict = field(default_factory=dict)     # 'to_dynamic' / 'to_potentially_dynamic' -> mean [s]
@@ -152,6 +158,26 @@ def sample_pred(pred, grid, cfg):
     return out
 
 
+def sample_pred_ignorable(pred, grid, cfg):
+    """-> list (per grid frame) of the pred ids whose published class is set and not annotated (cfg.annotated_classes),
+    sampled exactly as sample_pred."""
+    out = [set() for _ in grid]
+    if pred.empty or cfg.annotated_classes is None or 'class' not in pred:
+        return out
+    ft = np.unique(pred['t_ns'].to_numpy())
+    obj = objects(pred)
+    cl = obj['class'].fillna('').astype(str)
+    obj = obj[(cl != '') & ~cl.isin(set(cfg.annotated_classes))]
+    by_t = {t: set(g['track_id'].astype(int)) for t, g in obj.groupby('t_ns')}
+    ft_s = ft / 1e9
+    idx = np.searchsorted(ft_s, grid, side='right') - 1
+    for k, (t, i) in enumerate(zip(grid, idx)):
+        if i < 0 or t - ft_s[i] > cfg.max_pred_age:
+            continue
+        out[k] = by_t.get(ft[i], set())
+    return out
+
+
 # ── evaluation ──────────────────────────────────────────────────────────────
 
 def _match(gts, preds, gate):
@@ -181,6 +207,7 @@ def evaluate(gt, pred, cfg=None):
     grid = make_grid(gt, cfg)
     G = sample_gt(gt, grid, cfg)
     P = sample_pred(pred, grid, cfg)
+    IGN = sample_pred_ignorable(pred, grid, cfg)
     if cfg.skip_missing_gt:
         spans = {gid: (g['t_ns'].min() / 1e9, g['t_ns'].max() / 1e9)
                  for gid, g in objects(gt).groupby('track_id')}
@@ -200,6 +227,7 @@ def evaluate(gt, pred, cfg=None):
     grid = grid[keep]
     G = [g for g, k in zip(G, keep) if k]
     P = [p for p, k in zip(P, keep) if k]
+    IGN = [q for q, k in zip(IGN, keep) if k]
     G_states = G  # original GT states, for transition latencies
     # Relabel AFTER the dropout skip above, so that e.g. a GT person's PD phase in dynamic_only mode is a
     # legitimate "nothing to flag here" frame, not a frame skipped as if the motion capture had lost them.
@@ -220,7 +248,8 @@ def evaluate(gt, pred, cfg=None):
     dist_sum = 0.0
     matched_state = []                   # per frame: {gt_id: pred_state}
 
-    for gts, preds in zip(G, P):
+    res.num_pred_ignored_class = 0
+    for gts, preds, ign in zip(G, P, IGN):
         res.num_gt += len(gts)
         res.num_pred += len(preds)
         for gid, *_ in gts:
@@ -247,12 +276,19 @@ def evaluate(gt, pred, cfg=None):
             if i not in matched_g:
                 conf[g[3]][MISSED] += 1
         matched_p = {j for _, j, _ in m}
+        n_ign = 0
         for j, p in enumerate(preds):
             if j not in matched_p:
+                if p[0] in ign:          # unmatched prediction of a class the GT does not annotate: ignored
+                    n_ign += 1
+                    res.num_pred -= 1
+                    pred_count[p[0]] -= 1
+                    continue
                 res.fp_by_state[p[3]] = res.fp_by_state.get(p[3], 0) + 1
+        res.num_pred_ignored_class += n_ign
         matched_state.append(frame_state)
         res.fn += len(gts) - len(m)
-        res.fp += len(preds) - len(m)
+        res.fp += len(preds) - len(m) - n_ign
 
     if res.num_gt:
         res.mota = 1.0 - (res.fn + res.fp + res.idsw) / res.num_gt

@@ -91,6 +91,23 @@ def load_obstacles(bag, topic=None):
     return make_tracks(rows), (frame_ids.pop() if frame_ids else ''), found_topic
 
 
+
+def load_track_classes(bag, topic='/sins/tracker/tracks'):
+    """SINS tracker output (vision_msgs Detection3DArray, id 'track_<n>') -> {(t_ns, track_id): published object
+    class} for the ticks where the track carries one (results other than the motion-state labels). Same header stamps
+    as the ObstacleArray. Empty dict if the topic was not recorded."""
+    states = {'static', 'dynamic', 'potentially_dynamic', 'tracked'}
+    out = {}
+    with AnyReader([Path(bag)], default_typestore=typestore()) as r:
+        for c, _, raw in r.messages(_connections(r, topic=topic)):
+            m = r.deserialize(raw, c.msgtype)
+            t = stamp_ns(m.header)
+            for d in m.detections:
+                k = [h.hypothesis.class_id for h in d.results if h.hypothesis.class_id not in states]
+                if k:
+                    out[(t, int(d.id.split('_')[-1]))] = k[0]
+    return out
+
 def load_odometry(bag, topic='/odometry/filtered'):
     """nav_msgs/Odometry -> array [t_s, x, y, yaw] (child frame in header frame)."""
     out = []

@@ -1,0 +1,58 @@
+# Unified profile on the lab (17/11): ONE behaviour indoor/outdoor. Base = the outdoor reference I2P (coda_vjsye2i2p);
+# here only the scale/sensor parameters go back to the indoor (VLP-16 + RealSense, lab) values, plus ground_model
+# planes (the grid height map is an option, not part of the unified behaviour). Table and classes (confirmed by the
+# laptop session): eval/diagnostics/unified_profile/diff_indoor_vs_i2p.tsv. Launch args as the indoor lab runs.
+base: coda_vjsye2i2p
+files:
+  calibration_icp.yaml:
+    calibration_icp_node: {icp_fitness_threshold: 0.3, icp_max_correspondence_distance: 0.2, icp_max_runs: 5, icp_normal_max_nn: 30, icp_normal_radius: 0.15, icp_timeout_sec: 10.0, icp_voxel_size: 0.05,
+      is_indoor: true, min_overlap_points: 100}
+  dbscan_detector.yaml:
+    dbscan_detector_node:
+      camera_eps_far: 0.18
+      camera_eps_near: 0.09
+      lidar_eps_far: 0.3
+      lidar_eps_near: 0.12
+      lidar_eps_vertical_angle_deg: 2.0
+      max_box_extent: [3.0, 3.0, 2.5]
+      max_box_volume: 12.0
+  detection.yaml:
+    yolo_seg_track_detector:
+      camera_names: [front_camera, back_camera]
+      inference_size: 640
+  detection_yolo26.yaml:
+    yolo_seg_track_detector:
+      camera_names: [front_camera, back_camera]
+  preprocessing.yaml:
+    preprocessing_node:
+      camera_names: [front_camera, back_camera]
+      depth_input_max_points: 0
+      depth_max_value: 5.0
+      lidar_range_x: 15.0
+      lidar_range_y: 15.0
+      lidar_voxel_far: 0.03
+      lidar_voxel_near: 0.05
+      lidar_voxel_split_range: 6.0
+      voxel_resolution: 0.1
+      wall_input_band_edges: [3.0, 6.0]
+      wall_input_height_margin: 0.3
+      wall_input_voxel_sizes: [0.3, 0.2, 0.1]
+      wall_removal_margin: 0.1
+      ground_model: planes
+  semantic_segmentation.yaml:
+    yolo_semantic_seg_detector:
+      camera_names: [front_camera, back_camera]
+      detection_frame_stride: 2
+      detection_inference_size: 640
+  static_structures.yaml:
+    static_structures_node:
+      camera_names: [front_camera, back_camera]
+      lidar_range_x: 10.0
+      lidar_range_y: 10.0
+      ransac_inlier_threshold: 0.07
+      ransac_min_inliers: 25
+      wall_max_center_distance: 5.0
+      wall_max_missed_frames: 30
+  tracker.yaml:
+    tracker_node:
+      camera_names: [front_camera, back_camera]
