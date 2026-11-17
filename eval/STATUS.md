@@ -1645,3 +1645,4 @@ I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
   90.1/91.1/90.7, 86.4/86.8/86.4, 88.4/86.1/88.0; latenza 93.5/122, 78/105, 79.5/105 ms. Carrier chiude gli FP
   dell'anchor (da 211-334 a 19-51); A +1.0 dynamic_only. Gap residuo = FN della persona FERMA (1950 ~70 FN in
   quasi tutte le run lab_u contro 2 indoor; 1947 intermittente). Diagnosi YOLO-3D (punti 3-4) su 1950 dopo CODa/street.
+- 17/11 UTENTE: la priorita' e' battere gli altri metodi su CODa; raggiungere il 98 del profilo indoor sulle bag del laboratorio non e' fondamentale. Criterio di accettazione: CODa contro i baseline (metrica nativa, frame di test per i metodi addestrati su CODa), poi strada; sul lab solo niente regressioni evidenti.
