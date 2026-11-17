@@ -1640,3 +1640,8 @@ I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
   carrier+A: per ogni perdita di classe in FOV, YOLO vedeva ma associazione mancata / oggetto coperto o troncato /
   YOLO assente; perdite con id ByteTrack 2D ancora vivo; quanto resterebbe classificato con (3) identita' 2D, (4)
   decadimento solo se visibile e non coperto. Lab (lab_uca, 1947/1950), CODa tuning, street. Script eval/diagnostics/yolo_assoc/.
+- 17/11 A/B carrier+A, fase LAB (x3 alternate, GT solo person): MOTA indoor 97.8/97.9/98.0, lab_uc 93.9/94.0/93.1,
+  lab_uca 94.9/88.2/96.4; FP 9/7/2, 19/30/51, 15/39/15; FN 55/53/55, 154/139/147, 130/297/87; dynamic_only
+  90.1/91.1/90.7, 86.4/86.8/86.4, 88.4/86.1/88.0; latenza 93.5/122, 78/105, 79.5/105 ms. Carrier chiude gli FP
+  dell'anchor (da 211-334 a 19-51); A +1.0 dynamic_only. Gap residuo = FN della persona FERMA (1950 ~70 FN in
+  quasi tutte le run lab_u contro 2 indoor; 1947 intermittente). Diagnosi YOLO-3D (punti 3-4) su 1950 dopo CODa/street.
