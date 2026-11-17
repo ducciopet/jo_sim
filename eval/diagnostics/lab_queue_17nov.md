@@ -103,3 +103,32 @@ on 1952. Horizontal offset small (du -0.02..-0.21 box widths); the 1.0 m referen
 above the box centre: odom z = base_link (ground_height -0.3), so the point is ~1.3 m above the floor plus a camera
 height difference (the online calibration puts the camera 0.19 m below the URDF) -> a height-reference effect in this
 check, not a misalignment (98-100% inside).
+
+## 4. YOLO 2D <-> 3D association diagnosis, CODa (eval/diagnostics/yolo_assoc/, LXA rep 1, 9 tuning windows; measure only)
+yolo_assoc.py: class-loss events (published class at tick i-1, none at i, track alive) and the 3-tick decay streak
+checked per camera (front ZED + stereo cam0; 16_w1 stereo only) with the track box projected; ByteTrack ids per camera.
+Raw: coda_LXA_17nov.txt, yolo_assoc_rows.csv.
+
+| class | a: YOLO box of the same class covers it, not associated | b: occluded by a nearer track / truncated by the border | c: visible, no YOLO | total |
+|---|---|---|---|---|
+| person | 45 | 31 | 39 | 115 |
+| bicycle | 13 | 0 | 4 | 17 |
+| truck | 16 | 0 | 1 | 17 |
+| bus | 2 | 0 | 1 | 3 |
+| car | 0 | 2 | 0 | 2 |
+| all | **76 (49%)** | **33 (21%)** | 45 (29%) | 154 |
+
+- Losses with a known previous covering 2D instance (camera, id): 128; that same (camera, id) still published by its
+  camera during the streak: 76 (59%) -> the class was dropped while YOLO was still tracking the same instance.
+- Vehicles: 16 of the 17 truck losses and 13 of 17 bicycle losses are type a (YOLO sees them, association fails).
+- What-if over the 1932 unclassified ticks that follow the losses (until the class returns / track ends, max 50):
+  kept by (3) keep-while-the-same-(camera,id)-is-alive 192 (10%), by (4) evidence-only decay (occluded/truncated/not
+  in view) 701 (36%), by either 893 (46%). (3) as measured is per single (camera, id); a per-camera version that
+  accepts any camera keeping its own id would keep more.
+- Multi-camera (windows 0/10, ZED + stereo): ticks of classified tracks covered by a same-class YOLO box in 2 cameras
+  2685, in 1 camera 2256 -> ~54% of the covered ticks the object is seen by both cameras. Along the tracks the covering
+  (camera, id) changed 392 times by a camera switch vs 190 times by a new id in the same camera: two thirds of the
+  2D-identity changes are only "the other camera now sees it" -> with the ByteTrack id compared without its camera
+  (detectionYoloTrackId / last_yolo_track_id) these read as an identity change. Confirms the peer's concern (a).
+- Not yet measured: class conflicts between cameras on the same tick, double counting of class votes, lab 1950 (one
+  camera only there).
