@@ -1636,3 +1636,7 @@ I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
   latenza in C++.
 - Pagine: una sola pagina SINS (4nQUTxnrhzEXvrMCcfhvAu) con uscita YOLO26s-seg su lab/CODa/strada
   (eval/diagnostics/yolo_demo), grafici e video; le altre tre cancellate su richiesta dell'utente.
+- 17/11: diagnosi associazione YOLO 2D <-> 3D approvata dall'utente (punti 3 e 4), chiesta al lab DOPO la A/B
+  carrier+A: per ogni perdita di classe in FOV, YOLO vedeva ma associazione mancata / oggetto coperto o troncato /
+  YOLO assente; perdite con id ByteTrack 2D ancora vivo; quanto resterebbe classificato con (3) identita' 2D, (4)
+  decadimento solo se visibile e non coperto. Lab (lab_uca, 1947/1950), CODa tuning, street. Script eval/diagnostics/yolo_assoc/.
