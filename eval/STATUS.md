@@ -1656,3 +1656,9 @@ I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
 - Baseline sul laptop: seq 16 girata per CP+ST, EagerMOT, EMMC, DFM (camera stereo, niente ZED; LV-DOT non
   applicabile). EMMC/DFM su 11/12 con YOLO delle run LHI2P rep1: corretto un mio bug (camere ZED+stereo mescolate,
   fusione 3D-2D quasi nulla) prima dello scoring. Rescore e3 all+testing di tutti i baseline in corso.
+- 17/11 UTENTE: un oggetto puo' comparire contemporaneamente in due camere o prima in una poi nell'altra (due YOLO).
+  Trovato nel codice: l'id ByteTrack arriva al tracker senza la camera (detectionYoloTrackId = results[1].score) e
+  last_yolo_track_id lo tratta come globale (regola shrink/growth, id_known_same): un passaggio di camera sembra un
+  cambio d'oggetto (classe cancellata), e due camere possono dare lo stesso numero a oggetti diversi. Aggiunto alla
+  diagnosi del lab (eventi di clear con cambio di camera, doppio conteggio dei voti, continuita' al passaggio); fix
+  proposto: id (camera, id), ultimo id per camera, switch default off.
