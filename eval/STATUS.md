@@ -1690,3 +1690,7 @@ I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
   P2/P5; S3 P1; S4 suolo; S5 YOLO 640 vs 1280; B1 dati mai visti = lab mocap + street Dynablox/M-det; S6 freeze;
   S7 paper; poi spazio libero). NOTA: il GT della strada e' un riferimento SEMI-AUTOMATICO dei soli oggetti in moto
   (robot fermo, modello di sfondo + percorso >= 2 m), non annotato a mano: da dichiarare.
+- 17/11 notte: catena S1+S2 partita sul lab (s12_chain.sh, commit 1547030; codice sins branch yolo-assoc 43768e1,
+  default off): S0=R0, SA=I2P+A senza carrier, SM (+M), SMP (+M+P3+P4), SP2 (+P2 = yolo_refine_merge_fragments
+  esistente), SV (+P5); CODa 9 finestre + street x3, poi regressione lab. Smoke 10_w4: costo controllo 0.012 ms,
+  latenza 86 ms. Fine prevista 18/11 ~09:00.
