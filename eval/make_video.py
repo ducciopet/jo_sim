@@ -54,6 +54,7 @@ def main():
     ap.add_argument('--seq', required=True)
     ap.add_argument('--methods', nargs='+', default=['v1', 'v2'])
     ap.add_argument('--out', required=True)
+    ap.add_argument('--margin', type=float, default=1.0, help='[m] around the GT and robot extent shown')
     ap.add_argument('--speed', type=float, default=2.0, help='playback speed factor')
     ap.add_argument('--dpi', type=int, default=90)
     ap.add_argument('--names', nargs='+', default=None, help='panel titles, one per method (default: built-in names)')
@@ -90,7 +91,7 @@ def main():
 
     times = np.sort(gt['t_ns'].unique())
     pts = np.concatenate([gt[['x', 'y']].to_numpy(), jo[:, 1:3]])
-    lo, hi = pts.min(0) - 1.0, pts.max(0) + 1.0
+    lo, hi = pts.min(0) - args.margin, pts.max(0) + args.margin
 
     fig, axes = plt.subplots(1, len(args.methods), figsize=(5.2 * len(args.methods), 5.0), squeeze=False)
     axes = axes[0]

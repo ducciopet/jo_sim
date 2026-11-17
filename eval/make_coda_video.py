@@ -8,7 +8,7 @@ Top: front camera with YOLO's 2D boxes (thin, grey) and SINS's tracks projected 
 (odom frame, robot-centred, heading up): the current LiDAR scan, the annotated agents (green outlines, CODa GT),
 SINS tracks (left) and the baseline's detections (right, Dynablox by default).
 
-usage: make_coda_video.py --window w1 --run bags/coda/runs/B1_v2_coda0_w1 \
+usage: make_coda_video.py --window w1|10_w1 --run bags/coda/runs/B1_v2_coda0_w1 \
           [--baseline bags/dynablox_out/dynabloxa_coda0_w1.bag --baseline-method dynablox] --out eval/videos/coda_w1.mp4
 """
 import argparse
@@ -137,8 +137,17 @@ def main():
     ap.add_argument('--out', required=True)
     a = ap.parse_args()
     R = E.parent / 'bags/coda'
-    imgs, clouds, st, K = read_data(R / f'coda0_{a.window}')
-    ot, oT = read_odom(R / f'coda0_{a.window}_odom')
+    w = a.window if '_' in a.window else f'0_{a.window}'          # w1 (seq 0) or 10_w1, 16_w1 ...
+    WB = R / f'coda{w}'
+    if not (WB / 'metadata.yaml').exists():                       # window bags live on the NAS (local copy only during runs)
+        WB = Path('/mnt/nas-imperatore/datasets_SINS/derived/coda_windows') / f'coda{w}'
+    imgs, clouds, st, K = read_data(WB)
+    ot, oT = read_odom(R / f'coda{w}_odom')
+    if ('base_link', 'velodyne') not in st:                   # NAS window bags carry an empty /tf_static: take the run's
+        with AnyReader([Path(a.run)]) as r:
+            for c, _, raw in r.messages([c for c in r.connections if c.topic == '/tf_static']):
+                for tr in r.deserialize(raw, c.msgtype).transforms:
+                    st[(tr.header.frame_id, tr.child_frame_id)] = tf_mat(tr.transform)
     T_base_vel = st[('base_link', 'velodyne')]
     T_vel_cam = st[('velodyne', 'front_camera_depth_optical_frame')] @ st[('front_camera_depth_optical_frame',
                                                                           'front_camera_color_optical_frame')]
@@ -146,7 +155,7 @@ def main():
     tracks = objects(tracks)
     yolo = read_yolo(a.run)
     yts = np.array(sorted(yolo))
-    gt = pd.read_csv(R / f'coda0_{a.window}_gt.csv', keep_default_na=False)
+    gt = pd.read_csv(R / f'coda{w}_gt.csv', keep_default_na=False)
     gt = gt[gt['track_id'].astype(int) >= 0]
     for k in ('x', 'y', 'z', 'l', 'w', 'h', 'yaw'):
         gt[k] = gt[k].astype(float)
