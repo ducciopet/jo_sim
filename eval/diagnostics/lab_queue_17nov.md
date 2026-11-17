@@ -132,3 +132,23 @@ Raw: coda_LXA_17nov.txt, yolo_assoc_rows.csv.
   (detectionYoloTrackId / last_yolo_track_id) these read as an identity change. Confirms the peer's concern (a).
 - Not yet measured: class conflicts between cameras on the same tick, double counting of class votes, lab 1950 (one
   camera only there).
+
+## 5. e3 SINS testing frames + Dynablox / M-detector e3 (all + testing, 15 windows) + vehicles e3 (done 21:xx)
+`python3 eval/scripts/analysis/cmp_e3.py <coda_e3 | coda_e3/test> LXI,LXIr2,LXIr3 LXC,... LXA,... DBX MDET`
+(MOTA all annotated agents / moving, pooled per sequence; SINS = mean of 3 reps; held-out 11/12 not run for LX*)
+
+| | seq 0 all / moving | seq 10 | seq 16 | seq 11 | seq 12 |
+|---|---|---|---|---|---|
+| LXI (I2P), all frames | 59.4 / 80.1 | 51.4 / 64.2 | 63.3 / 80.1 | - | - |
+| LXA (+carrier +A), all frames | 58.5 / 79.2 | 55.3 / 66.2 | 62.7 / 81.3 | - | - |
+| Dynablox, all frames | -284.2 / -527.8 | -74.9 / -88.6 | 38.8 / 50.9 | 10.7 / 4.3 | -181.0 / -198.5 |
+| M-detector, all frames | -388.6 / -739.9 | -59.5 / -69.1 | -21.7 / -35.5 | -61.1 / -89.2 | -90.5 / -98.2 |
+| LXI, testing frames | 58.0 / 79.9 | 51.2 / 62.5 | 60.0 / 79.9 | - | - |
+| LXA, testing frames | 56.5 / 80.7 | 55.7 / 65.2 | 60.1 / 81.5 | - | - |
+| Dynablox, testing | -286.6 / -519.5 | -92.2 / -104.5 | 30.1 / 38.4 | 17.0 / 15.0 | -181.3 / -196.4 |
+| M-detector, testing | -435.3 / -807.8 | -63.3 / -70.9 | -16.9 / -32.2 | -63.0 / -88.4 | -72.3 / -78.9 |
+
+Files: coda_e3/{DBX,MDET}_<w>.json, coda_e3/test/..., coda_vehicle_e3/{dynablox,mdetector}_<w>.json (tuning vehicle
+windows). On testing frames LXA vs I2P: seq 10 +4.5, seq 0 -1.5, seq 16 +0.1 (MOTA all).
+Queue from the laptop session: done, except the lab part of the YOLO-3D diagnosis and the multi-camera class-conflict
+count (section 4). Nothing else launched.
