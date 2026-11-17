@@ -152,3 +152,11 @@ Files: coda_e3/{DBX,MDET}_<w>.json, coda_e3/test/..., coda_vehicle_e3/{dynablox,
 windows). On testing frames LXA vs I2P: seq 10 +4.5, seq 0 -1.5, seq 16 +0.1 (MOTA all).
 Queue from the laptop session: done, except the lab part of the YOLO-3D diagnosis and the multi-camera class-conflict
 count (section 4). Nothing else launched.
+
+## 6. S1+S2 (eval/PIPELINE.md) launched 18/11 ~21:40 as one chain (s12_chain.sh), sins branch yolo-assoc 43768e1
+New switches (all default off, counters + cost in the 50-tick log): track_yolo_id_per_camera (M; dbscan passes the id's
+camera), track_class_keep_while_2d_alive (P3), track_class_decay_visible_only (P4), track_vehicle_extent_prior (P5);
+P2 = the existing yolo_refine_merge_fragments. Smoke test 10_w4 (all on): no crash, check cost 0.012 ms median.
+Arms, CODa 9 windows + street, x3 alternated: S0 = R0 (I2P+carrier+A) / SA = I2P+A without carrier / SM = R0+M /
+SMP = R0+M+P3+P4 / SP2 = +P2 / SV = +P2+P5; scored e3 all + testing + vehicles; then lab regression lab_uca vs
+lab_ucamv x3. Expected end ~09:00 on 19/11. Then S4 (ground), S5 (640 vs 1280).
