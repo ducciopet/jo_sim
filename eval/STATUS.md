@@ -1570,4 +1570,4 @@ pari; street MOTA 46.1 vs 46.8 (range sovrapposti). Held-out 11/12 (alternato co
 53.3/33.5, tutti 40.3/30.5 vs 39.7/28.4, PD 61.0/37.5 vs 61.5/36.2, IDSW 285 vs 292. Latenza med/p90 56/94 vs 64/100
 (bimodale, nessun costo misurabile).
 Verdetto: I2P (profili coda_vjsye2i2p / mdp_street_vjsye2i2p) nuovo riferimento. Codice (branch lab
-inherit-guard d3400bc) pushato su ducciopet/sins main il 17/11, puntatore del submodule aggiornato.
+inherit-guard d3400bc) pushato su ducciopet/sins main il 17/11 come 2e8e003 (stesso contenuto), puntatore del submodule aggiornato.
