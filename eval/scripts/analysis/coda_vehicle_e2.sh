@@ -13,7 +13,8 @@
 #   -> eval/results/coda_vehicle_e2/<tag or method>_<w>.json. Resumable (existing json skipped).
 cd $(dirname $0)/../../..
 [ -d $HOME/.venvs/sins_eval/bin ] && export PATH=$HOME/.venvs/sins_eval/bin:$PATH  # lab venv (pandas)
-O=eval/results/coda_vehicle_e2; G=$O/gt; mkdir -p $G
+E=${E:-e2}; X=""; [ $E = e3 ] && X="--ignore-undefined"   # E=e3: + --ignore-undefined -> coda_vehicle_e3
+G=eval/results/coda_vehicle_e2/gt; O=eval/results/coda_vehicle_$E; mkdir -p $G $O
 B=/mnt/nas-imperatore/datasets_SINS/derived/baselines_out
 for c in ${VW:-0_w1 10_w1 10_w3 10_w4 10_w5 16_w1}; do
   [ -e $G/coda${c}_vgt.csv ] || python3 - "$c" "$G" <<'EOF'
@@ -34,8 +35,8 @@ EOF
   cp -n bags/coda/coda${c}_gt.json $G/coda${c}_vgt.json 2>/dev/null
   A="--gt $G/coda${c}_vgt.csv --ignore-gt $G/coda${c}_ogt.csv --odom bags/coda/coda${c}_odom"
   for t in $TAGS; do o=$O/${t}_$c.json; r=bags/coda/runs/${t}_v2_coda$c
-    [ -e $o ] || [ ! -e $r ] || python3 eval/coda_eval.py --run $r $A --out $o > /dev/null 2>&1 || echo "FAIL $t $c"; done
+    [ -e $o ] || [ ! -e $r ] || python3 eval/coda_eval.py $X --run $r $A --out $o > /dev/null 2>&1 || echo "FAIL $t $c"; done
   for m in $BASE; do o=$O/${m}_$c.json; r=$B/${m}F_coda$c.bag
-    [ -e $o ] || [ ! -e $r ] || python3 eval/coda_eval.py --method $m --run $r $A --out $o > /dev/null 2>&1 || echo "FAIL $m $c"; done
+    [ -e $o ] || [ ! -e $r ] || python3 eval/coda_eval.py $X --method $m --run $r $A --out $o > /dev/null 2>&1 || echo "FAIL $m $c"; done
 done
 echo "CODA VEHICLE E2 DONE"
