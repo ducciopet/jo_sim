@@ -1674,3 +1674,15 @@ I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
   mai tra maschere diverse), P5 track_vehicle_extent_prior (dimensioni medie nuScenes, box allungato lungo il raggio).
   A/B cumulativa x3: CODa+street base I2P+carrier+A, +M+P3+P4, +P2+P5; lab solo regressione. Criterio: CODa vs
   baseline, metrica nativa all+testing. Coda lab: A/B in corso, DBX/MDET e3, audit, build+A/B, prova suolo.
+- 17/11 notte, CONFRONTO e3 (lab_queue_17nov.md sez. 2-5 + baseline appresi del laptop), MOTA tutti / in moto, frame di
+  TEST: SINS LXA 0: 56.5/80.7, 10: 55.7/65.2, 16: 60.1/81.5 (held-out non girato per LX*); EMMC 35.8/46.1, 68.3/54.7,
+  51.9/76.8, 11: 72.9/33.9, 12: 68.6/61.2; EM 32.3/58.6, 56.8/52.9, 50.4/74.5, 52.9/53.6, 44.8/37.9; ST 31.0/37.5,
+  53.5/38.3, 51.3/67.8, 61.6/14.5, 61.5/53.5; DFM, Dynablox, M-detector, LV-DOT molto sotto. Veicoli in moto trovati
+  (tuning, e3): SINS LXA 23-41% (media 32.6), EMMC 97.1, ST 96.8, DFM 58.7, Dynablox 61.9, M-det 62.2.
+  Lettura: sulla metrica nativa EMMC batte SINS su seq 10 (e quasi certamente 11/12) anche sui frame di test; ma lo
+  split di CODa e' casuale per frame, quindi i frame di test sono a 100 ms da frame di training: CenterPoint ha visto
+  queste scene. SINS vince seq 0 e 16 e la metrica in moto su 0/10/16. Il gap e' soprattutto veicoli (fermi e in moto).
+- Diagnosi YOLO-3D (lab, CODa tuning): 154 perdite di classe, 49% YOLO vedeva l'oggetto ma associazione mancata, 21%
+  coperto/troncato, 29% YOLO assente; 59% con la stessa istanza 2D ancora viva; 2/3 dei cambi di id 2D sono solo
+  cambi di camera. Audit ingressi: parametri effettivi = profilo, copertura completa, nessun errore TF, catena camera
+  corretta (YOLO a 1280 px su CODa/strada, 640 lab: da uniformare? e' parametro di scala dichiarato).
