@@ -1,0 +1,98 @@
+file	param	indoor	coda_vjsye2i2p	classe	nota
+calibration_icp.yaml	calibration_icp_node.icp_fitness_threshold	0.3	0.15	SCALA/SENSORE	ICP
+calibration_icp.yaml	calibration_icp_node.icp_max_correspondence_distance	0.2	0.35	SCALA/SENSORE	ICP
+calibration_icp.yaml	calibration_icp_node.icp_max_runs	5	3	SCALA/SENSORE	ICP
+calibration_icp.yaml	calibration_icp_node.icp_normal_max_nn	30	50	SCALA/SENSORE	ICP
+calibration_icp.yaml	calibration_icp_node.icp_normal_radius	0.15	0.25	SCALA/SENSORE	ICP
+calibration_icp.yaml	calibration_icp_node.icp_timeout_sec	"""<absent>"""	7.0	SCALA/SENSORE	ICP
+calibration_icp.yaml	calibration_icp_node.icp_voxel_size	0.05	0.08	SCALA/SENSORE	ICP
+calibration_icp.yaml	calibration_icp_node.is_indoor	true	false	SCALA/SENSORE	ICP
+calibration_icp.yaml	calibration_icp_node.min_overlap_points	100	50	SCALA/SENSORE	ICP
+dbscan_detector.yaml	dbscan_detector_node.camera_eps_far	0.18	0.27	SCALA/SENSORE	eps clustering
+dbscan_detector.yaml	dbscan_detector_node.camera_eps_near	0.09	0.135	SCALA/SENSORE	eps clustering
+dbscan_detector.yaml	dbscan_detector_node.fusion_adaptive_wait	"""<absent>"""	true	COMPORTAMENTO	
+dbscan_detector.yaml	dbscan_detector_node.fusion_late_leaves_max_age	"""<absent>"""	0.3	COMPORTAMENTO	
+dbscan_detector.yaml	dbscan_detector_node.fusion_timeout_sec	0.12	0.05	COMPORTAMENTO	timing fusione (0.12 -> 0.05 con adaptive_wait)
+dbscan_detector.yaml	dbscan_detector_node.lidar_eps_far	0.3	0.45	SCALA/SENSORE	eps clustering
+dbscan_detector.yaml	dbscan_detector_node.lidar_eps_near	0.12	0.18	SCALA/SENSORE	eps clustering
+dbscan_detector.yaml	dbscan_detector_node.lidar_eps_vertical_angle_deg	2.0	0.33	SCALA/SENSORE	eps clustering
+dbscan_detector.yaml	dbscan_detector_node.max_box_extent	[3.0, 3.0, 2.5]	[6.0, 6.0, 3.5]	SCALA/SENSORE	limiti box
+dbscan_detector.yaml	dbscan_detector_node.max_box_volume	12.0	40.0	SCALA/SENSORE	limiti box
+dbscan_detector.yaml	dbscan_detector_node.stereo_camera.eps_scale	"""<absent>"""	1.0	SCALA/SENSORE	camere/topic
+dbscan_detector.yaml	dbscan_detector_node.yolo_class_min_height_classes	"""<absent>"""	"[""car"", ""truck"", ""bus"", ""bicycle""]"	COMPORTAMENTO ?	"soglia per classe YOLO: va contro ""nessuna soglia per tipo""? da confermare"
+dbscan_detector.yaml	dbscan_detector_node.yolo_class_min_height_values	"""<absent>"""	[1.1, 1.1, 1.5, 0.6]	COMPORTAMENTO ?	"soglia per classe YOLO: va contro ""nessuna soglia per tipo""? da confermare"
+detection.yaml	yolo_seg_track_detector.camera_names	"[""front_camera"", ""back_camera""]"	"[""front_camera""]"	SCALA/SENSORE	camere/topic
+detection.yaml	yolo_seg_track_detector.class_score_thresholds	"""<absent>"""	"[""bicycle:0.3""]"	COMPORTAMENTO	
+detection.yaml	yolo_seg_track_detector.inference_size	640	1280	SCALA/SENSORE	dimensione inferenza
+detection.yaml	yolo_seg_track_detector.target_classes	"[""person""]"	"[""person"", ""bicycle"", ""car"", ""motorbike"", ""bus"", ""truck"", ""dog"", ""cat"", ""horse""]"	COMPORTAMENTO	indoor solo person
+detection.yaml	yolo_seg_track_detector.weights_path	"""weights/yolo11n-seg.pt"""	"""weights/yolo26s-seg.pt"""	COMPORTAMENTO	yolo11n-seg -> yolo26s-seg
+detection_yolo26.yaml	yolo_seg_track_detector.camera_names	"[""front_camera"", ""back_camera""]"	"[""front_camera""]"	SCALA/SENSORE	camere/topic
+preprocessing.yaml	preprocessing_node.camera_names	"[""front_camera"", ""back_camera""]"	"[""front_camera""]"	SCALA/SENSORE	camere/topic
+preprocessing.yaml	preprocessing_node.camera_pose_at_stamp	"""<absent>"""	true	COMPORTAMENTO	
+preprocessing.yaml	preprocessing_node.depth_input_max_points	"""<absent>"""	150000	SCALA/SENSORE	sensore depth (camera)
+preprocessing.yaml	preprocessing_node.depth_max_value	5.0	4.5	SCALA/SENSORE	sensore depth (camera)
+preprocessing.yaml	preprocessing_node.depth_trigger_early	"""<absent>"""	true	COMPORTAMENTO	
+preprocessing.yaml	preprocessing_node.ground_grid_cell	"""<absent>"""	0.25	OPZIONALE (suolo)	b): lab piani, CODa/street griglia
+preprocessing.yaml	preprocessing_node.ground_grid_max_slope_deg	"""<absent>"""	40.0	OPZIONALE (suolo)	b): lab piani, CODa/street griglia
+preprocessing.yaml	preprocessing_node.ground_grid_memory_s	"""<absent>"""	30.0	OPZIONALE (suolo)	b): lab piani, CODa/street griglia
+preprocessing.yaml	preprocessing_node.ground_grid_tol	"""<absent>"""	0.15	OPZIONALE (suolo)	b): lab piani, CODa/street griglia
+preprocessing.yaml	preprocessing_node.ground_model	"""<absent>"""	"""grid"""	OPZIONALE (suolo)	b): lab piani, CODa/street griglia
+preprocessing.yaml	preprocessing_node.lidar_range_x	15.0	25.0	SCALA/SENSORE	range
+preprocessing.yaml	preprocessing_node.lidar_range_y	15.0	25.0	SCALA/SENSORE	range
+preprocessing.yaml	preprocessing_node.lidar_voxel_far	0.03	0.045	SCALA/SENSORE	voxel
+preprocessing.yaml	preprocessing_node.lidar_voxel_near	0.05	0.075	SCALA/SENSORE	voxel
+preprocessing.yaml	preprocessing_node.lidar_voxel_split_range	6.0	8.0	SCALA/SENSORE	voxel
+preprocessing.yaml	preprocessing_node.stereo_camera.aligned_depth_cloud_topic	"""<absent>"""	"""/stereo_camera/camera/depth/color/points"""	SCALA/SENSORE	camere/topic
+preprocessing.yaml	preprocessing_node.stereo_camera.aligned_depth_transport	"""<absent>"""	"""zstd"""	SCALA/SENSORE	camere/topic
+preprocessing.yaml	preprocessing_node.stereo_camera.depth_max_value	"""<absent>"""	6.0	SCALA/SENSORE	camere/topic
+preprocessing.yaml	preprocessing_node.voxel_resolution	0.1	0.2	SCALA/SENSORE	voxel
+preprocessing.yaml	preprocessing_node.wall_input_band_edges	[3.0, 6.0]	[4.0, 8.0]	SCALA/SENSORE	parametri muro
+preprocessing.yaml	preprocessing_node.wall_input_height_margin	0.3	0.4	SCALA/SENSORE	parametri muro
+preprocessing.yaml	preprocessing_node.wall_input_voxel_sizes	[0.3, 0.2, 0.1]	[0.4, 0.3, 0.2]	SCALA/SENSORE	parametri muro
+preprocessing.yaml	preprocessing_node.wall_removal_margin	0.1	0.15	SCALA/SENSORE	parametri muro
+preprocessing.yaml	preprocessing_node.yolo_leaf_aligned_path	"""<absent>"""	true	COMPORTAMENTO	
+preprocessing.yaml	preprocessing_node.yolo_leaf_lidar_beyond_depth	false	true	COMPORTAMENTO	
+preprocessing.yaml	preprocessing_node.yolo_leaf_mask_box_fallback	"""<absent>"""	true	COMPORTAMENTO	
+preprocessing.yaml	preprocessing_node.yolo_leaf_method	"""box"""	"""mask"""	COMPORTAMENTO	
+preprocessing.yaml	preprocessing_node.yolo_leaf_min_box_coverage	"""<absent>"""	0.5	COMPORTAMENTO	
+preprocessing.yaml	preprocessing_node.yolo_leaf_nearest_cluster	false	true	COMPORTAMENTO	
+preprocessing.yaml	preprocessing_node.yolo_leaf_sync	"""<absent>"""	true	COMPORTAMENTO	
+preprocessing.yaml	preprocessing_node.yolo_leaf_sync_tol	"""<absent>"""	0.07	COMPORTAMENTO	
+semantic_segmentation.yaml	yolo_semantic_seg_detector.camera_names	"[""front_camera"", ""back_camera""]"	"[""front_camera""]"	SCALA/SENSORE	camere/topic
+semantic_segmentation.yaml	yolo_semantic_seg_detector.detection_frame_stride	2	1	SCALA/SENSORE	frame rate camera (30 Hz RealSense vs 7.5 Hz ZED)
+semantic_segmentation.yaml	yolo_semantic_seg_detector.detection_inference_size	640	1280	SCALA/SENSORE	dimensione inferenza
+static_structures.yaml	static_structures_node.camera_names	"[""front_camera"", ""back_camera""]"	"[""front_camera""]"	SCALA/SENSORE	camere/topic
+static_structures.yaml	static_structures_node.lidar_range_x	10.0	25.0	SCALA/SENSORE	range
+static_structures.yaml	static_structures_node.lidar_range_y	10.0	25.0	SCALA/SENSORE	range
+static_structures.yaml	static_structures_node.pose_at_stamp	"""<absent>"""	true	COMPORTAMENTO	
+static_structures.yaml	static_structures_node.ransac_inlier_threshold	0.07	0.1	SCALA/SENSORE	parametri muro
+static_structures.yaml	static_structures_node.ransac_min_inliers	25	20	SCALA/SENSORE	parametri muro
+static_structures.yaml	static_structures_node.wall_max_center_distance	5.0	6.0	SCALA/SENSORE	parametri muro
+static_structures.yaml	static_structures_node.wall_max_missed_frames	30	20	SCALA/SENSORE	parametri muro
+tracker.yaml	tracker_node.camera_names	"[""front_camera"", ""back_camera""]"	"[""front_camera""]"	SCALA/SENSORE	camere/topic
+tracker.yaml	tracker_node.track_class_anchor_min_votes	"""<absent>"""	2	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_class_anchor_radius	"""<absent>"""	0.6	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_class_anchor_ttl	0.0	5.0	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_class_min_height_classes	"""<absent>"""	"[""car"", ""truck"", ""bus"", ""bicycle""]"	COMPORTAMENTO ?	"soglia per classe YOLO: va contro ""nessuna soglia per tipo""? da confermare"
+tracker.yaml	tracker_node.track_class_min_height_values	"""<absent>"""	[1.1, 1.1, 1.5, 0.6]	COMPORTAMENTO ?	"soglia per classe YOLO: va contro ""nessuna soglia per tipo""? da confermare"
+tracker.yaml	tracker_node.track_classified_corroboration_all	"""<absent>"""	true	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_classified_corroboration_min_size	"""<absent>"""	2.0	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_disocclusion_person_exempt	"""<absent>"""	true	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_inherit_motion_age	"""<absent>"""	0.5	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_inherit_motion_dist	"""<absent>"""	0.6	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_inherit_motion_probation	"""<absent>"""	0.5	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_inherit_motion_probation_ratio	"""<absent>"""	0.5	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_jitter_extent_memory	"""<absent>"""	2.0	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_jitter_footprint_scale	"""<absent>"""	1.0	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_lidar_fallback	"""<absent>"""	true	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_motion_consistency_ratio	"""<absent>"""	0.5	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_motion_consistency_window	"""<absent>"""	1.0	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_motion_min_net_floor	"""<absent>"""	0.3	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_motion_min_net_footprints	"""<absent>"""	0.5	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_point_shift_min_frac	"""<absent>"""	0.5	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_point_shift_veto	"""<absent>"""	true	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_semantic_dynamic_classes	"[""person"", ""car"", ""bus"", ""truck"", ""motorbike"", ""bicycle"", ""dog"", ""cat"", ""horse"", ""cow"", ""sheep""]"	"[""person"", ""car"", ""bus"", ""truck"", ""motorbike"", ""bicycle"", ""horse""]"	COMPORTAMENTO	valore CODa tolto dog/cat/cow/sheep perché CODa non li annota
+tracker.yaml	tracker_node.track_size_gate_body_lengths	"""<absent>"""	1.0	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_size_gate_travel_window	"""<absent>"""	3.0	COMPORTAMENTO	
+tracker.yaml	tracker_node.track_two_point_init	"""<absent>"""	true	COMPORTAMENTO	
+tracker.yaml	tracker_node.yolo2d_time_compensation	"""<absent>"""	true	COMPORTAMENTO	
