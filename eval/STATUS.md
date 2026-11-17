@@ -1629,3 +1629,10 @@ I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
   1.5 m il VLP-16 vede le gambe, una sempre in appoggio. Fix (A) approvato: veto solo per tracce senza classe
   dinamica (corpo articolato), default off. A/B cumulativa x3: lab indoor / lab_u+carrier / +A; CODa 9 + street
   I2P / +carrier / +A. Poi prova suolo.
+- 17/11 sera, prova "spazio libero" (idea dell'utente, solo diagnosi, eval/diagnostics/free_space/README.md, 9 finestre
+  CODa tuning): oggetti densi (>= 100 punti) AUC 0.83 contro gli FP residui di SINS e 0.90 contro gli oggetti fermi;
+  oggetti radi (< 100 punti) nessun segnale (AUC 0.37-0.47). Complessivo AUC 0.67-0.72. Raccomandazione: non prima
+  del congelamento; eventualmente come prova di moto solo per oggetti densi/vicini, con tutti i raggi e misura della
+  latenza in C++.
+- Pagine: una sola pagina SINS (4nQUTxnrhzEXvrMCcfhvAu) con uscita YOLO26s-seg su lab/CODa/strada
+  (eval/diagnostics/yolo_demo), grafici e video; le altre tre cancellate su richiesta dell'utente.
