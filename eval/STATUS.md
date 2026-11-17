@@ -1662,3 +1662,9 @@ I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
   cambio d'oggetto (classe cancellata), e due camere possono dare lo stesso numero a oggetti diversi. Aggiunto alla
   diagnosi del lab (eventi di clear con cambio di camera, doppio conteggio dei voti, continuita' al passaggio); fix
   proposto: id (camera, id), ultimo id per camera, switch default off.
+- 17/11 sera: codice su ducciopet/sins main cec8e5e (lab: floor_source, track_class_anchor_carrier,
+  track_point_shift_veto_unclassified_only, tutti default off), puntatore submodule 0a8f097. run_method.sh: timeout di
+  play = durata + 15 s (con +3 il laptop tagliava gli ultimi ~2 s delle finestre CODa). coda_vehicle_e2.sh: LBASE per
+  i baseline con uscite locali (veicoli e3 di ST/EMMC/DFM sul laptop). Lab fa DBX/MDET e3 + veicoli dopo la strada
+  (~20:00). Decisioni del 16-17/11 mandate alla sessione paper (solo informazione). Passaggio di consegne riscritto
+  (claude_account_backup/sins_handoff/LEGGIMI_PRIMA.md).

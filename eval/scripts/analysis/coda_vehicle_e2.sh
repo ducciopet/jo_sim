@@ -38,5 +38,8 @@ EOF
     [ -e $o ] || [ ! -e $r ] || python3 eval/coda_eval.py $X --run $r $A --out $o > /dev/null 2>&1 || echo "FAIL $t $c"; done
   for m in $BASE; do o=$O/${m}_$c.json; r=$B/${m}F_coda$c.bag
     [ -e $o ] || [ ! -e $r ] || python3 eval/coda_eval.py $X --method $m --run $r $A --out $o > /dev/null 2>&1 || echo "FAIL $m $c"; done
+  # CSV/bag baselines anywhere (laptop outputs), as rescore_e2.sh: LBASE="simpletrack:bags/unimt_out/unimt_coda{c}_tracks.csv:ST ..."
+  for b in $LBASE; do IFS=: read m tpl tag <<< "$b"; r=${tpl//\{c\}/$c}; o=$O/${tag}_$c.json
+    [ -e $o ] || [ ! -e $r ] || python3 eval/coda_eval.py $X --method $m --run $r $A --out $o > /dev/null 2>&1 || echo "FAIL $tag $c"; done
 done
 echo "CODA VEHICLE E2 DONE"
