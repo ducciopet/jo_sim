@@ -29,6 +29,11 @@ with AnyReader(bags) as r:
         if c.topic == '/tf_static':
             for tr in m.transforms: statics[(tr.header.frame_id, tr.child_frame_id)] = T_of(tr.transform.translation, tr.transform.rotation)
         elif K is None: K, size = np.array(m.k).reshape(3, 3), (m.height, m.width)
+if ('velodyne', f'{cam}_depth_optical_frame') not in statics:   # NAS window bags carry an empty /tf_static: the run's
+    with AnyReader([B / 'runs' / run]) as r:
+        for c, t, raw in r.messages([c for c in r.connections if c.topic == '/tf_static']):
+            for tr in r.deserialize(raw, c.msgtype).transforms:
+                statics[(tr.header.frame_id, tr.child_frame_id)] = T_of(tr.transform.translation, tr.transform.rotation)
 T_bv = np.array(json.load(open(f'{win}_gt.json'))['T_base_velodyne'])
 T_v_cam = statics[('velodyne', f'{cam}_depth_optical_frame')] @ statics[(f'{cam}_depth_optical_frame', f'{cam}_color_optical_frame')]
 odo = []

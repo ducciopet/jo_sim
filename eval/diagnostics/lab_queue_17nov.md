@@ -63,3 +63,34 @@ Reading:
   With A the loss shrinks (seq 0 -0.9, seq 16 -0.6) but PD found stays -4.8.
 - Net LXA vs I2P on the primary metric (MOTA all): -0.9 / +3.9 / -0.6 (seq 0 is noisy: 50-60 range across reps before).
 - Lab: carrier is what fixes lab_u (see section 1). A trade-off to decide: carrier helps the lab, A helps CODa and street.
+
+## 3. Input audit (rep 1 runs: LXA CODa 9 windows, street i2pca r1, lab LUCAa), eval/diagnostics/input_audit/
+**Effective parameters** (param_dump.sh: launch started as in the runs, `ros2 param dump` of every node; param_compare.py):
+- CODa coda_vjsye2i2pca: YOLO26s-seg, 9 classes (person, bicycle, car, motorbike, bus, truck, dog, cat, horse),
+  bicycle:0.3, inference 1280, one YOLO per camera (front_camera + stereo_camera), semantic-seg node NOT running
+  (single_yolo + mask), ground_model grid, floor_source camera, carrier on, veto-unclassified-only on, anchor ttl 5,
+  corroboration_all on, inherit probation 0.5, range 25 m, calibration_icp NOT running (enable_calibration false).
+- lab lab_uca: same YOLO model / classes / thresholds, inference 640, front_camera only, ground planes, range 15 m,
+  calibration_icp running.
+- street mdp_street_vjsye2i2pca: as CODa, front_camera only, inference 1280, grid, calibration_icp running.
+- The only differences from the YAML are launch-set by design: camera_names, tracker yolo2d_topic_template ->
+  /yolo_seg_track (mask + single_yolo), calibration_icp topics/frames/intrinsics from the camera's own topics.
+  (param_compare also lists detection_yolo26.yaml values: that second model file is not launched; ignore.)
+
+**Coverage** (coverage_logs.py, coverage_logs_17nov.txt): CODa 9/9 windows 0 annotated frames before the first / after
+the last tracker output, tracker msgs = scans (0_w1: 588/600, max gap 0.30 s), no gap > 0.3 s. Street: 10929/10929, 16
+gaps of 0.3-0.4 s. Lab: tracker = scans; 6-12 mocap frames per sequence lie after the last scan of the sensor bag (the
+mocap recording is longer): they count as FN for EVERY method (small, common to all).
+
+**Logs**: most WARN lines are yolo_refine diagnostics (ACCEPTED / no candidate / too low for its class) and class clears.
+`Invalid frame ID "<camera>_refined"` on CODa (16-36 per run) is benign: with calibration off the tracker falls back to
+the camera's optical frame ("FOV pose from frame '..._color_optical_frame'" logged). calibration_icp tf2 "Do not call
+canTransform with a timeout" ERROR on lab/street: cosmetic (calibration converges, VALID). No TF failures, no dropped
+scans, no queue warnings.
+
+**Camera chain CODa** (cam_chain.py, + fallback to the run's /tf_static since the NAS window bags carry an empty one;
+cam_chain_LXA_17nov.txt): YOLO-scan lag median -7..+6 ms, p90 42-47 ms (16_w1 stereo 0/0); YOLO outputs on 70-97% of
+scans (ZED ~7.5 Hz); annotated pedestrians in the image inside a YOLO person box: 10_w1 100%, 10_w2 38%, 10_w3 53%,
+10_w4 57%, 10_w5 40%, 16_w1 89% (seq 0 windows: no annotated pedestrian with >= 20 points in the image); median
+offset from the box centre |du| <= 13 px, |dv| <= 17 px -> extrinsics and timing are right; the 38-57% on 10_w2-w5 is
+YOLO missing people (crowds, small/far), not geometry.
