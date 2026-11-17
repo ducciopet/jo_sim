@@ -12,6 +12,7 @@
 #   SINS runs bags/coda/runs/<tag>_v2_coda<w>; baselines NAS derived/baselines_out/<m>F_coda<w>.bag (read only)
 #   -> eval/results/coda_vehicle_e2/<tag or method>_<w>.json. Resumable (existing json skipped).
 cd $(dirname $0)/../../..
+[ -d $HOME/.venvs/sins_eval/bin ] && export PATH=$HOME/.venvs/sins_eval/bin:$PATH  # lab venv (pandas)
 O=eval/results/coda_vehicle_e2; G=$O/gt; mkdir -p $G
 B=/mnt/nas-imperatore/datasets_SINS/derived/baselines_out
 for c in ${VW:-0_w1 10_w1 10_w3 10_w4 10_w5 16_w1}; do
