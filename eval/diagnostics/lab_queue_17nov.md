@@ -94,3 +94,12 @@ scans (ZED ~7.5 Hz); annotated pedestrians in the image inside a YOLO person box
 10_w4 57%, 10_w5 40%, 16_w1 89% (seq 0 windows: no annotated pedestrian with >= 20 points in the image); median
 offset from the box centre |du| <= 13 px, |dv| <= 17 px -> extrinsics and timing are right; the 38-57% on 10_w2-w5 is
 YOLO missing people (crowds, small/far), not geometry.
+
+**Camera chain lab** (lab_cam.py, LUCAa; lab_cam_17nov.txt; the indoor runs do not record /yolo_seg_track, not measured):
+YOLO-scan lag median 0 ms, p90 45-46 ms on all 6. Mocap person in the image -> inside a YOLO person box: 1942 100%,
+1947 100%, 1949 100%, 1950 98%. In 1945 and 1952 the person NEVER projects into the camera (median camera z -2.8 m:
+behind the robot, which stands still) -> there SINS can only use LiDAR motion; it explains the ~27 FN every profile has
+on 1952. Horizontal offset small (du -0.02..-0.21 box widths); the 1.0 m reference point lands 0.36-0.47 box heights
+above the box centre: odom z = base_link (ground_height -0.3), so the point is ~1.3 m above the floor plus a camera
+height difference (the online calibration puts the camera 0.19 m below the URDF) -> a height-reference effect in this
+check, not a misalignment (98-100% inside).
