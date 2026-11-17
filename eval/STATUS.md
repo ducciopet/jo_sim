@@ -1615,3 +1615,11 @@ Chiesto al lab: verifica del percorso della classe, poi fix fisico switchable "u
 (yolo_leaf_one_object_per_mask: se la maschera ha gia' un oggetto da profondita', beyond_depth non assegna altri
 cluster; altrimenti solo il cluster piu' vicino), A/B x3 lab (indoor / lab_u / lab_u+fix) + CODa/street (I2P vs
 I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
+- 17/11 sera, meccanismo verificato dal lab: NON beyond_depth ma il CLASS ANCHOR (track_class_anchor_ttl 5 s, r 0.6,
+  2 voti): la persona ferma lascia un anchor 'person' e ogni traccia ferma nata entro 0.6 m prende la classe (#272:
+  "class 'person' from the still-object anchor ... 115 votes"); replay lab_u con anchor off: FP 1947/1950 quasi a 0.
+  Fix approvato (switch unico, default off): l'anchor sostituisce un portatore PERSO; se la traccia votante e' viva
+  nel raggio non trasferisce, se esce dal raggio l'anchor si cancella (nessuna soglia nuova).
+  Secondo problema: FN della persona ferma in lab_u (1947 34-47 s): detection LiDAR-only 'L' (solo gambe) senza classe
+  YOLO nel tick -> decay in FOV in 3 tick -> statica; indoor la tiene PD. In diagnosi (replay lifecycle).
+  Video nuovi su NAS claude_handoff/media (CODa 10_w1/0_w1 I2P, lab_u 1947/1950), messi nelle pagine.
