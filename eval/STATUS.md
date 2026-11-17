@@ -1646,3 +1646,13 @@ I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
   dell'anchor (da 211-334 a 19-51); A +1.0 dynamic_only. Gap residuo = FN della persona FERMA (1950 ~70 FN in
   quasi tutte le run lab_u contro 2 indoor; 1947 intermittente). Diagnosi YOLO-3D (punti 3-4) su 1950 dopo CODa/street.
 - 17/11 UTENTE: la priorita' e' battere gli altri metodi su CODa; raggiungere il 98 del profilo indoor sulle bag del laboratorio non e' fondamentale. Criterio di accettazione: CODa contro i baseline (metrica nativa, frame di test per i metodi addestrati su CODa), poi strada; sul lab solo niente regressioni evidenti.
+- 17/11 controllo degli ingressi (utente: "assicurati che SINS sia implementato correttamente e gli input sensati").
+  Laptop, run LVE (eval/diagnostics/input_audit/cam_chain.py): lag YOLO-scan mediana ~0, p90 43 ms; pedoni GT
+  proiettati dentro un box YOLO person 59-100% (10_w4 affollata 59%), scarto mediano <= 15 px; tracce SINS vs GT offset
+  mediano <= 0.07 m xy, <= 0.05 m z: calibrazione, tempi e frame coerenti. ANOMALIA nelle run LVE del laptop: ultimi
+  ~2 s di ogni finestra senza uscite SINS (18-21 frame annotati contati FN); le run del lab (LHI2P) hanno copertura
+  completa, quindi i numeri attuali non ne risentono. Chiesto al lab audit completo su LXA/street/lab_uca: copertura,
+  parametri effettivi vs profilo, warning nei log, cam_chain, persona mocap nei box YOLO.
+- Baseline sul laptop: seq 16 girata per CP+ST, EagerMOT, EMMC, DFM (camera stereo, niente ZED; LV-DOT non
+  applicabile). EMMC/DFM su 11/12 con YOLO delle run LHI2P rep1: corretto un mio bug (camere ZED+stereo mescolate,
+  fusione 3D-2D quasi nulla) prima dello scoring. Rescore e3 all+testing di tutti i baseline in corso.
