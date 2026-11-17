@@ -1686,3 +1686,7 @@ I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
   coperto/troncato, 29% YOLO assente; 59% con la stessa istanza 2D ancora viva; 2/3 dei cambi di id 2D sono solo
   cambi di camera. Audit ingressi: parametri effettivi = profilo, copertura completa, nessun errore TF, catena camera
   corretta (YOLO a 1280 px su CODa/strada, 640 lab: da uniformare? e' parametro di scala dichiarato).
+- 17/11 notte: PIPELINE concordata con il lab in eval/PIPELINE.md (R0 = I2P+carrier+A; S1 classe M/P3/P4; S2 veicoli
+  P2/P5; S3 P1; S4 suolo; S5 YOLO 640 vs 1280; B1 dati mai visti = lab mocap + street Dynablox/M-det; S6 freeze;
+  S7 paper; poi spazio libero). NOTA: il GT della strada e' un riferimento SEMI-AUTOMATICO dei soli oggetti in moto
+  (robot fermo, modello di sfondo + percorso >= 2 m), non annotato a mano: da dichiarare.
