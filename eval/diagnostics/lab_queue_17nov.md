@@ -160,3 +160,42 @@ P2 = the existing yolo_refine_merge_fragments. Smoke test 10_w4 (all on): no cra
 Arms, CODa 9 windows + street, x3 alternated: S0 = R0 (I2P+carrier+A) / SA = I2P+A without carrier / SM = R0+M /
 SMP = R0+M+P3+P4 / SP2 = +P2 / SV = +P2+P5; scored e3 all + testing + vehicles; then lab regression lab_uca vs
 lab_ucamv x3. Expected end ~09:00 on 19/11. Then S4 (ground), S5 (640 vs 1280).
+
+## 7. S1+S2 results (s12_chain.sh, ended 19/11 08:30), e3, x3 in one chain
+CODa, MOTA all / moving per seq (pooled windows, mean of 3 reps; `cmp_e3.py`), + agg_e3.py columns:
+
+| arm | all frames 0 / 10 / 16 | testing frames 0 / 10 / 16 | PD found / prec | vehicle rec | IDSW | lat med / p90 |
+|---|---|---|---|---|---|---|
+| S0 = R0 (I2P+carrier+A) | 55.2/73.3, 51.3/62.5, 62.2/78.4 | 53.6/74.2, 50.6/60.1, 59.3/78.9 | 35.3 / 58.9 | 28.8 | 211 | 79 / 154 |
+| SA = I2P+A, no carrier | 53.1/73.3, 47.6/63.2, 60.7/79.3 | 52.3/74.2, 48.0/61.9, 57.4/78.8 | 32.8 / 52.2 | 28.2 | 238 | 94 / 144 |
+| SM = R0+M | **60.9/76.7**, 49.4/63.2, 61.5/79.1 | **58.6/76.3**, 49.6/61.0, 58.1/78.1 | 32.3 / 58.6 | 25.5 | **190** | 100 / 144 |
+| SMP = +P3+P4 | 52.1/70.9, 46.8/62.4, 62.6/80.3 | 48.6/69.5, 46.2/60.9, 58.2/78.8 | 34.9 / 52.1 | **35.4** | 209 | 82 / 150 |
+| SP2 = +P2 | 51.7/73.7, 47.8/62.6, 62.1/78.3 | 47.8/74.7, 47.0/61.1, 59.4/78.0 | 38.4 / 54.0 | 30.5 | 241 | 79 / 151 |
+| SV = +P2+P5 | 45.4/73.7, 50.3/62.4, 59.8/77.7 | 41.2/76.8, 46.7/58.9, 55.7/76.5 | 35.2 / 51.8 | 31.1 | 287 | 80 / 143 |
+
+Street (e3): MOTA | vehicle rec / prec | person rec / prec / MOTA
+- S0 52.4 [52.2-52.5] | 49.2 / 44.6 | 65.1 / 85.6 / 52.8
+- SA 51.4 | 50.2 / 43.7 | 65.2 / 84.5 / 51.5
+- SM 51.1 | 49.2 / 43.7 | 64.9 / 84.4 / 51.2
+- SMP 52.0 | 51.6 / 45.1 | 64.9 / 84.9 / 51.9
+- SP2 51.1 | 49.9 / 44.3 | 64.6 / 84.4 / 51.1
+- SV 46.1 [43.6-47.5] | 34.3 / 29.8 | 64.9 / 81.2 / 48.3
+
+Lab regression (lab_s12, MOTA full a/b/c): lab_uca 95.3 / 95.0 / 96.0 (FN 100/137/88); lab_ucamv 96.3 / 90.6 / 94.3
+(FN 78/240/137) -> no clear regression beyond the known intermittent standing-person loss (b run).
+
+Counters (10_w4, last 50-tick log, totals): SM per-camera id new-camera 106 / same 866 / changed 33; SMP kept by a live
+2D instance 168 ticks, decay skipped as hidden 285; SV vehicle boxes extended 206.
+
+Reading:
+- Chain-to-chain drift is large: R0 in this chain scores seq 10 51.3 (all) vs 55.3 in the 17/11 carrier chain (same
+  profile, same build behaviour). Only within-chain comparisons are valid.
+- No new switch beats R0 consistently. SM (per-camera id) is the only candidate: seq 0 +5.7 all / +3.4 moving (testing
+  +5.0 / +2.1), IDSW -21, but seq 10 -1.9 and seq 16 -0.7 (testing -1.0 / -1.2), street -1.3. Mixed, inside the noise
+  of seq 10/16; seq 0 is the noisiest sequence.
+- P3+P4 (SMP): vehicles +6.6 recall and street vehicles +2.4, but MOTA all -3/-4.5 on seq 0/10: keeping the class
+  longer keeps more PD boxes that do not match (PD precision 58.9 -> 52.1).
+- P2: neutral to slightly worse. P5 (vehicle extent prior): clearly harmful (street vehicle recall 49 -> 34, precision
+  45 -> 30; CODa seq 0 -6): the extended centre moves past the 1 m match gate. Drop P5.
+- SA (no carrier) is below R0 here on all three seqs and the street: R0 stays the reference.
+- Proposal: keep R0; optional confirm-run R0 vs R0+M with more reps (x5) if M is wanted; P3/P4/P2/P5 stay off.
