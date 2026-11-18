@@ -199,3 +199,27 @@ Reading:
   45 -> 30; CODa seq 0 -6): the extended centre moves past the 1 m match gate. Drop P5.
 - SA (no carrier) is below R0 here on all three seqs and the street: R0 stays the reference.
 - Proposal: keep R0; optional confirm-run R0 vs R0+M with more reps (x5) if M is wanted; P3/P4/P2/P5 stay off.
+
+## 8. S4 ground test results (s4_ground.sh, 08:33 -> 13:35), e3, x3 in one chain
+Arms on R0: G0 = grid (pcag), GL = planes with floor from the raw LiDAR (pcapl, floor_source lidar), GC = planes with floor
+from cameras (pcapc). Note: G0 rep1 of 0_w1 was not run (an older G0_w1.json had the same name, so lab_local skipped it):
+G0 on 0_w1 is x2.
+
+| MOTA all / moving | 0 | 10 | 16 | 0 testing | 10 testing | 16 testing | PD prec | CODa veh rec | IDSW |
+|---|---|---|---|---|---|---|---|---|---|
+| G0 grid       | 58.1 / 75.4 | 48.4 / 62.3 | 61.4 / 79.9 | 58.2 / 77.0 | 48.8 / 60.1 | 57.3 / 78.0 | 30.8 / 57.3 | 35.0 | 207 |
+| GL lidar floor| 58.6 / 68.1 | 50.7 / 63.9 | 61.4 / 78.6 | 56.8 / 69.0 | 50.3 / 63.2 | 57.9 / 77.2 | 32.2 / 58.5 | 35.6 | 218 |
+| GC camera floor| 51.0 / 71.4 | 47.4 / 57.7 | 39.1 / 50.2 | 50.7 / 72.9 | 47.1 / 55.6 | 37.4 / 50.7 | 20.3 / 51.5 | 24.9 | 121 |
+
+Street (x3): MOTA G0 50.6 [50.1-51.6], GL 52.0 [50.7-53.0], GC 54.5 [51.7-56.3]; persons MOTA 50.9 / 53.7 / 55.2;
+vehicles recall 47.2 / 42.6 / 49.2, precision 42.6 / 32.5 / 39.5.
+Floor-from-LiDAR cost: CODa 4-8 ms median, p90 6-12 ms per scan (plane found 47-50/50); street 2.3 ms median.
+Latency CODa median/p90: G0 79/126, GL 78/105, GC 94/127 ms. Street latency still reads -1..-3 ms (broken measure, to fix before S6).
+
+Reading:
+- GC (camera floor) is clearly worse on CODa (seq 16 -22 MOTA all, vehicles -10): out. Its street gain (+3.9) does not transfer.
+- GL: +2.3 on seq 10 all (+1.5 testing), flat on 16, street +1.4 (persons +2.8, but vehicle precision -10). On seq 0
+  moving it loses 7 points: on 0_w1 the FP on moving people doubles (~80 -> 170-200/min) and IDSW rises (45 -> 70-100);
+  0_w2/0_w3 are within noise. Not a clean win: GL is not adopted as the default; worth a look at 0_w1 (what the
+  LiDAR plane keeps that the grid removes) only if the ground becomes the gap.
+- Grid (R0) stays the reference.
