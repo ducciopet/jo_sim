@@ -225,22 +225,22 @@ Reading:
 - Grid (R0) stays the reference.
 
 ## 9. P5 (vehicle extent prior) bug check (eval/diagnostics/yolo_assoc/p5_check.py), 18/11 afternoon
-GT vehicles matched to a published obstacle within 3 m, same input with and without P5 (SV = pcamv vs SM = pcam, both
-with M, S1+S2 chain rep1). Radial error = (published - GT centre) on the ray robot -> GT, negative = short of the sensor.
+The S1+S2 arms were cumulative (SV = M+P3+P4+P2+P5), so P5 alone = SP2 (pcamp) vs SV (pcamv), same chain, rep1.
+GT vehicles matched to a published obstacle within 3 m; radial error = (published - GT centre) on the ray robot -> GT,
+negative = short of the sensor.
 
-| | paired | radial shift (P5 - ref) | moved away from sensor | centre < 1 m ref -> P5 | end-on radial ref -> P5 | end-on ray extent ref / P5 / GT |
+| | paired | radial shift (P5 - ref) | moved away / towards sensor | centre < 1 m ref -> P5 | end-on radial ref -> P5 | end-on ray extent ref / P5 / GT |
 |---|---|---|---|---|---|---|
-| CODa 10_w1 | 265 | +0.64 m | 78% (towards 3%) | 41% -> 66% | -0.80 -> +0.44 | 1.05 / 6.90 / 5.85 |
-| CODa 10_w4 | 155 | +0.00 m | 34% (towards 12%) | 41% -> 66% | -0.75 -> -0.10 | 0.77 / 3.38 / 5.54 |
-| street r1 | 738 | +0.61 m | 81% (towards 6%) | 91% -> 59% | +0.34 -> +0.77 | 1.22 / 1.90 / 3.14 |
+| CODa 10_w1 | 329 | +1.56 m | 84% / 6% | 47% -> 60% | -0.84 -> +0.46 | 1.06 / 6.90 / 5.85 |
+| CODa 10_w4 | 160 | +0.32 m | 51% / 9% | 48% -> 62% | -0.70 -> -0.12 | 0.74 / 1.98 / 5.54 |
+| street r1 | 772 | +0.61 m | 81% / 6% | 90% -> 58% | +0.25 -> +0.77 | 1.16 / 1.90 / 3.14 |
 
-- No sign or axis error: the centre moves away from the sensor along the ray and the extended axis is the one on the ray
-  (length when end-on, width when side-on). On CODa (OS1-128) it does what it should: published centres are ~0.8 m short
-  end-on and P5 brings them to the GT (vehicles < 1 m 41 -> 66%, CODa vehicle recall e3 25.5 -> 31.1).
-- On the street the reference centres are NOT short of the sensor (radial +0.19 m median, 91% already within 1 m): the
-  street vehicles are mostly side-on (690/738) and their published centre already sits on the GT, so the +0.6 m push
-  overshoots and drops them past the 1 m gate (91 -> 59%). The prior's premise (only the near face is seen) holds on
-  CODa but not on the street sequence. Side note: side-on CODa vehicles are never extended (radial -1.8..-2.0 m, extent
-  0.5 m vs GT 2.3 m: those tracks carry no vehicle class).
-- Also P5 costs CODa seq 0 MOTA all (S1+S2: SM 60.9 -> SV 45.4, PD precision 58.6 -> 51.8).
+- No sign or axis error: the centre moves away from the sensor along the ray, and the extended axis is the one on the ray
+  (length end-on, width side-on). On CODa end-on vehicles (OS1-128) it does what it should: centres ~0.8 m short come
+  to the GT (end-on < 1 m 50 -> 72-83%); on 10_w1 trucks get the 6.9 m prior (GT 5.85 m) and overshoot a bit.
+- On the street the reference centres are NOT short of the sensor (radial +0.2 m median, 90% already within 1 m): the
+  vehicles are mostly side-on (711/772) and already centred on the GT, so the +0.6 m push overshoots past the 1 m gate
+  (90 -> 58%; street vehicle recall 49.9 -> 34.3, MOTA 51.1 -> 46.1). The prior's premise (only the near face is seen,
+  centre short by half the hidden depth) holds on CODa end-on but not on the street sequence.
+- Net on CODa (SP2 -> SV): vehicle recall 30.5 -> 31.1 (noise), seq 0 MOTA all 51.7 -> 45.4, IDSW 241 -> 287.
 - Verdict: not a bug, P5 stays off (no extra R0+P5 arm in S5).
