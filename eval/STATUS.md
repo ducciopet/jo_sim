@@ -1694,3 +1694,10 @@ I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
   default off): S0=R0, SA=I2P+A senza carrier, SM (+M), SMP (+M+P3+P4), SP2 (+P2 = yolo_refine_merge_fragments
   esistente), SV (+P5); CODa 9 finestre + street x3, poi regressione lab. Smoke 10_w4: costo controllo 0.012 ms,
   latenza 86 ms. Fine prevista 18/11 ~09:00.
+- 18/11 mattina, ESITO S1+S2 (lab_queue sez. 7, stessa catena, e3): nessun nuovo switch batte R0 in modo consistente.
+  M (id YOLO per camera): seq 0 +5.7 MOTA tutti (testing +5.0), IDSW -21, ma seq 10 -1.9, seq 16 -0.7, street -1.3
+  (misto, nel rumore). P3+P4: veicoli +6.6 ma MOTA tutti -3/-4.5 (seq 0/10), precisione PD 59 -> 52. P2 neutro. P5
+  dannoso (street veicoli 49 -> 34): chiesta verifica di segno/asse prima di scartarlo. SA (senza carrier) sotto R0.
+  Lab con tutto acceso: nessuna regressione chiara. Deriva tra catene grande (R0 seq 10: 51.3 qui, 55.3 il 17/11).
+  Decisione: R0 riferimento; P2/P3/P4 off; M conferma x5 (seq 10, 16, street) dopo S5; P1 non girato. S4 suolo in
+  corso (fine ~14:00); floor lidar 5.9/8.9 ms per scan.
