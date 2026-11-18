@@ -13,6 +13,7 @@ Held-out 11/12 never used before S6. Summaries appended to eval/diagnostics/lab_
 | S1+S2 (one chain, started 17/11 night, s12_chain.sh, sins branch yolo-assoc 43768e1; arms S0=R0, SA=I2P+A without carrier, SM, SMP, SP2 (P2 = existing yolo_refine_merge_fragments), SV; ETA 18/11 ~09:00) | | | | |
 | S1 class | lab | M yolo id per camera; P3 keep class while the same 2D instance lives; P4 decay only when visible and not occluded | R0 / +M / +M+P3+P4 | keep the best arm if CODa MOTA all (testing) does not drop and vehicles/PD do not drop |
 | S2 vehicles | lab | P2 mask-guided fragment merge (same instance mask only); P5 vehicle extent prior (nuScenes mean sizes) | S1 / +P2 / +P2+P5 | same gate; vehicle recall and MOTA all seq 10 are the targets |
+| S2b vehicles (after p5b_chain, user 18/11) | lab | P5b vehicle extent only with reliable heading within 30 deg of the ray; P6 L-shape fit + class dims; P7 shape memory in the track frame (box and centre) | R0 / +best(P5,P5b) / +P6 / +P6+P7 | vehicle recall and MOTA all on testing frames |
 | S3 assoc | lab | P1 one-to-one mask <-> cluster assignment, nearest cluster owns the mask (occlusion) | S2 / +P1 | only if S1-S2 leave the class/vehicle gap |
 | S4 ground | lab | grid vs planes (floor_source lidar) vs planes (camera) | 3 arms | one model for all if within noise, else per-profile option, declared |
 | S5 YOLO size | lab | inference 640 vs 1280 on CODa + street (lab already 640) | 2 arms | one value everywhere if within noise (scale param otherwise, declared) |
