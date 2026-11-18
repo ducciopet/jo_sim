@@ -1701,3 +1701,9 @@ I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
   Lab con tutto acceso: nessuna regressione chiara. Deriva tra catene grande (R0 seq 10: 51.3 qui, 55.3 il 17/11).
   Decisione: R0 riferimento; P2/P3/P4 off; M conferma x5 (seq 10, 16, street) dopo S5; P1 non girato. S4 suolo in
   corso (fine ~14:00); floor lidar 5.9/8.9 ms per scan.
+- 18/11 S4 suolo (lab_queue sez. 8): griglia G0 resta (GL: seq 10 +2.3 tutti, street +1.4, ma seq 0 moving -7, FP
+  moving 0_w1 x2; GC peggio su CODa, seq 16 -22). Costo piano LiDAR 4-8 ms mediana. P5 (sez. 9): nessun bug; aiuta i
+  veicoli visti di testa (CODa centro -0.8 -> ~0, entro 1 m 50% -> 72-83%), danneggia quelli visti di lato (street 90%
+  -> 58% entro 1 m). Proposto P5b: estendere solo con orientamento affidabile (velocita' >= 1 m/s o box >= 1.5:1) quasi
+  parallelo al raggio (30 gradi). Proposto braccio lab grid vs planes (comportamento unico del suolo). Catena S5+M
+  (Y0, YM, Y6 640 px; M fino a x5) in attesa dell'ok utente per liberare disco sul lab.
