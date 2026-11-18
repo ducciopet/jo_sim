@@ -1715,3 +1715,9 @@ I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
 DYN 0.2 / 0.3 / 0.5 m/s rescored (eval/results/coda_e3_dyn{0.2,0.5}). Ranking among learned baselines unchanged on
 seqs 0/10/16 and 12 (EMMC >= EM > ST >> DFM, moving and all); MOTA all moves <= 2.7 pt. Seq 11 "moving" is fragile
 (few moving agents): ST 23.6 / 14.5 / 4.5, EMMC 38.8 / 33.9 / 27.0. SINS Y0 x3 + DBX/MDET at 0.2/0.5 come from the lab.
+
+## 18/11 21:30: S5+M chain done (lab, lab_queue_17nov.md sec. 10, ddc204a)
+M (yolo id per camera) x5: MOTA all seq 10 50.5 vs 50.3, seq 16 +1.1, seq 0 -2.2 (S1 had +5.7: noise), street -0.1;
+IDSW 329 -> 258, vehicle recall +5, no MOTA gain -> M stays off. YOLO 640 vs 1280: same latency (86 ms med), people
+recall -5.6, precision -6, MOTA all seq 0 -3.2, street -0.9, seq 10 +1.3 -> 1280 outdoor stays. R0 stays reference.
+p5b-heading builds; p5b_chain running, then rescore dyn 0.2/0.5 (results 19/11 morning).
