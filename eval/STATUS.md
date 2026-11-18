@@ -1707,3 +1707,6 @@ I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
   -> 58% entro 1 m). Proposto P5b: estendere solo con orientamento affidabile (velocita' >= 1 m/s o box >= 1.5:1) quasi
   parallelo al raggio (30 gradi). Proposto braccio lab grid vs planes (comportamento unico del suolo). Catena S5+M
   (Y0, YM, Y6 640 px; M fino a x5) in attesa dell'ok utente per liberare disco sul lab.
+- 18/11 14:09: catena S5+M partita (Y0 R0, YM R0+M, Y6 640 px; M a x5 su 10/16/street), fine ~00-01. Poi p5b_chain.sh
+  (55fe5de; sins branch p5b-heading cd36b25): Z0/ZH (R0 vs R0+P5b) CODa 9 + street x3, lab LZ0 planes vs LZG grid x3,
+  ~4.5 h. Disco lab liberato (utente ok diretto al lab, 38 bag verificati sul NAS), 15 GB liberi.
