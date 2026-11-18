@@ -1,7 +1,7 @@
 #!/bin/bash
 # Lab PC (06/11): WN / WNC / WNCJM x3 on CODa 0+10+16 and Marina di Pisa street, all on this machine.
 # Disk is short and NAS replay drops scans, so each CODa window is copied locally, run 9 times, then removed.
-# Resumable: a run whose result json exists is skipped. env CODA="TAG profile;..." STREET="profiles" pick the runs, WINDOWS="w1 11_w2 ..." the CODa windows, STREET=none skips the street. REPS="_" = first repetition only (default "_ r2 r3").
+# Resumable: a run whose result json exists is skipped. env CODA="TAG profile;..." STREET="profiles" pick the runs, WINDOWS="w1 11_w2 ..." the CODa windows, STREET=none skips the street. REPS="_" = first repetition only (default "_ r2 r3"). SREPS="1 2 3 4 5" = street repetitions (default 1 2 3).
 # Needs eval/scripts/analysis/lat_*.py copied into bags/replay.
 cd $(dirname $0)/../../..
 source eval/scripts/analysis/lab_gate.sh   # lab PC reservations (bags/lab_blackout)
@@ -30,9 +30,9 @@ echo "CODA DONE"
 [ "$P" = none ] && { powerprofilesctl set balanced; echo "$(date +%T) ALL DONE"; exit 0; }
 [ -L bags/mdp/mdp_street ] && { rm bags/mdp/mdp_street; rsync -a $N/mdp_street_work/mdp_street/ bags/mdp/mdp_street/; }
 echo "$(date +%T) street copied, $(df -h --output=avail / | tail -1) free"
-docker exec -u ros jo_sim_sins bash -c "PROFILES='$P' bash /home/ros/bags/mdp/run_street.sh" > bags/mdp/run_street_lab.log 2>&1
+docker exec -u ros jo_sim_sins bash -c "PROFILES='$P' SREPS='${SREPS:-1 2 3}' bash /home/ros/bags/mdp/run_street.sh" > bags/mdp/run_street_lab.log 2>&1
 mkdir -p eval/results/mdp_lab
-for r in r1 r2 r3; do for p in $P; do [ -e bags/mdp/runs/${p}_$r.done ] || { echo "MISSING $p $r"; continue; }
+for r in $(for n in ${SREPS:-1 2 3}; do echo r$n; done); do for p in $P; do [ -e bags/mdp/runs/${p}_$r.done ] || { echo "MISSING $p $r"; continue; }
   lat "$p $r" /home/ros/bags/mdp/runs/${p}_$r
   for G in "" _vehicle _person; do o=eval/results/mdp_lab/${p}${G}_$r.json
     [ -e $o ] || python3 eval/coda_eval.py --run bags/mdp/runs/${p}_$r --gt bags/mdp/mdp_street${G}_gt.csv --odom bags/mdp/mdp_street_odom --range 15 --out $o > /dev/null 2>&1 || echo "FAIL $p $G $r"
