@@ -1710,3 +1710,8 @@ I2P+fix), compilato insieme a floor_source. Prova suolo dopo.
 - 18/11 14:09: catena S5+M partita (Y0 R0, YM R0+M, Y6 640 px; M a x5 su 10/16/street), fine ~00-01. Poi p5b_chain.sh
   (55fe5de; sins branch p5b-heading cd36b25): Z0/ZH (R0 vs R0+P5b) CODa 9 + street x3, lab LZ0 planes vs LZG grid x3,
   ~4.5 h. Disco lab liberato (utente ok diretto al lab, 38 bag verificati sul NAS), 15 GB liberi.
+
+## 18/11 sera: sensibilità soglia di moto, parte laptop (baseline appresi, frame di test)
+DYN 0.2 / 0.3 / 0.5 m/s rescored (eval/results/coda_e3_dyn{0.2,0.5}). Ranking among learned baselines unchanged on
+seqs 0/10/16 and 12 (EMMC >= EM > ST >> DFM, moving and all); MOTA all moves <= 2.7 pt. Seq 11 "moving" is fragile
+(few moving agents): ST 23.6 / 14.5 / 4.5, EMMC 38.8 / 33.9 / 27.0. SINS Y0 x3 + DBX/MDET at 0.2/0.5 come from the lab.
