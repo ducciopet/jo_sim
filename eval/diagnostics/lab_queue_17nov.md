@@ -244,3 +244,28 @@ negative = short of the sensor.
   centre short by half the hidden depth) holds on CODa end-on but not on the street sequence.
 - Net on CODa (SP2 -> SV): vehicle recall 30.5 -> 31.1 (noise), seq 0 MOTA all 51.7 -> 45.4, IDSW 241 -> 287.
 - Verdict: not a bug, P5 stays off (no extra R0+P5 arm in S5).
+
+## 10. S5 (YOLO 640 vs 1280) + M confirmation (s5m_chain.sh, ended 18/11 21:18), e3, one chain
+Y0 = R0 (coda_vjsye2i2pca / street pcay), YM = R0+M (per-camera YOLO identity, pcm / pcmy), Y6 = R0 with YOLO
+inference_size 640 (pca6). x3 alternated on the 9 tuning windows + street; YM and Y0 reps 4-5 on seq 10, 16 and street (x5).
+
+CODa MOTA all / moving (cmp_e3.py), x3:
+
+| arm | all frames 0 / 10 / 16 | testing frames 0 / 10 / 16 | PD found / prec | vehicle rec | IDSW | lat med / p90 |
+|---|---|---|---|---|---|---|
+| Y0 = R0 | 59.6/77.0, 49.3/61.5, 58.5/73.6 | 58.5/78.6, 48.4/59.2, 53.7/71.3 | 33.1 / 58.3 | 23.2 | 329 | 86 / 126 |
+| YM = R0+M | 57.4/77.3, 49.5/61.5, 59.4/75.9 | 55.9/79.9, 48.6/58.7, 54.5/73.7 | 32.2 / 55.2 | 28.4 | 258 | 92 / 130 |
+| Y6 = 640 | 56.4/75.9, 50.6/62.8, 57.5/77.7 | 55.3/77.6, 50.0/61.1, 52.6/75.5 | 27.5 / 52.1 | 30.9 | 265 | 86 / 130 |
+
+x5 on seq 10 / 16 (all, testing): Y0 50.5 / 59.6 (49.6 / 55.4), YM 50.3 / 60.7 (49.6 / 56.5).
+Street e3 x3 (moving MOTA | veh rec / prec | person rec / prec / MOTA): Y0 52.7 | 50.7 / 45.6 | 65.1 / 85.6 / 52.8;
+YM 52.2 | 50.5 / 44.7 | 65.4 / 85.0 / 52.3; Y6 51.8 | 50.8 / 45.7 | 64.5 / 85.1 / 51.7.
+Street x5 (merged MOTA all / moving): Y0 43.9±0.9 / 52.4, YM 43.8±0.8 / 52.1.
+
+Reading:
+- M: neutral. x5 on seq 10 identical (testing 49.6 = 49.6), seq 16 +1.1 (all and testing), street -0.1; seq 0 (x3) now
+  -2.2 all / -2.6 testing, opposite sign to the S1 chain (+5.7): seq 0 swings are noise. Fewer IDSW (329 -> 258) and
+  vehicle recall +5, but no MOTA gain on the native metric -> M stays off.
+- YOLO 640: no latency gain on this PC (median 86 ms both), PD found -5.6 / precision -6, seq 0 -3.2 and street -0.9;
+  seq 10 +1.3 only. 1280 stays.
+- Street latency still reads ~0 ms (sim-clock issue, open).
