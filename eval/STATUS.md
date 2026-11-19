@@ -1769,3 +1769,9 @@ SINS unmatched predictions near vehicles 259: piece 131, offset 76, near 52 (fra
 ghosts with nothing annotated nearby ~410-420 for both methods (unannotated objects). The person gap is the larger one in
 rows (~950 vs ~215 on seq 10). Persons lost on seq 10: unconfirmed 4.8%, coasting with cluster there 4.5%, wrong label
 PD 2.8%, still without class 2.6%. Lab runs err_decomp on the LEAFC outputs after B1 (after_leafc_decomp.sh).
+
+## 19/11 late: run-to-run noise (laptop, R0, 0_w1 / 10_w1)
+Identical runs: normal rate 50.7/58.7 and 21.2/13.3; half-rate replay 51.5/62.5 and 28.1/6.0 (no help). preprocessing and
+static_structures seeded their RNG from the OS at every start (RANSAC walls/floor, subsampling): new random_seed param
+(sins c2-shape-assoc, default -1 = unchanged). With random_seed 1, x3: 0_w1 59.0/58.7/60.7 (spread 2.0, was 8), 10_w1
+10.5/20.2/18.2 (still ~10: the rest is message timing, YOLO leaves vs scan). Proposal: random_seed 1 in R1 for all chains.
