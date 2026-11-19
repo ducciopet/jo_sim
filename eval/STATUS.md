@@ -1761,3 +1761,11 @@ Key corrections: the native metric ignores still objects outside the camera (cod
 after the paper; vehicle gap on seq 10 worth ~7 pt, not 12.6 (moving persons and in-FOV still persons/bikes matter too);
 1 m centre gate may turn partial vehicle boxes into FP+FN (check at 2 m); connected-leaf demo was an upper bound (real
 smoke 1.4 -> 2.4 m); laptop single runs are anecdotes. New order and pre-registered decision rule in PIPELINE.md; freeze 24/11.
+
+## 19/11 late: error decomposition (eval/diagnostics/err_decomp.py), seq 10, laptop R0 (ADT) vs EMMC, all frames
+persons 4068 rows: EMMC TP@1m 97.1% vs SINS 73.7% (10_w2 is hard for every method: SINS 37% OK, EMMC MOTA -19.5);
+vehicles 541 rows: EMMC 99.4% vs SINS 59.7% + 11.6% found only within 2 m (centre offset) + 28.7% missed.
+SINS unmatched predictions near vehicles 259: piece 131, offset 76, near 52 (fragments and shifted boxes, no ghosts);
+ghosts with nothing annotated nearby ~410-420 for both methods (unannotated objects). The person gap is the larger one in
+rows (~950 vs ~215 on seq 10). Persons lost on seq 10: unconfirmed 4.8%, coasting with cluster there 4.5%, wrong label
+PD 2.8%, still without class 2.6%. Lab runs err_decomp on the LEAFC outputs after B1 (after_leafc_decomp.sh).
