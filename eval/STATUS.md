@@ -1755,3 +1755,9 @@ vehicles 39%, moving bikes 12%, still vehicles 17%, still bikes 23%. Beyond the 
 walls centred on 33% of vehicle rows (tall vehicles), 64% of vehicle rows fragmented, still objects re-born 13-33x per
 vehicle per window (gates read fragment centre jumps as motion; large-object relaxation off), PD lost out of FOV mostly
 by re-birth. Next candidates after leafc: wall veto on movable objects, fragment/splitter fix, still-object association.
+
+## 19/11 evening: plan revised after two independent reviews (Opus, Fable), user approved ("procedi con tutto")
+Key corrections: the native metric ignores still objects outside the camera (coda_eval.py 103-109) -> PD memory out of FOV
+after the paper; vehicle gap on seq 10 worth ~7 pt, not 12.6 (moving persons and in-FOV still persons/bikes matter too);
+1 m centre gate may turn partial vehicle boxes into FP+FN (check at 2 m); connected-leaf demo was an upper bound (real
+smoke 1.4 -> 2.4 m); laptop single runs are anecdotes. New order and pre-registered decision rule in PIPELINE.md; freeze 24/11.

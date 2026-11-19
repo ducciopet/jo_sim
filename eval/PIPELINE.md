@@ -31,3 +31,25 @@ Held-out 11/12 never used before S6. Summaries appended to eval/diagnostics/lab_
 Fixed facts: data = lab, CODa, street (JRDB out; SiT/CrowdBot rejected); metric primary = MOTA all; e3; CODa split per
 frame -> testing frames are 100 ms from training frames (declare); laptop harness fixed (run_method.sh +15 s).
 Known measurement bug to fix before S6: street latency from lat_tracks reads -2 / 10 ms (lab, S1 setup).
+
+
+## Revision 19/11 evening (user: "procedi con tutto"; independent reviews by two other models, see STATUS)
+Freeze date: Mon 24/11 (what is not ready stays out of paper-v1).
+Decision rule (pre-registered): adopt an arm only if CODa testing MOTA-all improves on >= 2 of 3 tuning sequences by more
+than the spread of its 3 repetitions, no sequence drops by more than 1 point, and the street is not worse; lab = no clear
+regression; latency reported. Paired per-window differences are reported with the decision.
+Order:
+1. LEAFC (running) -> offline error decomposition on its outputs (vehicle FP: extra fragments in a GT box / same object
+   with centre > 1 m / two-camera duplicates / ghosts; vehicles re-scored at a 2 m gate as a diagnostic; SINS vs EMMC per
+   class on seq 10; share of vehicle points actually stripped by walls; car "too low" rejections) -> safety tag ->
+   R1 = LEAFC winner + track_person_ray_offset 0 (rule compliance, in the reference, not an arm).
+2. Chain B (reduced C2b): R1 / + splitter off / + roof 4.5 m outdoors (scale) / walls off only together with the size cap.
+3. Chain A: YOLO instances as objects (C4-new: point ownership, mask erosion, instance-only objects need >= 2 frames,
+   ground contact and min points; late leaves stay class-only; (camera, id) to the tracker) / + shape association /
+   + existing switches (no second motion cue for classified tracks, travel proof instead of the person-size gate,
+   class decay on fresh YOLO frames only).
+4. Freeze 24/11: final chain as leave-one-out ablations from the final configuration; held-out 11/12 once.
+Dropped: PD coasting as its own arm, walls veto, large-object exemption (size threshold), P-series revisits, late-leaf
+motion compensation. After paper-v1: PD memory with free-space evidence (the native metric ignores out-of-FOV still
+objects, coda_eval.py 103-109), late-leaf compensation.
+Tooling: test a slowed / lockstep replay on the laptop to cut the run-to-run noise of logic A/B.
