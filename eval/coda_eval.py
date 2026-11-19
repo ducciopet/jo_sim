@@ -223,6 +223,8 @@ def main():
                     'state is undefined (track ends, gaps) become ignored regions instead of being dropped')
     ap.add_argument('--dyn-speed', type=float, default=0.3)
     ap.add_argument('--match-dist', type=float, default=1.0)
+    ap.add_argument('--points-min-cluster', type=int, default=20, help='point-output baselines (M-detector): minimum '
+                    'cluster size; 20 for the OS1-128 (CODa), 5 for the VLP-16 (lab, street), as in the lab evaluation')
     ap.add_argument('--extra-ignore', help='CSV t_ns,x,y[,..] of points of objects the GT does not annotate (JRDB: '
                     'movable non-person objects from JRDB-PanoTrack, eval/datasets/jrdb/jrdb_pano_ignore.py), labelled at a '
                     'lower rate: a prediction centred within --extra-ignore-dist of one of them, within --extra-ignore-dt of '
@@ -254,7 +256,7 @@ def main():
         topic, ids = BASELINES[a.method]
         # OS1-128 clouds are ~8x denser than the lab VLP-16: dynamic points are clustered with Dynablox's own default
         # minimum cluster size (20) instead of the lab's 5
-        pred = load_dynamic_points(a.run, topic, min_points=20) if ids is None else load_marker_boxes(a.run, topic, persistent_ids=ids)
+        pred = load_dynamic_points(a.run, topic, min_points=a.points_min_cluster) if ids is None else load_marker_boxes(a.run, topic, persistent_ids=ids)
     pred, n_far, n_ign = filter_pred(pred, ign, frames, odom, odom_ground_z(a.odom), a)
     res = {}
     ftimes = None
