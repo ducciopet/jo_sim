@@ -43,3 +43,11 @@ ON in R0 and against what SINS must do (track D and PD of every movable class, o
   Qualisys sequences; declare it in the paper or set it to 0.
 Kept on purpose (data says they help): lidar-fallback classification (majority of first classifications: persons 64 vs 29,
 trucks 17 vs 6), disocclusion suppression (unclassified only), class anchors, inherited motion.
+
+## C2 laptop diagnostics 19/11 (single runs, 4 windows; laptop MOTA noise up to 18 pt between identical runs)
+OK rate vs R0 (ADT): shape assoc (AXS) bikes PD 28->33, D 14->17, vehicles D 30->24, PD 19->18; + PD coasting (AXB) bikes PD
+42, vehicles PD 14; walls off (AXW) FP -125, IDSW -39, but still vehicles 19->11 (likely car + facade merge into one
+cluster above the 6 m cap: walls and the size cap interact); walls veto (AXV) IDSW x2, FP +300: dropped. First versions
+(stillness from the KF speed / from "not published dynamic") were wrong: the KF speed of a parked car seen in pieces is
+>= 0.25 m/s on 60-70% of the ticks, and a newborn walker grew its hull along the path. Decision: C2 arms run on the lab
+on top of the LEAFC winner (vehicle fixes upstream first); walls veto out of the chain.
