@@ -269,3 +269,37 @@ Reading:
 - YOLO 640: no latency gain on this PC (median 86 ms both), PD found -5.6 / precision -6, seq 0 -3.2 and street -0.9;
   seq 10 +1.3 only. 1280 stays.
 - Street latency still reads ~0 ms (sim-clock issue, open).
+
+## 11. Night 18-19/11: P5b, lab grid ground, motion-threshold sensitivity (after_s5m.sh, ended 03:48)
+sins p5b-heading (P5b/P6/P7 code, all default off) built OK at 21:19.
+
+P5b (heading-gated vehicle extent prior), x3 alternated, Z0 = R0 / ZH = R0+P5b:
+
+| arm | all frames 0 / 10 / 16 | testing frames 0 / 10 / 16 | PD found / prec | vehicle rec | IDSW | lat med / p90 |
+|---|---|---|---|---|---|---|
+| Z0 = R0 | 59.8/77.7, 49.5/61.8, 57.7/73.3 | 56.9/79.4, 48.9/59.8, 52.3/70.2 | 32.5 / 56.6 | 29.7 | 310 | 93 / 151 |
+| ZH = +P5b | 59.6/78.4, 49.7/63.6, 57.1/73.0 | 58.3/80.5, 47.8/61.4, 51.5/68.9 | 33.0 / 55.7 | 32.6 | 316 | 88 / 150 |
+
+Street e3 (moving MOTA | veh rec / prec | person rec / prec / MOTA): Z0 51.0 [47.7-52.8] | 48.3 / 43.8 | 65.2 / 84.1 / 51.3;
+ZH 49.6 [48.2-51.0] | 44.5 / 42.8 | 64.1 / 84.3 / 50.5. (Z0 r3 is a low outlier: 630 vehicle TP vs 780 in r1/r2.)
+-> P5b: CODa all-frames flat (-0.2/+0.2/-0.6), testing +1.4/-1.1/-0.8, vehicle recall +2.9; street -1.4 and vehicle
+recall -3.8 on all three reps. Not a winner: no extent prior in the P6/P7 chain (arms R0 / +P6 / +P6+P7).
+
+Lab ground (lab_ab x3 on the 6 Qualisys sequences, pooled), LZ0 = lab_uca (floor planes) / LZG = lab_ucag (grid):
+- MOTA full: LZ0 94.3 / 95.0 / 94.5, LZG 96.9 / 96.7 / 92.5 (c: FN 212, the known intermittent standing-person loss).
+- MOTA dynamic only: LZ0 89.4 / 91.3 / 90.8, LZG 88.3 / 89.0 / 88.9 (FN 63-76 -> 93-100, dyn recall 94.6 -> 92.7).
+-> The grid has no clear lab regression on full MOTA (fewer standing-person FN) but loses ~2 points on the moving
+people. Lab keeps its planes; CODa and street keep the grid (S4).
+
+Motion-threshold sensitivity (rescore_dyn.sh, CODa e3, R0 = Y0 x3 of the S5 chain; Dynablox / M-detector from baselines_out),
+MOTA all / moving, all frames (testing frames in brackets for R0):
+- 0.2 m/s: R0 58.5/71.1, 49.1/60.7, 57.9/71.2 (56.6/74.6, 48.4/58.9, 52.8/67.8); Dynablox -279 / -75 / 38.3, held-out 11 10.8,
+  12 -177; M-detector -382 / -59 / -21, 11 -57, 12 -89.
+- 0.3 m/s (default): R0 59.6/77.0, 49.3/61.5, 58.5/73.6 (58.5/78.6, 48.4/59.2, 53.7/71.3).
+- 0.5 m/s: R0 59.2/79.2, 49.4/62.0, 58.8/74.6 (57.2/77.9, 48.4/59.3, 53.9/72.6); Dynablox -293 / -75 / 38.8, 11 9.7, 12 -188;
+  M-detector -398 / -60 / -22, 11 -65, 12 -94.
+-> R0 MOTA all moves at most 1.9 points across 0.2-0.5 m/s; the ranking vs Dynablox / M-detector does not change at any
+threshold (they stay negative except Dynablox on seq 16 and 11, still 20+ points below R0).
+
+Next: P6/P7 chain (p67_chain.sh) started 03:55: X0 = R0 / XL = +P6 / XS = +P6+P7, CODa 9 windows + street x3, lab
+LX0 lab_uca / LXS lab_ucals x3, then e3 all + testing + vehicles.
