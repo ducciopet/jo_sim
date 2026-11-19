@@ -390,3 +390,124 @@ B1, street (eval/baselines/street_baselines.sh; lab VLP-16 configs, street extri
 | M-detector | -195.5 | -203.3 | 95.0 | 21435 | 10037 | -229.5 | -1430 |
 (* person / vehicle views of SINS from section 10, x5 Y0.) The robot is still on the kerb: M-detector flags most points
 of moving and nearby still objects, Dynablox has no identity (IDF1 9%).
+
+## 16. Error decomposition on LEAFC (eval/diagnostics/err_decomp.py, laptop script; run 19/11 22:09-~23:30)
+Q0/QC/QB/QS, r1-r3 pooled, 9 tuning windows, all frames then testing frames. EMMC call skipped (CSVs not on the lab PC).
+Full output: eval/diagnostics/err_decomp_leafc.txt
+```
+===== Q0 r1-r3, frames all
+runs: ['bags/coda/runs/Q0_v2_coda{c}', 'bags/coda/runs/Q0r2_v2_coda{c}', 'bags/coda/runs/Q0r3_v2_coda{c}']  windows: ['w1', 'w2', 'w3', '10_w1', '10_w2', '10_w3', '10_w4', '10_w5', '16_w1']  frames: all
+
+GT rows by class group (TP at the 1 m gate / found only within 2 m / missed):
+  persons    26772  TP@1m  81.4%  only@2m   0.4%  missed  18.2%
+  vehicles    2097  TP@1m  39.5%  only@2m  12.2%  missed  48.3%
+  bikes       8940  TP@1m  33.9%  only@2m   1.1%  missed  65.0%
+  other        429  TP@1m   0.0%  only@2m   0.0%  missed 100.0%
+
+unmatched predictions at 1 m: 3914
+  near persons      884: offset 178, piece 345, duplicate 9, near 238, ghost 114
+  near vehicles     904: offset 284, piece 329, duplicate 2, near 289, ghost 0
+  near bikes        175: offset 33, piece 74, duplicate 0, near 3, ghost 65
+  near other          3: offset 0, piece 0, duplicate 0, near 3, ghost 0
+  near none        1948: offset 0, piece 3, duplicate 2, near 50, ghost 1893
+===== QC r1-r3, frames all
+runs: ['bags/coda/runs/QC_v2_coda{c}', 'bags/coda/runs/QCr2_v2_coda{c}', 'bags/coda/runs/QCr3_v2_coda{c}']  windows: ['w1', 'w2', 'w3', '10_w1', '10_w2', '10_w3', '10_w4', '10_w5', '16_w1']  frames: all
+
+GT rows by class group (TP at the 1 m gate / found only within 2 m / missed):
+  persons    26772  TP@1m  81.7%  only@2m   0.4%  missed  17.9%
+  vehicles    2097  TP@1m  50.0%  only@2m  13.1%  missed  36.9%
+  bikes       8940  TP@1m  36.5%  only@2m   1.6%  missed  61.9%
+  other        429  TP@1m   0.0%  only@2m   0.0%  missed 100.0%
+
+unmatched predictions at 1 m: 4435
+  near persons     1165: offset 233, piece 495, duplicate 1, near 236, ghost 200
+  near vehicles     967: offset 319, piece 389, duplicate 2, near 257, ghost 0
+  near bikes        127: offset 30, piece 15, duplicate 0, near 2, ghost 80
+  near other          3: offset 0, piece 0, duplicate 0, near 3, ghost 0
+  near none        2173: offset 0, piece 0, duplicate 18, near 33, ghost 2122
+===== QB r1-r3, frames all
+runs: ['bags/coda/runs/QB_v2_coda{c}', 'bags/coda/runs/QBr2_v2_coda{c}', 'bags/coda/runs/QBr3_v2_coda{c}']  windows: ['w1', 'w2', 'w3', '10_w1', '10_w2', '10_w3', '10_w4', '10_w5', '16_w1']  frames: all
+
+GT rows by class group (TP at the 1 m gate / found only within 2 m / missed):
+  persons    26772  TP@1m  82.1%  only@2m   0.4%  missed  17.4%
+  vehicles    2097  TP@1m  52.2%  only@2m  14.0%  missed  33.8%
+  bikes       8940  TP@1m  37.6%  only@2m   1.5%  missed  60.9%
+  other        429  TP@1m   0.0%  only@2m   0.0%  missed 100.0%
+
+unmatched predictions at 1 m: 4530
+  near persons     1154: offset 222, piece 465, duplicate 1, near 243, ghost 223
+  near vehicles    1102: offset 348, piece 484, duplicate 0, near 270, ghost 0
+  near bikes        151: offset 34, piece 37, duplicate 0, near 3, ghost 77
+  near none        2123: offset 0, piece 0, duplicate 14, near 44, ghost 2065
+===== QS r1-r3, frames all
+runs: ['bags/coda/runs/QS_v2_coda{c}', 'bags/coda/runs/QSr2_v2_coda{c}', 'bags/coda/runs/QSr3_v2_coda{c}']  windows: ['w1', 'w2', 'w3', '10_w1', '10_w2', '10_w3', '10_w4', '10_w5', '16_w1']  frames: all
+
+GT rows by class group (TP at the 1 m gate / found only within 2 m / missed):
+  persons    26772  TP@1m  81.6%  only@2m   0.3%  missed  18.1%
+  vehicles    2097  TP@1m  54.0%  only@2m  13.9%  missed  32.1%
+  bikes       8940  TP@1m  37.3%  only@2m   1.5%  missed  61.3%
+  other        429  TP@1m   0.0%  only@2m   0.0%  missed 100.0%
+
+unmatched predictions at 1 m: 4713
+  near persons     1204: offset 194, piece 505, duplicate 4, near 283, ghost 218
+  near vehicles    1171: offset 363, piece 580, duplicate 1, near 227, ghost 0
+  near bikes        133: offset 21, piece 40, duplicate 2, near 5, ghost 65
+  near other          3: offset 0, piece 0, duplicate 0, near 3, ghost 0
+  near none        2202: offset 0, piece 0, duplicate 22, near 38, ghost 2142
+===== Q0 r1-r3, frames testing
+runs: ['bags/coda/runs/Q0_v2_coda{c}', 'bags/coda/runs/Q0r2_v2_coda{c}', 'bags/coda/runs/Q0r3_v2_coda{c}']  windows: ['w1', 'w2', 'w3', '10_w1', '10_w2', '10_w3', '10_w4', '10_w5', '16_w1']  frames: testing
+
+GT rows by class group (TP at the 1 m gate / found only within 2 m / missed):
+  persons     3612  TP@1m  81.7%  only@2m   0.4%  missed  17.9%
+  vehicles     306  TP@1m  44.8%  only@2m  11.8%  missed  43.5%
+  bikes       1239  TP@1m  29.0%  only@2m   1.0%  missed  70.1%
+  other         69  TP@1m   0.0%  only@2m   0.0%  missed 100.0%
+
+unmatched predictions at 1 m: 599
+  near persons      142: offset 21, piece 75, duplicate 0, near 28, ghost 18
+  near vehicles     124: offset 42, piece 46, duplicate 0, near 36, ghost 0
+  near bikes         38: offset 5, piece 10, duplicate 0, near 1, ghost 22
+  near none         295: offset 0, piece 0, duplicate 0, near 5, ghost 290
+===== QC r1-r3, frames testing
+runs: ['bags/coda/runs/QC_v2_coda{c}', 'bags/coda/runs/QCr2_v2_coda{c}', 'bags/coda/runs/QCr3_v2_coda{c}']  windows: ['w1', 'w2', 'w3', '10_w1', '10_w2', '10_w3', '10_w4', '10_w5', '16_w1']  frames: testing
+
+GT rows by class group (TP at the 1 m gate / found only within 2 m / missed):
+  persons     3612  TP@1m  82.4%  only@2m   0.5%  missed  17.1%
+  vehicles     306  TP@1m  54.6%  only@2m  12.7%  missed  32.7%
+  bikes       1239  TP@1m  31.0%  only@2m   1.5%  missed  67.6%
+  other         69  TP@1m   0.0%  only@2m   0.0%  missed 100.0%
+
+unmatched predictions at 1 m: 673
+  near persons      191: offset 32, piece 102, duplicate 0, near 29, ghost 28
+  near vehicles     128: offset 44, piece 49, duplicate 0, near 35, ghost 0
+  near bikes         26: offset 6, piece 1, duplicate 0, near 0, ghost 19
+  near none         328: offset 0, piece 0, duplicate 2, near 3, ghost 323
+===== QB r1-r3, frames testing
+runs: ['bags/coda/runs/QB_v2_coda{c}', 'bags/coda/runs/QBr2_v2_coda{c}', 'bags/coda/runs/QBr3_v2_coda{c}']  windows: ['w1', 'w2', 'w3', '10_w1', '10_w2', '10_w3', '10_w4', '10_w5', '16_w1']  frames: testing
+
+GT rows by class group (TP at the 1 m gate / found only within 2 m / missed):
+  persons     3612  TP@1m  82.8%  only@2m   0.6%  missed  16.7%
+  vehicles     306  TP@1m  58.2%  only@2m  11.4%  missed  30.4%
+  bikes       1239  TP@1m  33.1%  only@2m   1.3%  missed  65.6%
+  other         69  TP@1m   0.0%  only@2m   0.0%  missed 100.0%
+
+unmatched predictions at 1 m: 659
+  near persons      182: offset 33, piece 84, duplicate 0, near 30, ghost 35
+  near vehicles     148: offset 43, piece 65, duplicate 0, near 40, ghost 0
+  near bikes         32: offset 6, piece 7, duplicate 0, near 0, ghost 19
+  near none         297: offset 0, piece 0, duplicate 0, near 5, ghost 292
+===== QS r1-r3, frames testing
+runs: ['bags/coda/runs/QS_v2_coda{c}', 'bags/coda/runs/QSr2_v2_coda{c}', 'bags/coda/runs/QSr3_v2_coda{c}']  windows: ['w1', 'w2', 'w3', '10_w1', '10_w2', '10_w3', '10_w4', '10_w5', '16_w1']  frames: testing
+
+GT rows by class group (TP at the 1 m gate / found only within 2 m / missed):
+  persons     3612  TP@1m  82.3%  only@2m   0.4%  missed  17.3%
+  vehicles     306  TP@1m  57.2%  only@2m  12.4%  missed  30.4%
+  bikes       1239  TP@1m  33.1%  only@2m   1.3%  missed  65.6%
+  other         69  TP@1m   0.0%  only@2m   0.0%  missed 100.0%
+
+unmatched predictions at 1 m: 700
+  near persons      181: offset 27, piece 95, duplicate 0, near 32, ghost 27
+  near vehicles     155: offset 51, piece 72, duplicate 0, near 32, ghost 0
+  near bikes         24: offset 4, piece 5, duplicate 0, near 0, ghost 15
+  near none         340: offset 0, piece 0, duplicate 2, near 3, ghost 335
+```
