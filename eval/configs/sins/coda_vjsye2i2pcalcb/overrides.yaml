@@ -1,0 +1,9 @@
+# coda_vjsye2i2pcalc + cluster size limit = the largest movable class in the YOLO list (bus: ~12 x 2.6 x 3.5 m), not a van (19/11).
+# With 6 m, 9% of CODa vehicle rows (pickups median 6.15 m, delivery trucks 7.2 m) and two touching parked cars were
+# dropped as clusters before any class could reach them; a connected mask leaf of such a vehicle failed the same test.
+base: coda_vjsye2i2pcalc
+files:
+  dbscan_detector.yaml:
+    dbscan_detector_node:
+      max_box_extent: [12.0, 6.0, 4.0]
+      max_box_volume: 120.0

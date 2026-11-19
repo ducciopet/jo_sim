@@ -1,0 +1,9 @@
+# mdp_street_vjsye2i2pca + yolo_leaf_connected (19/11): the mask leaf is the largest 3D-connected group of the mask points (no depth cap);
+# link radius max(0.5 m, per_m x median depth), per_m = 1.2 x the LiDAR ring spacing (VLP-16, 2 deg = 0.035 rad). Sensor scale only.
+base: mdp_street_vjsye2i2pca
+files:
+  preprocessing.yaml:
+    preprocessing_node:
+      yolo_leaf_connected: true
+      yolo_leaf_connect_radius: 0.5
+      yolo_leaf_connect_radius_per_m: 0.042
