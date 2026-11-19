@@ -1732,3 +1732,11 @@ p5b-heading builds; p5b_chain running, then rescore dyn 0.2/0.5 (results 19/11 m
 - Motion threshold 0.2/0.3/0.5: R0 MOTA all varies <= 1.9; ranking vs Dynablox/M-detector unchanged at every
   threshold, held-out 11/12 included. With the laptop part: the "moving" metric is defensible (declare seq 11 fragility).
 - Street latency fixed (sim clock 8.5 ms behind scan stamps): median 6-7 ms, p90 17-19 ms.
+
+## 19/11: YOLO mask -> 3D leaf cuts vehicles short (diagnosis, page https://claude.ai/artifact/VmMFTXH9Ra5PQGSFVHouAU)
+Offline re-run of the leaf extraction with the CODa profile numbers (eval/diagnostics/yolo3d_assoc), coda10_w1, 3 vehicles,
+289 frames: LiDAR sees 3.7 / 5.7 / 6.2 m of the vehicle, the leaf (nearest cluster, valley 8%, cap +-0.3 m) keeps a ~0.6 m
+depth slice, the refine cut leaves 1.1 / 1.7 / 1.6 m; 11% of frames retention < 0.35 -> class lost. Real logs agree (street:
+80% of 7608 car refinements cut the object shorter). Proposal (switchable, default off): leaf = all mask points minus
+ground, largest 3D connected group (radius growing with range), no depth cap -> 3.4 / 5.5 m on the side-seen vehicles;
+the far rear-seen one stays short (side sparse, fixed 0.5 m radius). Needs A/B x3 (persons near walls: the cap was set for that).
