@@ -351,3 +351,42 @@ Reading:
 - leafc_then_b1.sh started 13:17: sins leaf-connected aebd06c built OK, first run Q0 w1 13:19. Q0/QC/QB/QS x3 on CODa
   9 windows + street (pcaq/pcalc/pcalcb/pcalcbs), lab LQ0/LQC/LQS x3 (lab_leafc), e3 rescore; then B1 street
   (eval/baselines/street_baselines.sh). Expected end: chain ~01:30 on 20/11, B1 ~03:00.
+
+## 15. LEAFC (leaf/size/speed, 19/11 13:17-21:24) + B1 street baselines (21:25-22:09)
+sins leaf-connected aebd06c. Cumulative arms x3 alternated: Q0 = R0 / QC = + connected mask leaf / QB = + cluster size
+limit = bus / QS = + association speed gate 15 m/s. CODa MOTA all / moving (cmp_e3.py), 9 tuning windows:
+
+| arm | all frames 0 / 10 / 16 | testing frames 0 / 10 / 16 | PD found / prec | moving veh rec | IDSW |
+|---|---|---|---|---|---|
+| Q0 = R0 | 61.5/74.9, 47.6/60.7, 59.6/76.3 | **60.8**/76.6, **47.5**/57.0, 54.6/73.3 | 30.5 / 56.8 | 32.8 | 262 |
+| QC = +LC | 54.9/76.1, 48.3/60.9, 59.9/74.2 | 51.0/76.6, 46.6/58.3, 55.0/70.7 | 34.3 / 58.0 | 37.4 | 298 |
+| QB = +LC+size | 61.3/76.8, 47.5/60.1, 60.2/74.6 | 58.8/77.6, 45.9/56.2, 54.8/72.0 | 34.7 / 56.6 | 41.0 | 277 |
+| QS = +LC+size+speed | 61.8/78.2, 46.2/60.2, 59.1/73.3 | 58.0/79.2, 44.6/57.5, 54.3/70.4 | 34.7 / 56.4 | 42.4 | 299 |
+
+Testing MOTA all per rep (r1/r2/r3), seq 0 | 10 | 16:
+Q0 59.5/58.2/64.7 | 48.7/46.5/47.3 | 57.3/53.6/52.9; QC 55.2/51.7/46.1 | 49.5/47.7/42.6 | 53.4/55.8/55.7;
+QB 52.2/62.1/62.1 | 46.0/43.9/47.7 | 54.5/54.1/55.9; QS 50.9/61.2/62.1 | 44.5/44.3/45.1 | 54.0/54.7/54.1.
+Street e3 (moving MOTA | veh rec / prec | person MOTA): Q0 (pcaq) 52.5 [50.8-53.4] | 49.9 / 44.9 | 52.7; QC 52.2 | 50.7 / 44.9 |
+52.3; QB 51.6 | 48.2 / 44.4 | 52.0; QS 49.9 | 44.6 / 41.3 | 50.6.
+Lab (lab_leafc, MOTA full / dynamic only, a b c): LQ0 94.0 96.4 86.6 / 86.1 88.7 89.7; LQC 91.1 94.9 90.5 / 89.7 88.5 86.7;
+LQS 96.6 92.8 93.7 / 89.3 86.7 86.1 -> means full 92.3 / 92.2 / 94.4, dynamic 88.2 / 88.3 / 87.4: no clear regression.
+Leaf counters (QC): points of the mask kept 96-99% (was the 0.3 m depth slice), 0.09-0.12 ms per leaf; CODa track
+latency median 100 / p90 125 ms in all four arms, street 7 / 19 ms (corrected clock).
+People next to walls: the lab (persons beside walls and furniture) shows no regression (LQC dynamic 88.3 vs 88.2); no
+per-person size log exists, so this is the only check made.
+
+Pre-registered rule (testing MOTA all better on >= 2 of 3 seqs by more than the rep spread, no seq -1, street not worse):
+- QC: 0 -9.8, 10 -0.9, 16 +0.4 -> fails. QB: -2.0, -1.6, +0.2 -> fails. QS: -2.8, -2.9, -0.3 -> fails. Street: none better.
+- No LEAFC winner: R0 (Q0) stays the reference. The connected leaf does what it should for vehicles (moving vehicle recall
+  32.8 -> 37.4, +size cap 41.0, +speed 42.4) but MOTA all does not follow; QC alone loses 10 points on seq 0 testing
+  (r3 46.1), recovered when the size cap is added (QB): a connected leaf larger than 6 m was dropped whole by the old cap.
+
+B1, street (eval/baselines/street_baselines.sh; lab VLP-16 configs, street extrinsic z 0.652, e3, range 15 m):
+
+| method | MOTA all | moving MOTA | recall all | FP | IDSW | person MOTA all | vehicle MOTA all |
+|---|---|---|---|---|---|---|---|
+| SINS R0 (pcaq x3) | 43.7 | 52.5 | 65.5 | - | - | 42.3* | -92* |
+| Dynablox | 20.5 | 17.8 | 65.3 | 3866 | 982 | 21.1 | -131.5 |
+| M-detector | -195.5 | -203.3 | 95.0 | 21435 | 10037 | -229.5 | -1430 |
+(* person / vehicle views of SINS from section 10, x5 Y0.) The robot is still on the kerb: M-detector flags most points
+of moving and nearby still objects, Dynablox has no identity (IDF1 9%).
