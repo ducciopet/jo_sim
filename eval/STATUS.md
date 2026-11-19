@@ -1748,3 +1748,10 @@ of CODa vehicle rows (pickups 6.15 m, delivery trucks 7.2 m); association speed 
 moving-car p90 9.4 m/s. Cumulative arms Q0/QC/QB/QS (profiles *i2pcalc, *lcb, *lcbs; lab_ucalc, lab_ucalcs) x3, after
 p6street + P6 FP + B1, before S6. Minor to watch: unclassified D needs person size; car min height 1.1 m; mask/scan
 offset at 20 m.
+
+## 19/11 pm: audit of R0 on CODa (eval/diagnostics/audit_19nov/README.md)
+Laptop diagnostic runs ADT (9 windows, per-track CSV) + ADL (4 windows, lifecycle + walls). Moving persons 82% OK, moving
+vehicles 39%, moving bikes 12%, still vehicles 17%, still bikes 23%. Beyond the leaf slice and the 6 m cap (in test):
+walls centred on 33% of vehicle rows (tall vehicles), 64% of vehicle rows fragmented, still objects re-born 13-33x per
+vehicle per window (gates read fragment centre jumps as motion; large-object relaxation off), PD lost out of FOV mostly
+by re-birth. Next candidates after leafc: wall veto on movable objects, fragment/splitter fix, still-object association.
