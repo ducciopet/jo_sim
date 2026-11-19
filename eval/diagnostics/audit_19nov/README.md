@@ -22,3 +22,24 @@ Findings (impact order):
 7. Class cleared after 3 in-FOV ticks without YOLO (track_max_non_yolo_in_fov_frames) + growth trigger (5 ticks).
 8. Unclassified movers need person size to become D (size gate: 6% of moving-vehicle rows); moving vehicles held PD 13%
    (corroboration). Bikes beyond 15 m: 53% not detected at all (thin, sensor limit).
+
+## Code check 19/11 (R0 = coda_vjsye2i2pca on sins main cec8e5e)
+Switched OFF in R0 (dead code for the reference; keep only what a chain will test, declare or remove the rest before
+paper-v1): tracker 25 (disocclusion variants x5, travel_proof x6, motion_group, fragment_merge, absorb_pieces,
+inherit_motion_size_check, large_object_footprint, publish_coasting_ticks, decay_fresh_frames_only, ...), dbscan 9
+(yolo_refine_nested, merge_fragments, fragment_merge_*, occlusion_edge_check, late_leaves_motion_comp, ...).
+ON in R0 and against what SINS must do (track D and PD of every movable class, one behaviour indoor/outdoor):
+- track_dynamic_constrain_size + target 0.5x0.5x1.7: unclassified movers must be person-sized to become D.
+- track_classified_corroboration_all: classified movers need KF confidence / point vote -> 13% of moving vehicles held PD.
+- track_max_non_yolo_in_fov_frames 3 (0.3 s) and the growth trigger (5 ticks): class cleared on short YOLO gaps.
+- track_publish_coasting_ticks 0 + coasting only for tracks published DYNAMIC: a still classified object (PD) is never
+  published on a missed tick (coasting = 8-20% of PD losses) although it cannot have gone anywhere.
+- association hard gates on the box centre (speed 8 / 4 m/s, veldir, top height 1.0 m, size): fragments of a still object
+  read as motion -> re-births.
+- split_enabled (plateau splitter) and yolo_refine_keep_rest: vehicles in pieces, low pieces become extra objects.
+- yolo_class_min_height car 1.1 m: rejects 26% of car leaves (the matched object is a low piece / slice).
+- static_structures walls (vertical extent >= 1.8 m, length >= 2 m) on tall parked vehicles, points stripped.
+- track_person_box_completion with track_person_ray_offset 0.07 m measured on the lab mocap bags: a value fitted on the
+  Qualisys sequences; declare it in the paper or set it to 0.
+Kept on purpose (data says they help): lidar-fallback classification (majority of first classifications: persons 64 vs 29,
+trucks 17 vs 6), disocclusion suppression (unclassified only), class anchors, inherited motion.

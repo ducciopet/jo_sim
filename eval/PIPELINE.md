@@ -18,9 +18,15 @@ Held-out 11/12 never used before S6. Summaries appended to eval/diagnostics/lab_
 | S4 ground | lab | grid vs planes (floor_source lidar) vs planes (camera) | 3 arms | one model for all if within noise, else per-profile option, declared |
 | S5 YOLO size | lab | inference 640 vs 1280 on CODa + street (lab already 640) | 2 arms | one value everywhere if within noise (scale param otherwise, declared) |
 | B1 unseen data | lab | (a) lab sequences (mocap GT, never seen by any learned model): learned baselines with the 16-line weights (UniMT, EagerMOT) are already in campaign r9, re-run with all methods at S6; (b) street: Dynablox + M-detector (lab has the images; NAS). The street GT is a semi-automatic reference of MOVING objects (robot still, background model + travel >= 2 m), not hand-annotated: declare it; CODa-trained CenterPoint on the 16-line street LiDAR only as an optional domain-transfer note | 1 run each | comparison on unseen data |
-| S6 freeze | lab | tag paper-v1 (sins + jo_sim); final chain: lab x3, CODa tuning + held-out x3, street x3, GLIM map; e3 all + testing; baselines re-scored | - | numbers for the paper |
+| S6 freeze (after C2-C4) | lab | tag paper-v1 (sins + jo_sim); final chain: lab x3, CODa tuning + held-out x3, street x3, GLIM map; e3 all + testing; baselines re-scored | - | numbers for the paper |
 | S7 paper | laptop | hand the paper session (sins-paper-4c): profile + commit, latencies, baseline list, e3 tables (native first) | - | - |
-| later | lab | free-space evidence for dense/near objects (probe: AUC 0.83-0.90 near, none far) | after paper-v1 | - |
+| LEAFC (running 19/11 13:17) | lab | Q0 R0 / QC +connected mask leaf / QB +size cap = bus / QS +speed 15 m/s; lab LQ0/LQC/LQS | cumulative | CODa testing MOTA all, vehicles, moving, street; people next to walls |
+| B1 street | lab | Dynablox + M-detector on the street (after LEAFC) | - | baselines on unseen data |
+| C2a assoc (user 19/11) | lab | still-object association on the occupied shape (box distance, gates only when the box left the shape) + coasting publication of still classified tracks; quick arm track_large_object_footprint | best LEAFC / +shape / +shape+PD coasting | re-births per object, PD out of FOV, IDSW |
+| C2b structure (user 19/11) | lab | plateau splitter off; walls off; walls vetoed on movable masks / classified tracks | best / split off / walls off / walls veto | vehicle fragmentation, FP from facades, persons out of FOV |
+| C3 PD memory | lab | still classified objects kept until free space is seen through their shape; PD->D from shape displacement; unclassified D by travel at any size up to a bus | best / +memory / +memory+motion | PD out of FOV, FP |
+| C4 fragments | lab | only if still fragmented: no split inside a YOLO instance, merge pieces of one mask (P2), refine keep_rest | best / variants | fragmentation |
+| later | lab | free-space evidence beyond C3 (far, sparse objects) | after paper-v1 | - |
 
 Fixed facts: data = lab, CODa, street (JRDB out; SiT/CrowdBot rejected); metric primary = MOTA all; e3; CODa split per
 frame -> testing frames are 100 ms from training frames (declare); laptop harness fixed (run_method.sh +15 s).
