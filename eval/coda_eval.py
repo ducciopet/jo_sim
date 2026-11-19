@@ -177,7 +177,7 @@ def filter_pred(pred, ign, frames, odom, odom_z, a):
         c, s = np.cos(p[:, 5]), np.sin(p[:, 5])
         in_box = (np.abs(c * dx + s * dy) <= p[:, 3] / 2) & (np.abs(-s * dx + c * dy) <= p[:, 4] / 2)
         disc = np.hypot(dx, dy) < a.ignore_dist
-        if np.any(np.where(p[:, 2] > 0, in_box, disc)):
+        if np.any(np.where(p[:, 2] > 0, in_box, (in_box | disc) if getattr(a, 'ignore_box', False) else disc)):
             hit[j] = True
     if getattr(a, 'extra_ignore', None):
         ex = pd.read_csv(a.extra_ignore)
@@ -210,6 +210,8 @@ def main():
     # so beyond it real movers are unannotated and would count as false positives
     ap.add_argument('--range', type=float, default=20.0)
     ap.add_argument('--ignore-dist', type=float, default=1.0)
+    ap.add_argument('--ignore-box', action='store_true',
+                    help='ignored objects cover their own box (+ the disc) instead of the disc only: a piece of an ignored 6 m vehicle away from its centre is no FP (20/11)')
     ap.add_argument('--min-range', type=float, default=1.2)
     ap.add_argument('--max-height', type=float, default=2.5, help='predictions centred higher above the robot ground')
     ap.add_argument('--min-pts', type=int, default=1)
