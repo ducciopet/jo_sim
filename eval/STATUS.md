@@ -1740,3 +1740,11 @@ depth slice, the refine cut leaves 1.1 / 1.7 / 1.6 m; 11% of frames retention < 
 80% of 7608 car refinements cut the object shorter). Proposal (switchable, default off): leaf = all mask points minus
 ground, largest 3D connected group (radius growing with range), no depth cap -> 3.4 / 5.5 m on the side-seen vehicles;
 the far rear-seen one stays short (side sparse, fixed 0.5 m radius). Needs A/B x3 (persons near walls: the cap was set for that).
+
+## 19/11 pm: leaf/size/speed chain proposed to the lab (user: "scrivilo e concordalo con il lab")
+sins branch leaf-connected aebd06c: yolo_leaf_connected (default off), connected mask leaf, no depth cap, 0.09 ms/leaf
+(laptop smoke 10_w1: car leaf median 1.40 -> 2.41 m). Two more absurd limits found: max_box_extent 6 m / 40 m3 drops 9%
+of CODa vehicle rows (pickups 6.15 m, delivery trucks 7.2 m); association speed gate 8 m/s (4 outside FOV) vs CODa
+moving-car p90 9.4 m/s. Cumulative arms Q0/QC/QB/QS (profiles *i2pcalc, *lcb, *lcbs; lab_ucalc, lab_ucalcs) x3, after
+p6street + P6 FP + B1, before S6. Minor to watch: unclassified D needs person size; car min height 1.1 m; mask/scan
+offset at 20 m.
