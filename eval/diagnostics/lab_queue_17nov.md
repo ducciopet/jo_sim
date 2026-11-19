@@ -343,3 +343,11 @@ Reading:
   median 6-7 ms, p90 17-19 ms (pcax, pcals, pcay x3). CODa unchanged (offset +0.5 ms; X0 0_w1 78 / 176 ms).
   The YOLO path on the street is 171 ms behind the scan stamp (recorded - stamp of the detections), but the tracker does
   not wait for it (late YOLO leaves are class-only, 1631 in r1 log), so it does not add to the track latency.
+
+## 14. 19/11 13:17: order changed by the user (via the laptop): leaf/size/speed chain now
+- p6street_chain.sh stopped at 13:15 (container processes killed by PID + replay cleanup.sh): done pcaw r1-r2, pcp6 r1;
+  pcp6_r2 interrupted (no .done; bag left on disk, not deleted: deletion needs the user's own OK). Not rerun: P6 is
+  rejected on CODa and the connected leaf changes the vehicle boxes upstream. P6 FP diagnosis (p6_fp.py) skipped.
+- leafc_then_b1.sh started 13:17: sins leaf-connected aebd06c built OK, first run Q0 w1 13:19. Q0/QC/QB/QS x3 on CODa
+  9 windows + street (pcaq/pcalc/pcalcb/pcalcbs), lab LQ0/LQC/LQS x3 (lab_leafc), e3 rescore; then B1 street
+  (eval/baselines/street_baselines.sh). Expected end: chain ~01:30 on 20/11, B1 ~03:00.
