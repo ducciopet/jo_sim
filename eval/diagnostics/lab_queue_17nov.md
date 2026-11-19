@@ -511,3 +511,8 @@ unmatched predictions at 1 m: 700
   near bikes         24: offset 4, piece 5, duplicate 0, near 0, ghost 15
   near none         340: offset 0, piece 0, duplicate 2, near 3, ghost 335
 ```
+
+## 17. R1 check (r1check.sh, 19/11 22:14)
+sins c2-shape-assoc d38adae built OK. R1 = coda_vjsye2i2pcar1 (R0 + track_person_ray_offset 0 + random_seed 1 in
+preprocessing and static_structures; installed cfg checked), 1 run on CODa w1 (tag R1C): e3 MOTA all 62.3 (moving 75.3),
+latency 77 / 176 ms. Q0 r1-r3 on w1: 61.6 / 61.6 / 61.0 -> pass range 59.0-63.6: PASS. Chain B can start from this branch.
