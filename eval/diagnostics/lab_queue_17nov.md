@@ -303,3 +303,27 @@ threshold (they stay negative except Dynablox on seq 16 and 11, still 20+ points
 
 Next: P6/P7 chain (p67_chain.sh) started 03:55: X0 = R0 / XL = +P6 / XS = +P6+P7, CODa 9 windows + street x3, lab
 LX0 lab_uca / LXS lab_ucals x3, then e3 all + testing + vehicles.
+
+## 12. P6 / P7 (p67_chain.sh, 19/11 03:55-08:44), sins p5b-heading, x3 alternated in one chain
+X0 = R0 / XL = R0+P6 (track_vehicle_lshape) / XS = R0+P6+P7 (track_shape_memory). P5 and P5b both lost -> no extent prior arm.
+
+| arm | all frames 0 / 10 / 16 | testing frames 0 / 10 / 16 | PD found / prec | moving veh rec | IDSW | lat med / p90 |
+|---|---|---|---|---|---|---|
+| X0 = R0 | **60.6**/75.7, **50.9**/61.6, 59.2/76.6 | **60.3**/79.2, **50.9**/59.1, 54.5/74.9 | 31.0 / 58.5 | 25.8 | 289 | 79 / 117 |
+| XL = +P6 | 57.7/73.4, 48.9/60.6, 59.4/76.4 | 56.9/76.8, 48.7/57.6, 54.8/74.6 | 31.7 / 56.3 | **39.1** | 287 | 79 / 111 |
+| XS = +P6+P7 | 58.2/75.0, 48.6/60.1, 57.8/74.0 | 58.3/76.8, 47.1/57.5, 52.2/70.8 | 33.1 / 58.2 | 34.8 | 372 | 79 / 106 |
+
+Pooled counts, all frames (3 reps): XL vs X0 TP +51 / +5 / +33 on seq 0 / 10 / 16, but FP +250 / +203 / +8 -> the loss is
+extra false positives, not missed objects. Vehicle-only (full) seq 10: TP 736 -> 751, FP 3035 -> 3237, IDSW 49 -> 109.
+Street e3 (moving MOTA | veh rec / prec | person MOTA): X0 51.9 | 49.7 / 44.1 | 52.1; XL 52.4 | 49.2 / 44.6 | 52.8;
+XS 50.7 | 48.6 / 42.9 | 51.0.
+Lab (lab_p67, MOTA full / dynamic only, a b c): LX0 94.5 93.7 92.8 / 87.0 86.4 88.4; LXS 96.5 92.9 89.4 / 88.4 86.4 87.7
+(LXS c: FN 289, the known intermittent standing-person loss) -> no evident lab regression.
+
+Reading:
+- P6 raises moving-vehicle recall a lot (+13) but costs 2-3 MOTA all points on seq 0 and 10 (testing -3.4 / -2.2)
+  through extra FP; flat on seq 16 and on the street (+0.5, inside the noise). Not adopted.
+- P7 on top of P6: worse on 10 and 16 (testing -3.8 / -2.3 vs R0), IDSW +83, street -1.2. Not adopted.
+- Vehicle box work (P5, P5b, P6, P7) is closed with no winner: R0 stays the reference for S6.
+- Open question for P6 only: where the extra FP come from (re-centred/re-oriented boxes double-matching, or class
+  carried to non-vehicle clusters). A per-cluster FP diff on seq 0/10 would tell; not run.
