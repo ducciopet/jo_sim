@@ -315,15 +315,31 @@ X0 = R0 / XL = R0+P6 (track_vehicle_lshape) / XS = R0+P6+P7 (track_shape_memory)
 
 Pooled counts, all frames (3 reps): XL vs X0 TP +51 / +5 / +33 on seq 0 / 10 / 16, but FP +250 / +203 / +8 -> the loss is
 extra false positives, not missed objects. Vehicle-only (full) seq 10: TP 736 -> 751, FP 3035 -> 3237, IDSW 49 -> 109.
-Street e3 (moving MOTA | veh rec / prec | person MOTA): X0 51.9 | 49.7 / 44.1 | 52.1; XL 52.4 | 49.2 / 44.6 | 52.8;
+Street e3 (moving MOTA | veh rec / prec | person MOTA): X0 51.9 | 49.7 / 44.1 | 52.1; XL INVALID (see 13) [52.4 | 49.2 / 44.6 | 52.8];
 XS 50.7 | 48.6 / 42.9 | 51.0.
 Lab (lab_p67, MOTA full / dynamic only, a b c): LX0 94.5 93.7 92.8 / 87.0 86.4 88.4; LXS 96.5 92.9 89.4 / 88.4 86.4 87.7
 (LXS c: FN 289, the known intermittent standing-person loss) -> no evident lab regression.
 
 Reading:
 - P6 raises moving-vehicle recall a lot (+13) but costs 2-3 MOTA all points on seq 0 and 10 (testing -3.4 / -2.2)
-  through extra FP; flat on seq 16 and on the street (+0.5, inside the noise). Not adopted.
+  through extra FP; flat on seq 16. Street not measured (see 13, re-run p6street_chain.sh). Not adopted on CODa.
 - P7 on top of P6: worse on 10 and 16 (testing -3.8 / -2.3 vs R0), IDSW +83, street -1.2. Not adopted.
 - Vehicle box work (P5, P5b, P6, P7) is closed with no winner: R0 stays the reference for S6.
 - Open question for P6 only: where the extra FP come from (re-centred/re-oriented boxes double-matching, or class
   carried to non-vehicle clusters). A per-cluster FP diff on seq 0/10 would tell; not run.
+
+## 13. Corrections 19/11: P6 street arm, street latency
+- P6 street arm invalid: the street profile name `mdp_street_vjsye2i2pcal` already existed (an R0 re-run of the 18/11
+  S1+S2 chain, commit 1547030); its run bags had been archived to the NAS but the `.done` files stayed, so run_street.sh
+  skipped the P6 runs and the old R0 runs were scored as "XL". The CODa XL runs are valid (fresh tags, run with the
+  P6 profile then named coda_vjsye2i2pcal, now kept as coda_vjsye2i2pcp6). The pcal profiles are restored to their
+  original content (R0 re-run). Other street arms checked: pcax, pcals, pcaz, pcah all run on 18-19/11.
+  Re-run started 19/11 ~09:15: p6street_chain.sh, street x3 alternated pcaw (R0) / pcp6 (R0+P6).
+- Street latency (open since S4): not a pipeline bug. On the street the sim clock of `ros2 bag play --clock` runs
+  ~8.5 ms BEHIND the scan stamps (preprocessing "scan age at processing start" median -8.5 ms; CODa -1 ms), and the
+  street scans are small (VLP-16: 29k raw -> 2.3k points after crop, preprocessing 2.7 ms vs 21.5 ms on CODa's 25k), so
+  recorded - stamp read ~ -2 ms. lat_tracks.py now adds back a negative median scan age (not physical: a scan cannot be
+  processed before it was taken) from <run>_logs/det.log, and prints the raw value too. Street track latency corrected:
+  median 6-7 ms, p90 17-19 ms (pcax, pcals, pcay x3). CODa unchanged (offset +0.5 ms; X0 0_w1 78 / 176 ms).
+  The YOLO path on the street is 171 ms behind the scan stamp (recorded - stamp of the detections), but the tracker does
+  not wait for it (late YOLO leaves are class-only, 1631 in r1 log), so it does not add to the track latency.
