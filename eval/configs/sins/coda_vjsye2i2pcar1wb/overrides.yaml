@@ -1,0 +1,10 @@
+# Chain B (20/11): R1 + LiDAR wall stripping off outdoors + cluster size limit = bus [12,6,4] 120 m3 (a long vehicle without its wall cut must not be dropped as too big)
+base: coda_vjsye2i2pcar1
+files:
+  preprocessing.yaml:
+    preprocessing_node:
+      wall_removal_enabled: false
+  dbscan_detector.yaml:
+    dbscan_detector_node:
+      max_box_extent: [12.0, 6.0, 4.0]
+      max_box_volume: 120.0
