@@ -1721,3 +1721,14 @@ M (yolo id per camera) x5: MOTA all seq 10 50.5 vs 50.3, seq 16 +1.1, seq 0 -2.2
 IDSW 329 -> 258, vehicle recall +5, no MOTA gain -> M stays off. YOLO 640 vs 1280: same latency (86 ms med), people
 recall -5.6, precision -6, MOTA all seq 0 -3.2, street -0.9, seq 10 +1.3 -> 1280 outdoor stays. R0 stays reference.
 p5b-heading builds; p5b_chain running, then rescore dyn 0.2/0.5 (results 19/11 morning).
+
+## 19/11: P5b / P6 / P7 / ground lab / sensitivity SINS (lab sec. 11-13)
+- P5b: CODa MOTA all flat (testing +1.4/-1.1/-0.8), vehicle recall +2.9; street -1.4 (vehicle recall -3.8) -> off.
+- P6 L-shape: moving-vehicle recall 25.8 -> 39.1 but MOTA all seq 0/10/16 -2.9/-2.0/+0.2 (+250/+203 FP) -> off;
+  street arm invalid (name collision), re-run p6street_chain. P6+P7 worse (IDSW +83). Vehicle-box work: no winner.
+  Diagnosis of P6 FPs (shifted boxes vs ghosts) requested on existing outputs.
+- Lab ground: grid 96.9/96.7/92.5 vs planes 94.3/95.0/94.5, moving people 88.7 vs 90.5 -> lab keeps planes
+  (ground model = per-profile option, declared; CODa/street grid).
+- Motion threshold 0.2/0.3/0.5: R0 MOTA all varies <= 1.9; ranking vs Dynablox/M-detector unchanged at every
+  threshold, held-out 11/12 included. With the laptop part: the "moving" metric is defensible (declare seq 11 fragility).
+- Street latency fixed (sim clock 8.5 ms behind scan stamps): median 6-7 ms, p90 17-19 ms.
