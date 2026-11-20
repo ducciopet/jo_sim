@@ -1797,3 +1797,8 @@ User requirement (20/11, via lab): no distance window on mask points -> yolo_lea
 Running on the lab: r1lc_chain (R1 vs R1+connected x3), then r1lc_nf_chain (nearest_cluster off, mask->box fallback off).
 Chain A profiles on R1 + connected (cumulative): r1lcb (+ bus size cap: on R0 it recovered 8 of the 10 points connected
 lost on seq 0), r1lcbk (+ shape association), r1lcbks (+ corroboration_all off, decay on fresh YOLO frames).
+
+## 20/11: C5 track_min_hits_semantic 2 (sins c5-semantic-birth c88c9e5), laptop x1, 9 windows, r1lc base
+Pooled MOTA all e3: HB (r1lc) 58.9 vs HS (+ semantic birth) 56.3 (FN 3776 -> 4116); moving 72.2 vs 71.0; e3ib 60.1 vs 57.2.
+Persons TP@1m 82.3 -> 81.5, vehicles 41.3 -> 48.4, bikes 39.8 -> 29.3. No gain on persons (the target): not sent to the lab.
+"Track unconfirmed" in the 19/11 funnel does not translate into recoverable rows with a shorter confirmation.
