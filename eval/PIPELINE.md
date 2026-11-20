@@ -74,3 +74,13 @@ Evaluation: e3ib (e3 + --ignore-box) reported next to e3; the user decides which
 4. Freeze 24/11 is no longer binding: changes that take 4+ days are allowed if the expected gain is large (user).
    C4-new (YOLO instances as objects) is back in scope; out-of-FOV vehicle memory/registration stays after the paper
    (0 GT rows of "still in FOV, then moving out of FOV" on CODa 0/10/16 and the street; still out-of-FOV is ignored).
+
+## Decisions 20/11 evening (user)
+- Paper evaluation stays as universal as possible: primary table = e3 MOTA-all over all annotated movable classes (standard
+  CLEAR-MOT, 1 m gate), moving-only and PD as secondary columns of the same table; e3ib as a declared extra column. No
+  framing choice of a favourable subset; limits (far sparse LiDAR, no semantics out of the camera view by design) are
+  stated as facts.
+- No learning-based clustering/classification on the point cloud.
+- Persons never seen by a camera: faster motion proof for person-sized unclassified clusters tested as a lab arm x3,
+  decided by the pooled rule.
+- e3ib testing frames of the CSV baselines: pending the NAS mount on the laptop (user).
