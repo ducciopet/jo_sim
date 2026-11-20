@@ -536,7 +536,7 @@ Lab (summary / dynamic only MOTA, a/b/c): LCB0 95.5/93.8/94.1 | 86.4/87.4/88.1; 
 LCBB 94.8/94.1/93.1 | 89.1/87.7/89.4. No evident regression.
 
 err_decomp (eval/diagnostics/err_decomp_chainb.txt, all frames): CBN raises vehicle TP@1m 39.1 -> 53.8% and cuts unmatched
-3638 -> 3167, but persons TP 82.0 -> 79.5% and seq 0 collapses (splitter off merges people in the crowded seq 0).
+3638 -> 3167, but persons TP 82.0 -> 79.5% and seq 0 collapses (likely: splitter off merges people in the crowded seq 0; not verified).
 Ghosts with no GT near: CB0 1702, CBW 1466, CBN 1801, CBT ~similar.
 
 Decision (pre-registered rule): no arm adopted. Reference becomes R1 (CB0). CBN is the interesting signal for vehicles
