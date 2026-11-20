@@ -562,3 +562,25 @@ raycasting leaves no ambiguity between two masks in the same box). On 19/11, con
 60.8/47.5/54.6, so seq 0 is the problem to understand.
 Running r1lc_chain.sh (d708aff): RB0 (R1) vs RC0 (R1 + connected) x3 alternated on CODa + street (pcar1k vs pcar1lc) + lab
 (LRB0/LRC0), then e3, e3ib, vehicles, and err_decomp incl. seq 0 only -> eval/diagnostics/err_decomp_r1lc.txt.
+
+## 20. Disk full, cleanup, R1 vs r1lc on CODa, pooled columns, chain A started (20/11)
+
+- ~10:30 the lab PC disk filled (another user's GLIM/SIT job in docker, ~2 GB / 30 s; not touched). r1lc_chain and the queued
+  r1lc_nf_chain were stopped. Its CODa part (RB0/RC0 x3, 09:10-10:22) had finished and is valid (same bag sizes/durations as
+  chain B); the street runs after 10:42 failed and were marked .done without bags.
+- Cleanup with the user's OK (in this session): output bags of Q0/QC/QS x3 and CBT/CBW x3 (CODa) and street pcar1t/pcar1wb x3,
+  after checking all their e3/e3 test/e3ib/e3ib test JSONs exist; the failed street pcar1k/pcar1lc markers. Kept: QB, CB0, CBN, logs.
+- JSONs pushed (aad7574): coda, coda_e3[/test], coda_e3ib[/test], coda_vehicle_e3, mdp_e3, mdp_e3ib, lab_chainb for Q*, CB*, RB0/RC0.
+- pooled9.py: pooled MOTA-all over the 9 windows per rep, paired gain vs reference rep range.
+
+Pooled MOTA all (9 windows), mean [range], paired gain vs ref; e3 all | e3 testing:
+- chain B, ref CB0 57.1 [56.5-58.1] | 54.8 [53.7-56.1]: CBW -0.3 | -1.0; CBN +1.3 | +2.6 (> spread 2.5 on testing only); CBT -1.5 | -1.6
+- LEAFC, ref Q0 55.5 [54.8-56.4] | 52.7 [51.5-54.3]: QC -0.5 | -1.5; QB +0.2 | -0.8; QS -0.8 | -1.6
+- R1 vs r1lc (same chain today), ref RB0 55.8 [54.8-57.3] | 53.4 [52.5-55.1]: RC0 +0.8 | +0.9 (e3ib +1.8 | +2.1), all <= spread
+Old verdicts in the pooled form: no arm passes on both testing and all (CBN passes testing only); unchanged.
+Per seq testing (e3): RB0 57.3/47.4/57.0, RC0 60.2/45.8/59.4. On R1, connected does NOT lose seq 0 (+2.9); seq 10 -1.6.
+RB0 (R1, today) is below CB0 (R1, last night) on seq 0 (57.3 vs 63.5, same profile/build): between-chain variance is large.
+
+Chain A started 11:10 (a30dd66, chainA.sh): AL0 r1lc / AB0 r1lcb / AN0 r1lcbn / AM0 r1lcbm / AK0 r1lcbk, x3 alternated CODa +
+street + lab (LAL0..LAK0, lab_chaina), then e3, e3ib, vehicles, err_decomp -> eval/diagnostics/err_decomp_chainA.txt. Disk guard
+kills the chain below 3 GB free. Afterwards: r1lc_nf (lcn, lcf), then the ks switches.
