@@ -1817,3 +1817,8 @@ Arms on the laptop (x1, pooled MOTA all / moving, base HB 58.9 / 72.2):
 - + track_publish_coasting_established (r1lcpe; sins c5-semantic-birth): 58.2 / 71.8; persons 84.0%; extra FP are ghosts
   (+200, far from any annotated object): coasting prolongs whatever false dynamic tracks exist. Not adopted.
 The person gap to EMMC is diffuse across tracker rules; no single switch recovers it on the laptop.
+20/11: far LiDAR leaf 0.045 -> 0.02 m (r1lcv, laptop x1, 8 windows; 0_w2 run broken): points per scan unchanged (10_w1
+15665 vs 15667 after crop; the adaptive voxel never fires, ~10-16k points < 30k budget), pooled MOTA all 58.7 vs 58.7, moving
+71.9 vs 73.1, persons 82.4 vs 81.9%. Downsampling is not what loses far persons: lost persons >= 10 m have a median of 29
+raw LiDAR points (found: 56), i.e. the sensor's own sparsity. Persons never seen by a camera = 71% of out-of-FOV moving rows.
+User 20/11: no learning-based clustering/classification on the point cloud.
