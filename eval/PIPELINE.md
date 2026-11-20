@@ -61,3 +61,16 @@ Chain A on r1lc, cumulative: r1lcb (+ bus size cap) / r1lcbk (+ shape associatio
 decay on fresh YOLO frames). Code still to write: C4-new (YOLO instances as objects, absorbs fragments) and splitter off
 only on vehicle-class clusters (CBN gained +6.5/+3.9 on seq 10/16 but -13 on seq 0); they join chain A when ready.
 Evaluation: e3ib (e3 + --ignore-box) reported next to e3; the user decides which is primary.
+
+## Decisions 20/11 afternoon (user confirmed)
+1. Decision rule, replacing the 19/11 one from now on (old verdicts are reported in both forms): an arm is adopted if
+   its paired GT-pooled MOTA-all over the 9 tuning windows (seq 0 w1-3, 10 w1-5, 16 w1) improves on BOTH testing frames
+   and all frames by more than the run-to-run spread (x3) of the reference; veto if any sequence drops by more than the
+   reference's own run range on all frames, or the street drops beyond its run range; lab = no clear regression; latency
+   reported. Reason (independent review): seq 0 has 232 testing rows (1 pt = ~2 errors) while R1's own runs span ~7.
+2. Metric: e3 stays primary; e3ib (--ignore-box) is a declared secondary column for all methods. Fixed before 11/12.
+3. Order: chain A first (r1lc / r1lcb / r1lcbn / r1lcbk; contains the R1+connected reference, so the separate R1 vs
+   r1lc chain is dropped), then r1lc_nf (lcn, lcf), then the tracker switches (ks) / walls off with the cap on the winner.
+4. Freeze 24/11 is no longer binding: changes that take 4+ days are allowed if the expected gain is large (user).
+   C4-new (YOLO instances as objects) is back in scope; out-of-FOV vehicle memory/registration stays after the paper
+   (0 GT rows of "still in FOV, then moving out of FOV" on CODa 0/10/16 and the street; still out-of-FOV is ignored).
