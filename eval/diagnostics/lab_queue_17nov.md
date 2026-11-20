@@ -553,3 +553,12 @@ Street MOTA all (full, not the 15 m moving column of agg_e3): e3ib = e3 within 0
 Street MOTA all per rep: R1 43.0/42.3/41.8 (mean 42.4), R0 pcaq 42.0/44.4/44.6 (43.7), wb 44.1/45.9/44.8 (45.0),
 n 38.4/39.7/38.9, t 40.8/40.7/43.6. Note: on this column R1 is 1.3 below R0 (ranges overlap); CBW is the best street arm.
 Baseline files in coda_e3ib are named dynablox_*/mdetector_*; DBX_*/MDET_* symlinks added for cmp_e3.py.
+
+## 19. User requirement: no distance window on YOLO mask points (20/11, 09:10)
+
+The user wants no distance filtering of the points inside YOLO masks. R1 still used the mode + valley depth window capped at +-0.3 m
+(yolo_leaf_depth_tolerance), so yolo_leaf_connected becomes mandatory. The user keeps yolo_leaf_nearest_cluster (with masks,
+raycasting leaves no ambiguity between two masks in the same box). On 19/11, connected on R0 gave testing 51.0/46.6/55.0 vs
+60.8/47.5/54.6, so seq 0 is the problem to understand.
+Running r1lc_chain.sh (d708aff): RB0 (R1) vs RC0 (R1 + connected) x3 alternated on CODa + street (pcar1k vs pcar1lc) + lab
+(LRB0/LRC0), then e3, e3ib, vehicles, and err_decomp incl. seq 0 only -> eval/diagnostics/err_decomp_r1lc.txt.
