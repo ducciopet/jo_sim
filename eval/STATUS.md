@@ -1806,3 +1806,14 @@ Persons TP@1m 82.3 -> 81.5, vehicles 41.3 -> 48.4, bikes 39.8 -> 29.3. No gain o
 HB (r1lc): pooled MOTA all 57.8 vs 58.9, moving 72.3 vs 72.2 (e3ib 58.7 vs 60.1, 72.6 vs 72.5): within single-run noise.
 Persons 82.4 vs 82.3%, vehicles 48.5 vs 41.3%, bikes 33.1 vs 39.8%. The fallback fires ~200 times per window, a leaf in ~30%
 of them (counter logged every 200 at the time). Lab nf2 chain (RC1/RN0/RF0/RCC x3) decides.
+
+## 20/11 pm: persons lost on the current base (r1lc + per-track CSV, laptop x1, 9 windows; rows_coda_PF.csv)
+Moving persons 11078 rows, lost 15.0% (any published state counts, as MOTA all): held static by the motion rules 5.4%
+(70% out of FOV: debounce, disocclusion, C, size gate), coasting with no cluster 3.4% (median 16.5 m), unconfirmed 2.8%
+(17.7 m), coasting next to an unassociated cluster 2.2%, no cluster/offset 1.2%. Detection loses ~1%; the tracker the rest.
+Out of FOV: 168 of the 423 held-static rows are persons seen in camera before (class not carried / track re-born).
+Arms on the laptop (x1, pooled MOTA all / moving, base HB 58.9 / 72.2):
+- track_publish_coasting_ticks 3 (r1lcp): 57.0 / 69.5; persons found 82.3 -> 85.2% but FP +565 (seq 0).
+- + track_publish_coasting_established (r1lcpe; sins c5-semantic-birth): 58.2 / 71.8; persons 84.0%; extra FP are ghosts
+  (+200, far from any annotated object): coasting prolongs whatever false dynamic tracks exist. Not adopted.
+The person gap to EMMC is diffuse across tracker rules; no single switch recovers it on the laptop.
