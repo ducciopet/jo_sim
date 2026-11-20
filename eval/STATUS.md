@@ -1775,3 +1775,25 @@ Identical runs: normal rate 50.7/58.7 and 21.2/13.3; half-rate replay 51.5/62.5 
 static_structures seeded their RNG from the OS at every start (RANSAC walls/floor, subsampling): new random_seed param
 (sins c2-shape-assoc, default -1 = unchanged). With random_seed 1, x3: 0_w1 59.0/58.7/60.7 (spread 2.0, was 8), 10_w1
 10.5/20.2/18.2 (still ~10: the rest is message timing, YOLO leaves vs scan). Proposal: random_seed 1 in R1 for all chains.
+
+## 20/11: LEAFC, chain B, ignore-box evaluation (lab_queue 15-18b), new base R1 + connected
+LEAFC (R0 base, x3, CODa testing MOTA all seq 0/10/16): Q0 60.8/47.5/54.6, QC (connected leaf) 51.0/46.6/55.0, QB (+ bus size
+cap) 58.8/45.9/54.8, QS (+ speed 15) 58.0/44.6/54.3; no arm passes the rule. err_decomp (all frames): vehicles TP@1m
+39.5 -> 50.0 / 52.2 / 54.0%, but unmatched predictions 3914 -> 4435-4713 (pieces near persons and vehicles, ghosts).
+Ghosts (laptop SD runs, ghosts.py): 60% lie inside the box of an annotated ~6 m vehicle the metric ignores (still out of
+camera, > 20 m, undefined motion) but further than the 1 m ignore disc from its centre. coda_eval --ignore-box (default
+off): ignored objects cover their box too. e3ib (= e3 + --ignore-box): baselines EMMC/EM/ST/DFM change <= 0.2 (all frames),
+SINS 10_w1 laptop 10.5/20.2 -> 30.9/32.8; on the lab chains +2-3 on seq 10 only, rule outcomes unchanged. e3 stays the
+main column until the user decides.
+R1 = R0 + person ray offset 0 + random_seed 1 (profiles *r1): check passed (w1 62.3 in 59.0-63.6).
+Chain B on R1 (x3, testing MOTA all seq 0/10/16, e3 / e3ib): CB0 = R1 63.5/49.9/56.3 / 63.5/52.6/56.3; CBW (walls off +
+size cap) 58.8/51.8/54.0; CBN (splitter off) 50.3/56.4/60.2 (seq 0 -13, +6.5, +3.9); CBT (roof 4.5) 62.4/51.2/52.3.
+No arm passes; R1 is the reference (above R0 on all 3). Moving vehicles: CB0 19.2, CBW 33.9, CBN 38.4, CBT 33.9.
+Street MOTA all (full): R1 42.4 (43.0/42.3/41.8) vs R0 43.7 (42.0/44.4/44.6), -1.3 with overlapping ranges; CBW best 45.0;
+street moving: R1 52.7, wb 52.2, n 49.2, t 53.0, R0 52.5. Lab: no clear regression. CBN: vehicles TP@1m 39.1 -> 53.8%,
+persons 82.0 -> 79.5% (seq 0 loss: crowd merging, unverified).
+Baselines e3ib: Dynablox seq 0/10/16 -271/-92/30, M-detector -435/-62/-17.
+User requirement (20/11, via lab): no distance window on mask points -> yolo_leaf_connected mandatory; nearest_cluster kept.
+Running on the lab: r1lc_chain (R1 vs R1+connected x3), then r1lc_nf_chain (nearest_cluster off, mask->box fallback off).
+Chain A profiles on R1 + connected (cumulative): r1lcb (+ bus size cap: on R0 it recovered 8 of the 10 points connected
+lost on seq 0), r1lcbk (+ shape association), r1lcbks (+ corroboration_all off, decay on fresh YOLO frames).

@@ -53,3 +53,11 @@ Dropped: PD coasting as its own arm, walls veto, large-object exemption (size th
 motion compensation. After paper-v1: PD memory with free-space evidence (the native metric ignores out-of-FOV still
 objects, coda_eval.py 103-109), late-leaf compensation.
 Tooling: test a slowed / lockstep replay on the laptop to cut the run-to-run noise of logic A/B.
+
+## Update 20/11
+LEAFC and chain B: no arm passes the rule; R1 (= R0 + ray offset 0 + random_seed 1) is the reference. User requirement:
+yolo_leaf_connected is mandatory (no distance window on mask points), so the base becomes R1 + connected (r1lc, on the lab).
+Chain A on r1lc, cumulative: r1lcb (+ bus size cap) / r1lcbk (+ shape association) / r1lcbks (+ corroboration_all off,
+decay on fresh YOLO frames). Code still to write: C4-new (YOLO instances as objects, absorbs fragments) and splitter off
+only on vehicle-class clusters (CBN gained +6.5/+3.9 on seq 10/16 but -13 on seq 0); they join chain A when ready.
+Evaluation: e3ib (e3 + --ignore-box) reported next to e3; the user decides which is primary.
