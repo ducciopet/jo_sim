@@ -584,3 +584,22 @@ RB0 (R1, today) is below CB0 (R1, last night) on seq 0 (57.3 vs 63.5, same profi
 Chain A started 11:10 (a30dd66, chainA.sh): AL0 r1lc / AB0 r1lcb / AN0 r1lcbn / AM0 r1lcbm / AK0 r1lcbk, x3 alternated CODa +
 street + lab (LAL0..LAK0, lab_chaina), then e3, e3ib, vehicles, err_decomp -> eval/diagnostics/err_decomp_chainA.txt. Disk guard
 kills the chain below 3 GB free. Afterwards: r1lc_nf (lcn, lcf), then the ks switches.
+
+## 21. Chain A (20/11, 11:10 -> 22:30), all on R1 + connected
+
+Pooled MOTA all over 9 windows, mean [range], paired gain vs AL0 (r1lc); e3 all | e3 testing (AL0 spread 4.7 | 4.9: rep r1 low):
+- AL0 r1lc 56.7 [54.2-58.9] | 54.9 [52.3-57.2]
+- AB0 + bus cap: -0.2 | -1.1
+- AN0 + bus cap + splitter off: +2.0 | +0.8
+- AM0 + bus cap + refine merge fragments: +1.8 | +1.9 (the most consistent: testing 57.0/56.9/56.4, range 0.6)
+- AK0 + bus cap + shape association: +1.4 | +0.6
+e3ib: AN0 +1.3 | -0.2, AM0 +1.0 | +1.1, AK0 +1.0 | +0.2, AB0 -0.5 | -1.4. No arm passes the pooled rule (gain > ref spread).
+Per seq testing MOTA all (e3): AL0 59.5/50.2/57.4, AB0 62.2/49.2/55.2, AN0 48.4/54.6/58.7 (seq 0 -11 again: veto),
+AM0 64.8/54.5/56.3, AK0 58.5/49.0/59.8. Moving vehicles (all): AL0 32.1, AB0 30.4, AN0 44.8, AM0 33.8, AK0 31.4.
+Latency CODa med/p90: 100/152, AN0 78/103, others ~100/140-154.
+Street, 15 m moving MOTA: lc 52.4, lcb 51.7, lcbn 49.7, lcbm 52.0, lcbk 50.5; full MOTA all lc 41.6, lcb 40.9, lcbn 41.9,
+lcbm 41.5, lcbk 37.2 (rep 31.7). Lab MOTA a/b/c: LAL0 94.4/89.6/93.5, LAB0 91.4/95.6/94.3, LAN0 92.5/96.3/94.4,
+LAM0 96.4/94.5/94.9, LAK0 94.3/92.2/92.4: no evident regression.
+Reading: nothing passes; AM0 (merge fragments) is the best candidate (gain on all/testing, low spread, seq 0 and 10 up,
+street and lab fine); AN0 helps vehicles and seq 10/16 but breaks seq 0 as before, also with the bus cap.
+Next: r1lc_nf2 (RC1/RN0/RF0/RCC) started after A on c5-semantic-birth.
