@@ -84,3 +84,11 @@ Evaluation: e3ib (e3 + --ignore-box) reported next to e3; the user decides which
 - Persons never seen by a camera: faster motion proof for person-sized unclassified clusters tested as a lab arm x3,
   decided by the pooled rule.
 - e3ib testing frames of the CSV baselines: pending the NAS mount on the laptop (user).
+
+## External baselines PC (20/11, user)
+Baselines move to an external PC with another Claude account; package and instructions on the NAS
+(datasets_SINS/derived/baselines_ext/package, README.md; status in baselines_ext/STATUS_EXT.md; local copy
+~/Desktop/sins-baselines, no git remote). Phase A = fidelity (EagerMOT KITTI, SimpleTrack nuScenes, CenterPoint CODa;
+Dynablox/DeepFusionMOT done; M-detector metric-only, no KITTI scans). Phase B datasets: CODa gaps, DOALS, JRDB, street,
+lab. KITTI as a dataset deferred (scans not downloaded). SINS must run on DOALS (LiDAR only) and JRDB too (lab PC,
+scale/sensor profiles only) once the final version is fixed. No tests on the laptop.
