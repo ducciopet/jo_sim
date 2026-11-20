@@ -542,3 +542,14 @@ Ghosts with no GT near: CB0 1702, CBW 1466, CBN 1801, CBT ~similar.
 Decision (pre-registered rule): no arm adopted. Reference becomes R1 (CB0). CBN is the interesting signal for vehicles
 (seq 10/16 and moving vehicles) but must not apply to people: candidate for chain A (splitter off only for vehicle-class
 clusters), to be named by the peer. e3ib column follows when after_chainb_ib.sh finishes.
+
+### 18b. e3ib column (e3 + --ignore-box), 07:55
+
+CODa testing MOTA all seq 0/10/16, e3 -> e3ib: CB0 63.5/49.9/56.3 -> 63.5/52.6/56.3; CBW 58.8/51.8/54.0 -> 58.8/54.0/54.0;
+CBN 50.3/56.4/60.2 -> 50.4/58.6/60.2; CBT 62.4/51.2/52.3 -> 63.4/54.2/52.3; Q0 60.8/47.5/54.6 -> 61.5/50.4/54.6.
+Dynablox -286.6/-92.2/30.1 -> -271.1/-91.6/30.1 (11: 17.0 -> 21.4, 12: -181.3 -> -169.1); M-detector -435.3/-63.3/-16.9 -> -434.9/-62.1/-16.9.
+--ignore-box helps mostly seq 10 (+2-3 for all SINS arms); ranking and rule outcome unchanged (no arm adopted).
+Street MOTA all (full, not the 15 m moving column of agg_e3): e3ib = e3 within 0.2 for every run.
+Street MOTA all per rep: R1 43.0/42.3/41.8 (mean 42.4), R0 pcaq 42.0/44.4/44.6 (43.7), wb 44.1/45.9/44.8 (45.0),
+n 38.4/39.7/38.9, t 40.8/40.7/43.6. Note: on this column R1 is 1.3 below R0 (ranges overlap); CBW is the best street arm.
+Baseline files in coda_e3ib are named dynablox_*/mdetector_*; DBX_*/MDET_* symlinks added for cmp_e3.py.
