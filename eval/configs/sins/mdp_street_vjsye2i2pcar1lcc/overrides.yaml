@@ -1,0 +1,8 @@
+# 20/11 (user: no distance window on the points of a YOLO detection): r1lc + the mask->box fallback also uses 3D connectivity
+# (nearest connected group with >= min points spanning >= min_box_coverage of the box) instead of the +-0.3 m depth window.
+# Needs sins branch c5-semantic-birth (yolo_leaf_fallback_connected).
+base: mdp_street_vjsye2i2pcar1lc
+files:
+  preprocessing.yaml:
+    preprocessing_node:
+      yolo_leaf_fallback_connected: true
