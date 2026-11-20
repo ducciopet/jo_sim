@@ -1802,3 +1802,7 @@ lost on seq 0), r1lcbk (+ shape association), r1lcbks (+ corroboration_all off, 
 Pooled MOTA all e3: HB (r1lc) 58.9 vs HS (+ semantic birth) 56.3 (FN 3776 -> 4116); moving 72.2 vs 71.0; e3ib 60.1 vs 57.2.
 Persons TP@1m 82.3 -> 81.5, vehicles 41.3 -> 48.4, bikes 39.8 -> 29.3. No gain on persons (the target): not sent to the lab.
 "Track unconfirmed" in the 19/11 funnel does not translate into recoverable rows with a shorter confirmation.
+20/11: r1lcc (connected mask->box fallback, no depth window anywhere; sins c5-semantic-birth 0f24631), laptop x1, 9 windows vs
+HB (r1lc): pooled MOTA all 57.8 vs 58.9, moving 72.3 vs 72.2 (e3ib 58.7 vs 60.1, 72.6 vs 72.5): within single-run noise.
+Persons 82.4 vs 82.3%, vehicles 48.5 vs 41.3%, bikes 33.1 vs 39.8%. The fallback fires ~200 times per window, a leaf in ~30%
+of them (counter logged every 200 at the time). Lab nf2 chain (RC1/RN0/RF0/RCC x3) decides.
