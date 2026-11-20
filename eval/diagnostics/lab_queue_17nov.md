@@ -516,3 +516,29 @@ unmatched predictions at 1 m: 700
 sins c2-shape-assoc d38adae built OK. R1 = coda_vjsye2i2pcar1 (R0 + track_person_ray_offset 0 + random_seed 1 in
 preprocessing and static_structures; installed cfg checked), 1 run on CODa w1 (tag R1C): e3 MOTA all 62.3 (moving 75.3),
 latency 77 / 176 ms. Q0 r1-r3 on w1: 61.6 / 61.6 / 61.0 -> pass range 59.0-63.6: PASS. Chain B can start from this branch.
+
+## 18. Chain B on R1 (20/11, 22:18 -> 06:23)
+
+Arms on R1 (= R0 + ray_offset 0 + random_seed 1, sins c2-shape-assoc): CB0 = R1, CBW = walls off + bus size cap (r1wb),
+CBN = splitter off (r1n), CBT = outdoor roof 4.5 (r1t). x3 CODa + street, lab LCB0/LCBN/LCBB x3.
+
+CODa testing MOTA all, seq 0 / 10 / 16 (mean of 3 reps; per-rep range):
+- CB0 63.5 [62.5-65.5] / 49.9 [49.8-50.2] / 56.3 [53.4-59.4]
+- CBW 58.8 / 51.8 / 54.0  -> seq 0 -4.7: FAIL
+- CBN 50.3 / 56.4 / 60.2  -> seq 0 -13.2 (+6.5 on 10, +3.9 on 16): FAIL
+- CBT 62.4 / 51.2 / 52.3  -> seq 0 -1.1, seq 16 -4.0: FAIL
+- ref Q0 (R0, chain 19/11) 60.8 / 47.5 / 54.6: R1 above R0 on all 3 seqs (different chain, same machine)
+All frames: CB0 63.5/50.3/60.3, CBW 60.5/52.5/59.0, CBN 52.9/54.7/62.6, CBT 61.5/51.2/57.2.
+Moving vehicles (all frames): CB0 19.2, CBW 33.9, CBN 38.4, CBT 33.9. Latency CODa med/p90: CB0 96/125, CBW 102/175, CBN 75/101, CBT 123/174 ms.
+
+Street MOTA (15 m): R1 52.7 [52.2-53.1], wb 52.2, n 49.2 (vehicle recall 44.7 vs 50.7), t 53.0, R0 pcaq 52.5. Latency 6-7 ms med.
+Lab (summary / dynamic only MOTA, a/b/c): LCB0 95.5/93.8/94.1 | 86.4/87.4/88.1; LCBN 96.2/94.0/92.9 | 87.7/86.0/86.1;
+LCBB 94.8/94.1/93.1 | 89.1/87.7/89.4. No evident regression.
+
+err_decomp (eval/diagnostics/err_decomp_chainb.txt, all frames): CBN raises vehicle TP@1m 39.1 -> 53.8% and cuts unmatched
+3638 -> 3167, but persons TP 82.0 -> 79.5% and seq 0 collapses (splitter off merges people in the crowded seq 0).
+Ghosts with no GT near: CB0 1702, CBW 1466, CBN 1801, CBT ~similar.
+
+Decision (pre-registered rule): no arm adopted. Reference becomes R1 (CB0). CBN is the interesting signal for vehicles
+(seq 10/16 and moving vehicles) but must not apply to people: candidate for chain A (splitter off only for vehicle-class
+clusters), to be named by the peer. e3ib column follows when after_chainb_ib.sh finishes.
