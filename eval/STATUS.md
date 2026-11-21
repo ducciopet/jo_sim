@@ -1822,3 +1822,8 @@ The person gap to EMMC is diffuse across tracker rules; no single switch recover
 71.9 vs 73.1, persons 82.4 vs 81.9%. Downsampling is not what loses far persons: lost persons >= 10 m have a median of 29
 raw LiDAR points (found: 56), i.e. the sensor's own sparsity. Persons never seen by a camera = 71% of out-of-FOV moving rows.
 User 20/11: no learning-based clustering/classification on the point cloud.
+
+## 21/11 — nf2 result, chain D
+- nf2 CODa (lab, ×3, pooled e3 all | testing vs RC1 = r1lc, 55.7 | 53.5, spread 3.8 | 3.3): RN0 +1.1 | +0.7, RF0 +1.9 | +2.2, **RCC (lcc) +2.4 | +2.4** (e3ib +2.6 | +2.5); moving vehicles 45.6 vs 42.0; same latency. X = lcc. Street/lab stopped by the lab disk guard.
+- New code (default off, compiled only): split_masked (detector, 74b951d): the tall/low split is undone when one YOLO instance covers all parts, and no other leaf touches them. track_person_size_confirm_ticks (tracker, cd01b90).
+- Chain D sent to the lab: DC0 r1lcc, DM0 r1lccbm, DS0 r1lccbms, DQ0 r1lccbmq (coda/street/lab).
