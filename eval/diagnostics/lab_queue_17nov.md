@@ -603,3 +603,19 @@ LAM0 96.4/94.5/94.9, LAK0 94.3/92.2/92.4: no evident regression.
 Reading: nothing passes; AM0 (merge fragments) is the best candidate (gain on all/testing, low spread, seq 0 and 10 up,
 street and lab fine); AN0 helps vehicles and seq 10/16 but breaks seq 0 as before, also with the bus cap.
 Next: r1lc_nf2 (RC1/RN0/RF0/RCC) started after A on c5-semantic-birth.
+
+## 22. nf2: removing the depth window from the mask->box fallback (20/11 22:30 -> 21/11 00:54, CODa only)
+
+sins c5-semantic-birth 2aff69c, all on R1 + connected. RC1 = lc (fallback with depth window), RN0 = nearest_cluster off,
+RF0 = fallback off, RCC = fallback by 3D connectivity (no depth window anywhere).
+Pooled MOTA all (9 windows), paired gain vs RC1; e3 all | testing (RC1 55.7 [53.4-57.1] | 53.5 [51.7-55.0], spread 3.8 | 3.3):
+- RN0 +1.1 | +0.7;  RF0 +1.9 | +2.2;  RCC +2.4 (+3.9 +1.1 +2.4) | +2.4 (+2.7 -0.2 +4.6). e3ib: RCC +2.6 | +2.5, RF0 +1.8 | +2.2.
+Per seq testing (e3): RC1 55.6/45.8/58.9, RN0 56.8/47.1/58.9, RF0 60.1/50.0/59.0, RCC 60.9/50.4/58.7.
+Moving vehicles: RC1 42.0, RN0 46.4, RF0 41.6, RCC 45.6. Latency 100/125 ms for all.
+No arm passes the pooled rule (gain <= spread), but per the 20/11 decision the base must be a no-window variant: RCC (lcc) is
+the best on every column and becomes the base for the next chains.
+fallback_connected counter (det.log, last periodic line; destructor "final" lines not in det.log): about 200-350 box fallbacks
+per window on seq 10 / 0_w1 with ~20-40% getting a leaf, < 50 on 0_w2/0_w3/16_w1; 0.01-0.04 ms per fallback.
+-> eval/diagnostics/fallback_connected_counts.txt.
+DISK_ABORT at 00:54 when the street copy left 2 GB free: street (lcr/lcn/lcf/lcc) and lab not run. Partial dir
+mdp_street_vjsye2i2pcar1lcr_r1 left behind (cleanup needs the user's OK).
