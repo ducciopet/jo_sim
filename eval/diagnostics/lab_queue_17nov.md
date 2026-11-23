@@ -642,3 +642,16 @@ split_masked N/M: not available (log every 50 rejoins, fewer per window); the co
 Reading: DM0 is the chain D winner (passes testing and e3ib, just short on e3 all; street better; lab to recheck).
 Videos (DM0 rep 1, EagerMOT on the right): NAS datasets_SINS/derived/videos/chainD/chainD_DM0_coda{0_w1,10_w4,16_w1}.mp4.
 make_coda_video.py: CSV baselines (coda_eval.CSV_METHODS) and stereo camera (seq 16 has no front camera); bag path tested.
+
+## 24. Lab recheck DC0 vs DM0 (23/11 22:00-22:46, same build cd01b90, x3 more: LDC1/LDM1, eval/results/lab_chaind2)
+
+6 reps per arm, summary MOTA: LDC 95.8/93.7/87.9/96.6/90.6/93.9 (mean 93.1); LDM 92.4/84.1/94.4/94.4/92.5/92.9 (mean 91.8,
+93.3 without the one failed sequence). Dynamic-only MOTA mean: DC 88.3, DM 89.2. PD recall mean: DC 87.7, DM 85.2.
+Per sequence (6 reps): 1942 all 97-98.5 except LDM0b 10.1 (not reproduced in LDM1). 1947 DC 85.1 (bimodal 68.7-95.7) vs DM 91.9;
+1950 DC 91.4 (4 reps ~95, 2 reps ~84) vs DM 84.2 (all 6 reps 79-86, FN ~75): a consistent DM loss on 1950, compensated on 1947.
+LDM0b 1942 cause: NOT a merge. During the 34.8-54.6 s gap the person (standing still, LiDAR-only "L" detections, no YOLO
+class) is detected every frame as a 0.55 x 0.23 x 1.22 m box at the right place; the tracker demoted track_30 from
+potentially_dynamic to static at ~37 s and the object stopped being published, until a new track (345) at 54.6 s. A
+still, unclassified person decaying to static: a one-off (not in the other 5 DM runs on 1942).
+Reading: no clear lab regression for DM0 overall (mean -1.3 incl. the one-off, dynamic-only +0.9); seq 1950 is worth a look
+(DM misses ~75 GT rows in every rep).
