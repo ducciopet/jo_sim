@@ -1827,3 +1827,8 @@ User 20/11: no learning-based clustering/classification on the point cloud.
 - nf2 CODa (lab, ×3, pooled e3 all | testing vs RC1 = r1lc, 55.7 | 53.5, spread 3.8 | 3.3): RN0 +1.1 | +0.7, RF0 +1.9 | +2.2, **RCC (lcc) +2.4 | +2.4** (e3ib +2.6 | +2.5); moving vehicles 45.6 vs 42.0; same latency. X = lcc. Street/lab stopped by the lab disk guard.
 - New code (default off, compiled only): split_masked (detector, 74b951d): the tall/low split is undone when one YOLO instance covers all parts, and no other leaf touches them. track_person_size_confirm_ticks (tracker, cd01b90).
 - Chain D sent to the lab: DC0 r1lcc, DM0 r1lccbm, DS0 r1lccbms, DQ0 r1lccbmq (coda/street/lab).
+
+## 23/11 — chain D result, new base (user OK)
+- Chain D (lab, x3, pooled vs DC0 = r1lcc 57.5 | 55.5, spread 1.82 | 2.42): DM0 r1lccbm +1.75 | +2.50 (e3ib +1.7 | +2.5, passes), per-seq test 59.6/53.4/61.1 vs 54.7/52.5/58.0, no veto; street 53.1 vs 51.5; latency +0. DS0 split_masked -0.1 | -0.3 (the 0_w1 IDSW drop was parked bikes, not general). DQ0 person-size confirm -0.4 | -0.7, seq 0 veto, +32 person IDSW.
+- Lab recheck (6 reps): DM 91.8 (93.3 without the one-off 1942 rep: a still unclassified person decayed to static, not a merge) vs DC 93.1; dynamic-only 89.2 vs 88.3; seq 1950 consistent DM loss (84.2 vs 91.4), to analyse.
+- **User 23/11: r1lccbm is the new base** (no distance window on mask points + bus size cap + merge_fragments). split_masked and person_size_confirm stay in code, off.
