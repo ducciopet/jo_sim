@@ -6,7 +6,7 @@ cd $(dirname $0)/../../..
 export PATH=$HOME/.venvs/sins_eval/bin:$PATH
 git -C sins fetch -q origin; git -C sins checkout -q c5-semantic-birth && git -C sins merge -q --ff-only origin/c5-semantic-birth || { echo "CHECKOUT FAILED"; exit 1; }
 git -C sins log --oneline -1
-[ $(df -B1G --output=avail / | tail -1) -lt 15 ] && { echo "DISK LOW ($(df -h --output=avail / | tail -1)), not starting"; exit 1; }
+[ $(df -B1G --output=avail / | tail -1) -lt 8 ] && { echo "DISK LOW ($(df -h --output=avail / | tail -1)), not starting"; exit 1; }
 for p in r1 r1lc r1lcc r1lccbm r1lccbma; do for s in coda_vjsye2i2pca mdp_street_vjsye2i2pca lab_uca; do
   python3 eval/configs/sins/make_cfg.py $s$p > /dev/null || { echo "make_cfg $s$p FAILED"; exit 1; }; done; done
 guard() { while kill -0 $1 2>/dev/null; do
