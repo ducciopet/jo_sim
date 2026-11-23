@@ -655,3 +655,32 @@ potentially_dynamic to static at ~37 s and the object stopped being published, u
 still, unclassified person decaying to static: a one-off (not in the other 5 DM runs on 1942).
 Reading: no clear lab regression for DM0 overall (mean -1.3 incl. the one-off, dynamic-only +0.9); seq 1950 is worth a look
 (DM misses ~75 GT rows in every rep).
+
+## 25. Offline analysis on the new base DM0 (user decision 23/11: r1lccbm is the base)
+
+1) Lab seq 1950, DC vs DM, 6 reps each (eval/diagnostics/lab_fn_seq.py): person FN by cause
+   (merged into a bigger box / box that exists only thanks to the bus cap / held static / not published / no detection).
+   - merged 0 and bus-cap 0 in all 12 runs (1 merged row in LDC0a). Every FN has a person-size detection at the right place;
+     the losses are all in the tracker (held static + not published).
+   - FN by time: about 15 rows at 0-2 s (start-up) in every run, plus one event at 50-58 s worth about 55 rows. That event
+     happens in 6 of 6 DM runs and in 2 of 6 DC runs (LDC0c, LDC1c).
+   - Mechanism (LDM0a vs LDC0a, the run bags): at about 52.7 s the person crouches. The detected height drops from 1.7 to
+     0.7-0.9 m (then back to 1.3 m), at the same position (< 0.1 m off). In the good runs the existing track (D) continues as
+     PD. In the bad runs it is replaced by a new track (track_834 / track_865), which is born or quickly held static and is
+     not published until about 58 s.
+   - Examples (s from seq start): 52.7, 54.5, 56.5. Not a merge_fragments or bus-cap effect on the boxes; DM makes the
+     re-birth on a height change systematic.
+2) CODa person-loss funnel + person IDSW causes (eval/diagnostics/coda_person_funnel.py; person_funnel_chainD.txt).
+   - Method: an approximation of the laptop funnel from the bags (no track_debug_csv); coasting is inferred from cluster absence.
+   - Moving persons, all frames, 8637 rows, mean of 3 reps, DC0 -> DM0: lost 16.2 -> 15.4%.
+     - held static by the motion rules 6.1 -> 5.3
+     - no cluster (detection) 3.6 -> 3.6
+     - published but given to another GT (crowd) 2.7 -> 2.8
+     - eval range boundary 1.7 -> 1.6: the GT just inside 1.2 / 20 m, the prediction just outside; a metric effect, for all methods
+     - coasting next to an unassociated cluster 0.8 -> 0.9; cluster with no track 0.7 -> 0.7
+     - unconfirmed 0.2 -> 0.2; eval ignore zone 0.3 -> 0.3
+   - Testing, moving: 16.7 -> 15.6% (held static 6.6 -> 5.2).
+   - Person ID switches, per rep, all frames: re-birth DC0 53 -> DM0 50. A pre-existing track taking over the person:
+     DC0 14 -> DM0 27 (doubled), plus 6 -> 6 taken over from another GT object. Testing: takeover 12 -> 15, re-birth 19 -> 17.
+   Reading: merge_fragments slightly reduces "held static" (5.3 vs 6.1) and doubles the takeovers of a person by a
+   pre-existing track (a merged fragment's old track inherits the person).
