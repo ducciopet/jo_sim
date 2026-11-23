@@ -10,6 +10,7 @@ SINS tracks (left) and the baseline's detections (right, Dynablox by default).
 
 usage: make_coda_video.py --window w1|10_w1 --run bags/coda/runs/B1_v2_coda0_w1 \
           [--baseline bags/dynablox_out/dynabloxa_coda0_w1.bag --baseline-method dynablox] --out eval/videos/coda_w1.mp4
+       CSV baselines (coda_eval.CSV_METHODS): --baseline <...>/eagermot_coda0_w1.csv --baseline-method eagermot --baseline-name EagerMOT
 """
 import argparse
 import subprocess
@@ -24,7 +25,7 @@ from rosbags.highlevel import AnyReader
 E = Path(__file__).resolve().parent
 sys.path.insert(0, str(E))
 sys.path.insert(0, str(E / 'adapters'))
-from coda_eval import BASELINES                                     # noqa: E402
+from coda_eval import BASELINES, CSV_METHODS, load_csv_tracks      # noqa: E402
 from harness.ros_io import load_obstacles                           # noqa: E402
 from harness.tracks import objects                                  # noqa: E402
 from marker_adapter import load_marker_boxes                        # noqa: E402
@@ -51,11 +52,12 @@ def stamp(h):
     return h.stamp.sec * 1_000_000_000 + h.stamp.nanosec
 
 
-def read_data(bag):
+def read_data(bag, cam='front_camera', cam_bag=None):
+    # cam_bag: the separate *_stereo window bag holding the stereo camera (seq 16 has no front camera)
     imgs, clouds, statics, K = [], [], {}, None
-    with AnyReader([Path(bag)]) as r:
-        want = {'/front_camera/camera/color/image_raw', '/velodyne_points', '/tf_static',
-                '/front_camera/camera/color/camera_info'}
+    with AnyReader([Path(bag)] + ([Path(cam_bag)] if cam_bag else [])) as r:
+        want = {f'/{cam}/camera/color/image_raw', '/velodyne_points', '/tf_static',
+                f'/{cam}/camera/color/camera_info'}
         for c, _, raw in r.messages([c for c in r.connections if c.topic in want]):
             m = r.deserialize(raw, c.msgtype)
             if c.topic == '/tf_static':
@@ -85,11 +87,11 @@ def read_odom(bag):
     return np.array(t), np.array(T)
 
 
-def read_yolo(bag):
+def read_yolo(bag, cam='front_camera'):
     out = {}
     with AnyReader([Path(bag)]) as r:
         # the camera shown (front_camera), from whichever YOLO node ran (box detector or instance segmentation)
-        for c, _, raw in r.messages([c for c in r.connections if c.topic.endswith('front_camera/detections')
+        for c, _, raw in r.messages([c for c in r.connections if c.topic.endswith(f'{cam}/detections')
                                      and c.msgtype == 'vision_msgs/msg/Detection2DArray']):
             m = r.deserialize(raw, c.msgtype)
             out[stamp(m.header)] = [(d.bbox.center.position.x, d.bbox.center.position.y, d.bbox.size_x, d.bbox.size_y)
@@ -141,7 +143,10 @@ def main():
     WB = R / f'coda{w}'
     if not (WB / 'metadata.yaml').exists():                       # window bags live on the NAS (local copy only during runs)
         WB = Path('/mnt/nas-imperatore/datasets_SINS/derived/coda_windows') / f'coda{w}'
-    imgs, clouds, st, K = read_data(WB)
+    with AnyReader([Path(a.run)]) as r:                           # camera shown: front, else stereo (seq 16 has no front camera)
+        cam = 'front_camera' if any(c.topic.endswith('front_camera/detections') for c in r.connections) else 'stereo_camera'
+    SB = WB.parent / f'{WB.name}_stereo'
+    imgs, clouds, st, K = read_data(WB, cam, SB if cam == 'stereo_camera' and SB.exists() else None)
     ot, oT = read_odom(R / f'coda{w}_odom')
     if ('base_link', 'velodyne') not in st:                   # NAS window bags carry an empty /tf_static: take the run's
         with AnyReader([Path(a.run)]) as r:
@@ -149,18 +154,19 @@ def main():
                 for tr in r.deserialize(raw, c.msgtype).transforms:
                     st[(tr.header.frame_id, tr.child_frame_id)] = tf_mat(tr.transform)
     T_base_vel = st[('base_link', 'velodyne')]
-    T_vel_cam = st[('velodyne', 'front_camera_depth_optical_frame')] @ st[('front_camera_depth_optical_frame',
-                                                                          'front_camera_color_optical_frame')]
+    T_vel_cam = st[('velodyne', f'{cam}_depth_optical_frame')] @ st[(f'{cam}_depth_optical_frame', f'{cam}_color_optical_frame')]
     tracks, _, _ = load_obstacles(a.run)
     tracks = objects(tracks)
-    yolo = read_yolo(a.run)
+    yolo = read_yolo(a.run, cam)
     yts = np.array(sorted(yolo))
     gt = pd.read_csv(R / f'coda{w}_gt.csv', keep_default_na=False)
     gt = gt[gt['track_id'].astype(int) >= 0]
     for k in ('x', 'y', 'z', 'l', 'w', 'h', 'yaw'):
         gt[k] = gt[k].astype(float)
     base = None
-    if a.baseline:
+    if a.baseline and a.baseline_method in CSV_METHODS:   # offline trackers (EagerMOT, ...): unified CSV, same frame as coda_eval
+        base = objects(load_csv_tracks(a.baseline))
+    elif a.baseline:
         topic, ids = BASELINES[a.baseline_method]
         base = objects(load_dynamic_points(a.baseline, topic, min_points=20) if ids is None
                        else load_marker_boxes(a.baseline, topic, persistent_ids=ids))

@@ -619,3 +619,26 @@ per window on seq 10 / 0_w1 with ~20-40% getting a leaf, < 50 on 0_w2/0_w3/16_w1
 -> eval/diagnostics/fallback_connected_counts.txt.
 DISK_ABORT at 00:54 when the street copy left 2 GB free: street (lcr/lcn/lcf/lcc) and lab not run. Partial dir
 mdp_street_vjsye2i2pcar1lcr_r1 left behind (cleanup needs the user's OK).
+
+## 23. Chain D on lcc (23/11, 12:26 -> 20:55) + videos
+
+sins c5-semantic-birth cd01b90. DC0 = r1lcc (no depth window anywhere) / DM0 = + bus cap + merge fragments / DS0 = DM0 +
+split_masked / DQ0 = DM0 + person-size confirm 3. Other users' jobs (glim, FIDO) loaded the PC during the chain: latency as
+arm - DC0 only.
+Pooled MOTA all (9 windows), paired gain vs DC0; e3 all | testing (DC0 57.5 [56.3-58.1] | 55.5 [54.1-56.5], spread 1.82 | 2.42):
+- DM0 +1.75 (+2.6 +0.9 +1.7) | +2.50 (+3.4 +1.8 +2.4): passes on testing (> 2.42), just short on all (1.75 vs 1.82).
+  e3ib: +1.7 > 1.3 | +2.5 > 2.0, passes both. Per seq testing DM0 59.6/53.4/61.1 vs DC0 54.7/52.5/58.0: all 3 up, no veto.
+- DS0 -0.1 | -0.3;  DQ0 -0.4 | -0.7 (seq 0 testing 47.8 vs 54.7: veto).
+Street 15 m moving MOTA: lcc 51.5 [49.6-52.6], lccbm 53.1 [51.6-54.0], lccbms 51.7, lccbmq 51.2; full MOTA all lcc 40.9,
+lccbm 42.5, lccbms 42.5, lccbmq 39.7. Latency vs DC0: CODa med +0 for all (p90 +0/+2/+0), street lccbm +2 ms med.
+Lab MOTA a/b/c: LDC0 95.8/93.7/87.9, LDM0 92.4/84.1/94.4 (b: pot recall 70.2), LDS0 94.7/94.4/95.4, LDQ0 95.6/93.4/93.9.
+Lab: one low rep each for LDC0 and LDM0; DM0 mean 90.3 vs DC0 92.5, not a clear regression but to recheck.
+ID switches per class (idsw_class.py, mean per rep, all/moving, all frames): persons DC0 73/62, DM0 85/72, DS0 80/68,
+DQ0 105/87; vehicles 31/17, 34/15, 24/10, 24/16; bikes 67/1, 58/2, 67/1, 54/1. Testing: persons 35/31, 36/33, 33/30, 39/35.
+DS0's 0_w1 IDSW drop was parked bikes and does not hold over 9 windows; DQ0 adds person ID switches.
+err_decomp_chainD.txt: persons TP@1m DC0 81.2, DM0 82.0; vehicles 55.8 / 54.2; unmatched near vehicles "piece" 549 -> 302
+with DM0 (merge fragments works on vehicle fragments).
+split_masked N/M: not available (log every 50 rejoins, fewer per window); the counter is every 100 fusions from 70002e2 on.
+Reading: DM0 is the chain D winner (passes testing and e3ib, just short on e3 all; street better; lab to recheck).
+Videos (DM0 rep 1, EagerMOT on the right): NAS datasets_SINS/derived/videos/chainD/chainD_DM0_coda{0_w1,10_w4,16_w1}.mp4.
+make_coda_video.py: CSV baselines (coda_eval.CSV_METHODS) and stereo camera (seq 16 has no front camera); bag path tested.
