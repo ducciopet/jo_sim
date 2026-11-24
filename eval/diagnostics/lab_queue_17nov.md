@@ -719,3 +719,17 @@ tracker topic at the tick before), B's position in the 5 ticks before vs fused d
 Reading: the merge_fragments absorption hypothesis does not hold for most crowd swaps; about 19% look like two persons in one
 cluster that DC0 kept apart, and those have no camera instance. Crowd swaps go to after the freeze (association).
 Held-static gate per track: not observable from the bags (needs track_debug_csv: a diagnostic run).
+
+## 28. Held-static moving persons on EB: which motion gate (24/11, diagnostic run HDBG = r1lccbmadbg, 9 windows x1)
+
+hdbg.sh (track_debug_csv per window, bags/coda/runs/HDBG_trk_<c>.csv), held_static_gates.py -> held_static_gates_EB.txt.
+Moving person GT rows 8617; paired with a confirmed track within 1 m: 8491. Paired with a dynamic track: 7282.
+Held (non-dynamic for >= 3 ticks): 719 rows, 8.3% of the moving rows.
+- Status of the held track: static 47%, missed (coasting, not published) 41%, PD 13%.
+- Out of camera FOV 75%; no class 83% (person class 17%). The persons really walk: GT speed median 1.29 m/s (p25 1.02, p75 1.55).
+- Failing gates (share of held rows): point vote 50%, disocclusion 20%, consistency window 13%, size 7%, KF confidence 4%,
+  speed 3%, net footprint from birth 3%.
+- No gate failing: 24%. These are in the debounce: confirm_ticks 5, dyn_ticks median 2.
+- Top combinations: vote alone 221, none 173, disocc 76, vote+disocc 57, cons 54, size 34 (all PD).
+Reading: the point-vote evidence is the main gate holding walking, unclassified, out-of-FOV persons. Then debounce, then
+disocclusion. The KF speed itself is fine.
