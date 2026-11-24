@@ -806,3 +806,21 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
   2. Association of fragments to an existing large classified track (gate by the track's extent, not its centre).
   - To check first: does YOLO detect these trucks (camera instance present)?
 - New adoption sign test: eval/scripts/analysis/sign27.py. Test on EB vs E0: 17/27 all, 18/27 testing. EB would NOT pass the new rule.
+
+## 31c. Chain F result (24/11): FT (disocclusion travel exemption) REJECTED
+| CODa | Rule | All frames | Testing frames |
+|---|---|---|---|
+| e3 | pooled F0 / FT (means) | 59.1 / 58.2 | 57.3 / 55.5 |
+| e3 | paired gain vs ref spread | -0.9 (+2.2 -1.4 -3.5) vs 2.1 | -1.8 vs 2.2 |
+| e3 | sign test (adopt at >= 19/27) | 14/27 | 13/27 |
+| e3ib | sign test | 15/27 | 13/27 |
+
+- Per sequence, MOTA-all F0 -> FT:
+  - seq 0: 53.6 -> 57.8;
+  - **seq 10: 55.3 -> 51.9**. 10_w4 is worse in every rep (+110/+256/+113 errors). 10_w2 persons unchanged (-21/-20/+39).
+  - seq 16: 63.3 -> 62.9.
+- Vehicles (moving) 33.9 -> 45.2. Person IDSW 160 -> 172.
+- Street: MOTA 52.6 -> 54.1. Person recall 65.7 -> 69.9, person precision 84.9 -> 83.1.
+- Lab, 6 reps per arm: roughly equal or slightly better (main MOTA 92.9-95.6 vs 91.4-96.2).
+- Latency: 126/200 vs 124/197 ms.
+- Decision: the base stays r1lccbma (EB). Chain G (N0/NE) uses it as the reference.
