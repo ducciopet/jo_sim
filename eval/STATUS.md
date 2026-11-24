@@ -1832,3 +1832,8 @@ User 20/11: no learning-based clustering/classification on the point cloud.
 - Chain D (lab, x3, pooled vs DC0 = r1lcc 57.5 | 55.5, spread 1.82 | 2.42): DM0 r1lccbm +1.75 | +2.50 (e3ib +1.7 | +2.5, passes), per-seq test 59.6/53.4/61.1 vs 54.7/52.5/58.0, no veto; street 53.1 vs 51.5; latency +0. DS0 split_masked -0.1 | -0.3 (the 0_w1 IDSW drop was parked bikes, not general). DQ0 person-size confirm -0.4 | -0.7, seq 0 veto, +32 person IDSW.
 - Lab recheck (6 reps): DM 91.8 (93.3 without the one-off 1942 rep: a still unclassified person decayed to static, not a merge) vs DC 93.1; dynamic-only 89.2 vs 88.3; seq 1950 consistent DM loss (84.2 vs 91.4), to analyse.
 - **User 23/11: r1lccbm is the new base** (no distance window on mask points + bus size cap + merge_fragments). split_masked and person_size_confirm stay in code, off.
+
+## 24/11 — chain E, static anchor adopted (user OK)
+- EB = r1lccbma (track_static_anchor_radius 0.5, claim radius 1.0; sins c15a337) vs E0 r1lccbm: CODa +1.2 | +1.2 pooled (every rep positive; below E0 spread 3.3 | 3.5, rule not passed formally), e3ib +1.1 | +1.0, per-seq test 60.3/51.9/60.1 vs 59.5/48.0/60.9 (no veto); lab 95.6 vs 92.9 (6 reps, 94.0-96.3); street equal; latency +0; moving-vehicle TP 145 vs 122/rep.
+- v1 of the anchor (0736dee, no claim condition) was -9 on 0_w1 (still objects' sliding centroids re-born): discarded.
+- **User 24/11: r1lccbma is the new base.** Next: crowd-swap diagnosis (merge_fragments absorbing a neighbour?), held-static persons, then freeze + final table.
