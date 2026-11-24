@@ -790,3 +790,19 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
   - Offset 1-2 m: 13-18%, mostly still vehicles under 6 m. The centre sits short, towards the sensor, by -0.3 m median.
   - Vehicle FP: 226-303 per rep, made of pieces and offsets.
 - Next: why the large trucks are not published (confirmation/size gate?). Persons in 10_w4: "taken by other GT" 7% (crowd).
+
+## 31b. Seq 10 vehicles: which gate (HDBG debug CSV = EB, 10_w1/10_w4/10_w5, x1; veh_gates.py, output veh_gates_seq10_HDBG.txt)
+- 541 vehicle rows, TP 55%. 242 rows not found.
+- **Not a confirmation or size gate: fragmentation.**
+  - Inside the GT box of a missed vehicle there are on average **6.1 debug tracks**; the funnel counted 3.5 fused detections.
+  - The track nearest the GT centre is a small, **unclassified** piece of about 1.6x0.3x0.5 m:
+    - static 44%, with dyn_ticks 0 and no motion evidence;
+    - unconfirmed 20%, with hits 1: new fragments, re-born each scan.
+  - The whole-vehicle tracks (4.1x1.4x1.8 m, class truck/car, about 2 m/s) are in 'missed' (coasting) 27% of the time, because the detection fragments do not associate to them.
+  - Trucks >= 6 m: the nearest piece is a 1.6x0.2x0.3 sliver. There is no single cluster of the truck, so the bus cap is not the cause.
+- Side/back out of the FOV: only 22 rows in HDBG, too few to conclude. The held-static share varies a lot by rep.
+- Lever candidates, after chain F:
+  1. Detection-level merge of LiDAR fragments that fall into one YOLO vehicle instance (currently merge_fragments acts on the persons' path?).
+  2. Association of fragments to an existing large classified track (gate by the track's extent, not its centre).
+  - To check first: does YOLO detect these trucks (camera instance present)?
+- New adoption sign test: eval/scripts/analysis/sign27.py. Test on EB vs E0: 17/27 all, 18/27 testing. EB would NOT pass the new rule.
