@@ -824,3 +824,11 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - Lab, 6 reps per arm: roughly equal or slightly better (main MOTA 92.9-95.6 vs 91.4-96.2).
 - Latency: 126/200 vs 124/197 ms.
 - Decision: the base stays r1lccbma (EB). Chain G (N0/NE) uses it as the reference.
+
+## 32. Disk cleanup + chain G launched (24/11, ~17:20)
+- With the user's explicit OK in this session, old run bags were archived to the NAS, then deleted locally:
+  - CODa: every tag except EB/F0/FT/HDBG, 1439 dirs, 46 GB, to datasets_SINS/derived/coda_runs_archive;
+  - old street runs: 96, 23 GB, to mdp_runs_archive.
+  - Checks before deleting: rsync, a checksum dry-run (no content differences), and a size check of all 3069 files.
+  - Free space: 5.6 -> 79 GB.
+- Chain G (chainG.sh, sins e82f9ea): N0 r1lccbma vs NE r1lccbmae (extent association), x3 CODa + street (control lccbmak), lab x6 (lab_chaing/lab_chaing2).
