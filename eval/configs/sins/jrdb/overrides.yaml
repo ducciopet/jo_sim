@@ -1,0 +1,49 @@
+# JRDB (eval/datasets/jrdb/convert_jrdb.sh), exposed dataset of the final runs (FINAL_RUN_SPEC.md: the held-out 6 were run
+# with J2-J5 in early November; reported as exposed). Replaces jrdb_indoor/jrdb_outdoor, which derived from the old
+# indoor/outdoor split (one behaviour since 16/11). SENSOR overrides only on top of the CODa method profile (rebased on the
+# frozen one at the 05/12 freeze):
+#  - upper VLP-16 = the robot's LiDAR: ring spacing 2.0 deg, mask-leaf link radius per metre 1.2 x 2 deg = 0.042 (as lab);
+#  - LiDAR crop 15 m (JRDB evaluation range 15 m);
+#  - five rectified color cameras cam0..cam8 (752x480, 15 Hz), no depth sensor: depth = the scan projected online
+#    (lidar_depth_node), valid to the 15 m crop; floor = lowest near-horizontal plane below the sensor (found on J1: the
+#    projected depth reaches ceilings and table tops).
+# The ground model of the CODa profile is kept (the old jrdb_indoor grid ground was a per-profile method choice).
+base: coda_vjsye2i2pcar1lccbma
+files:
+  preprocessing.yaml:
+    preprocessing_node:
+      camera_names: [cam0, cam2, cam4, cam6, cam8]
+      lidar_range_x: 15.0
+      lidar_range_y: 15.0
+      yolo_leaf_connect_radius_per_m: 0.042
+      cam0: {aligned_depth_transport: zstd, aligned_depth_cloud_topic: /cam0/camera/depth/color/points, depth_max_value: 15.0}
+      cam2: {aligned_depth_transport: zstd, aligned_depth_cloud_topic: /cam2/camera/depth/color/points, depth_max_value: 15.0}
+      cam4: {aligned_depth_transport: zstd, aligned_depth_cloud_topic: /cam4/camera/depth/color/points, depth_max_value: 15.0}
+      cam6: {aligned_depth_transport: zstd, aligned_depth_cloud_topic: /cam6/camera/depth/color/points, depth_max_value: 15.0}
+      cam8: {aligned_depth_transport: zstd, aligned_depth_cloud_topic: /cam8/camera/depth/color/points, depth_max_value: 15.0}
+  static_structures.yaml:
+    static_structures_node:
+      camera_names: [cam0, cam2, cam4, cam6, cam8]
+      lidar_range_x: 15.0
+      lidar_range_y: 15.0
+      floor_lowest_below_sensor: true
+  semantic_segmentation.yaml:
+    yolo_semantic_seg_detector:
+      camera_names: [cam0, cam2, cam4, cam6, cam8]
+  detection.yaml:
+    yolo_seg_track_detector:
+      camera_names: [cam0, cam2, cam4, cam6, cam8]
+  detection_yolo26.yaml:
+    yolo_seg_track_detector:
+      camera_names: [cam0, cam2, cam4, cam6, cam8]
+  tracker.yaml:
+    tracker_node:
+      camera_names: [cam0, cam2, cam4, cam6, cam8]
+  dbscan_detector.yaml:
+    dbscan_detector_node:
+      lidar_eps_vertical_angle_deg: 2.0
+      cam0: {eps_scale: 1.0}
+      cam2: {eps_scale: 1.0}
+      cam4: {eps_scale: 1.0}
+      cam6: {eps_scale: 1.0}
+      cam8: {eps_scale: 1.0}
