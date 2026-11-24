@@ -1,0 +1,11 @@
+# Chain F (24/11): base r1lccbma + track_disocclusion_travel_window 2 s (min_dist 1.5 m, straightness 0.8 = the B1 values
+# of 03/11, not re-tuned): a track that moved >= 1.5 m almost straight in the last 2 s is not blocked by the disocclusion
+# rule (revealed background does not travel with the track). HDBG 24/11: long-lived walking persons (age p50 4.9 s, out of
+# FOV, unclassified) held static by disocclusion despite motion evidence. Config only, no new code (sins >= c15a337).
+base: coda_vjsye2i2pcar1lccbma
+files:
+  tracker.yaml:
+    tracker_node:
+      track_disocclusion_travel_window: 2.0
+      track_disocclusion_travel_min_dist: 1.5
+      track_disocclusion_travel_min_straightness: 0.8
