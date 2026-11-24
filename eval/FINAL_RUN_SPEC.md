@@ -73,7 +73,7 @@ Columns per table:
   - Script: `eval/scripts/analysis/bootstrap_claims.py` `[TBD, laptop, before the freeze]`.
 
 ## 4. Runtime
-- Paper latency: a quiet window on the lab PC after the freeze (user 24/11): other users' jobs paused or idle, arranged with the user; load average and CPU/GPU logged per run. Frozen SINS on 1 CODa window + the street + 1 lab sequence, x3.
+- Paper latency: on the LAPTOP after the freeze (user 24/11, the only exception to "no tests on the laptop"; the lab PC is shared and its load inflates latency): nothing else running, load average and CPU/GPU logged per run; hardware (CPU, GPU, RAM) stated in the paper. Frozen SINS on 1 CODa window + the street + 1 lab sequence, x3.
 - Report per-scan latency med/p90 per node and end to end; dropped scans.
 - Baselines: their own reported per-frame times plus ours (external PC: RTX 3060 laptop GPU), stated per hardware.
 

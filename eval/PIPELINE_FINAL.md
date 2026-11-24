@@ -163,4 +163,4 @@ EMMC is labelled the "in-domain upper reference" on CODa. CMT/BEVFusion are like
 ## User decisions 24/11 (explicit)
 - Plan v2: "OK".
 - New unseen CODa sequences: **2 + 3 + 18** (~20 GB, annotated spans only, to the NAS; downloaded by the external PC; not converted or run before the 05/12 freeze).
-- Latency for the paper: a **quiet window on the lab PC** after the freeze (other users' jobs paused or idle, arranged with the user; load logged).
+- Latency for the paper: first a quiet window on the lab PC was decided; then (user, same day) **on this laptop** after the freeze, only for the latency test (exception to the no-tests rule).
