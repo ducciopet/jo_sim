@@ -684,3 +684,22 @@ Reading: no clear lab regression for DM0 overall (mean -1.3 incl. the one-off, d
      DC0 14 -> DM0 27 (doubled), plus 6 -> 6 taken over from another GT object. Testing: takeover 12 -> 15, re-birth 19 -> 17.
    Reading: merge_fragments slightly reduces "held static" (5.3 vs 6.1) and doubles the takeovers of a person by a
    pre-existing track (a merged fragment's old track inherits the person).
+
+## 26. Chain E: static anchor (23/11 23:16 -> 24/11 04:55)
+
+Base E0 = r1lccbm vs EB = r1lccbma (track_static_anchor_radius 0.5, sins c5-semantic-birth c15a337, v2: rejects only candidates
+claimed by a moving track within 1 m). A first attempt with v1 (0736dee, tag EA) was clearly worse on 0_w1 (MOTA 48.0 vs 57.4,
+FP/min 382 vs 248, counter 75k) and was stopped at the start of an EA run; EA runs kept on disk but discarded. E0 w1/r2 w1 reused.
+CODa pooled MOTA all (9 windows), paired gain vs E0; e3 all | testing (E0 58.3 [56.8-60.0] | 55.8 [54.1-57.6], spread 3.3 | 3.5):
+- EB +1.2 (+1.6 +1.0 +1.0) | +1.2 (+1.8 +0.8 +1.1): positive in every rep, below the spread (E0's reps vary 3.3). e3ib +1.1 | +1.0.
+Per seq testing: E0 59.5/48.0/60.9, EB 60.3/51.9/60.1 (seq 16 -0.8, within E0's range: no veto). Moving vehicles 35.4 -> 42.1.
+Street 15 m moving MOTA: lccbmr (E0 copy) 53.0, lccbma 52.9; full MOTA all 42.9 vs 42.4 (ranges overlap). Latency +0 / -1 ms.
+Lab, 6 reps per arm (lab_chaine + lab_chaine2), pooled MOTA per rep: E0 94.4/95.6/91.9/87.2/92.1/96.0 (mean 92.9);
+EA arm (= EB code) 94.7/96.2/94.0/96.1/96.3/96.1 (mean 95.6). Seq 1950: E0 87.6 (2 of 6 good) vs 91.4 (4 of 6 good);
+seq 1947: E0 87.9 (one 66.2) vs 95.8 (all 95-96.5): the anchor removes the lab's bimodal losses.
+Parked-then-moving risk: moving-vehicle TP per rep 122 -> 145, moving-vehicle IDSW 16 -> 15: no sign of it.
+Person IDSW per rep (all frames, all/moving): E0 87/72, EB 88/68; testing 45/38 vs 39/34. Takeovers by a pre-existing track:
+E0 18/35/30, EB 47/19/36 (mostly D person tracks, as in chain D): the anchor does not change the CODa crowd swaps.
+Person funnel, moving: lost E0 15.4% vs EB 15.4%. Anchor counter: 2-18k candidate pairs rejected per window (not tens).
+Reading: EB is consistently better (+1.2 in all 3 CODa reps, lab +2.7 and much more stable) but does not pass the pooled rule
+because E0's own spread is 3.3. Decision for the user/laptop.
