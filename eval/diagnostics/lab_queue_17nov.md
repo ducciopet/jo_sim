@@ -733,3 +733,27 @@ Held (non-dynamic for >= 3 ticks): 719 rows, 8.3% of the moving rows.
 - Top combinations: vote alone 221, none 173, disocc 76, vote+disocc 57, cons 54, size 34 (all PD).
 Reading: the point-vote evidence is the main gate holding walking, unclassified, out-of-FOV persons. Then debounce, then
 disocclusion. The KF speed itself is fine.
+
+## 29. Held-static follow-up: motion evidence and the point-to-surface veto (HDBG, held_static_veto.py -> held_static_veto_EB.txt)
+
+The veto hypothesis (vetoed = pm_frac in [0, 0.5) on an unclassified track) does NOT hold.
+Held walking persons (719 rows):
+- motion_ev = 0 only 19%; vetoed 3% overall (18% of the motion_ev = 0 rows).
+- pm_frac p10/50/90: 0.88 / 1.00 / 1.00; no baseline (pm_frac < 0) 31%.
+- pm_n median 31, vs 94 for correctly dynamic walking persons. pm_dist about 0.6 m and pm_dt 0.6 s in both sets.
+Correctly dynamic walking persons (7075 rows): motion_ev = 0 1%, pm_frac p10 0.97.
+By range (held / dynamic):
+- motion_ev = 0: < 10 m 27% / 1%, 10-15 m 12% / 1%, 15-20 m 14% / 1%.
+- vetoed: 7%, 1%, 0% in the three ranges.
+- pm_n held: 145, 25, 16.
+Held rows WITH motion evidence: 579 (81%).
+- Status: static 262, missed (coasting, unpublished) 250, PD 67.
+- dyn_ticks below the 5-tick confirmation: 64%; dyn_ticks p10/50/90 0/3/82. Disocclusion in 23%.
+- "No gate failing" rows (170): dyn_ticks p10/50/90 1/4/52.
+Held episodes: 132. The dyn_ticks streak resets in 14% of them (0.16 resets per episode); at the reset ticks cons_ok 16,
+vote 16, kf_conf 5, disocc 4.
+Reading: most held walking persons already have motion evidence. They are lost to:
+- the 5-tick confirmation not yet reached (short tracks, re-births);
+- coasting tracks that are not published (missed, with dyn_ticks high in the p90 tail);
+- disocclusion (about 1/4).
+The veto and the point vote are minor.
