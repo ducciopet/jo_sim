@@ -776,3 +776,17 @@ Held rows with motion_ev = 1 and dyn_ticks < 5: 369.
   - So these are long-lived walking tracks held static by the disocclusion block despite a large travel.
 Reading: the clearest physical rule is that disocclusion must not block a track whose own net travel is already large (it
 is the object moving, not a newly revealed background). Re-birth inheritance is not the lever.
+
+## 31a. Seq 10 diagnosis on EB (24/11, offline, partial; chain F still running)
+- Gap to EMMC on seq 10 (errors per rep, e3 all): +712 errors in total (15.5 points). By window:
+  - 10_w1: +416 (vehicles ~285)
+  - 10_w4: ~+540 (persons ~330, vehicles ~190)
+  - 10_w5: +48
+  - 10_w3: about 0
+  - 10_w2: **-272**. SINS wins here: EMMC has 879 FP from pieces and duplicates. But SINS misses 65% of persons, mostly "held static" (39% of rows).
+- Vehicles (new eval/diagnostics/coda_vehicle_funnel.py, output vehicle_funnel_seq10_EB.txt; 541 rows/rep): TP 55-60%.
+  - Vehicles >= 6 m (Delivery Truck): 52-56% "unconfirmed". There is a fused cluster with about 3.5 fragments, and a non-static track, but nothing is published.
+  - Side/back vehicles out of the camera FOV: 72-80% "held static" in r1/r3.
+  - Offset 1-2 m: 13-18%, mostly still vehicles under 6 m. The centre sits short, towards the sensor, by -0.3 m median.
+  - Vehicle FP: 226-303 per rep, made of pieces and offsets.
+- Next: why the large trucks are not published (confirmation/size gate?). Persons in 10_w4: "taken by other GT" 7% (crowd).
