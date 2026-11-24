@@ -757,3 +757,22 @@ Reading: most held walking persons already have motion evidence. They are lost t
 - coasting tracks that are not published (missed, with dyn_ticks high in the p90 tail);
 - disocclusion (about 1/4).
 The veto and the point vote are minor.
+
+## 30. Held-static: re-birth donors vs long tracks blocked by disocclusion (HDBG, held_donors.py -> held_donors_EB.txt)
+
+Held rows with motion_ev = 1 and dyn_ticks < 5: 369.
+- On tracks younger than 1 s: 24%; younger than 2 s: 37%. So most are NOT re-births.
+- Young heir tracks: 31.
+  - Donor within 0.6 m / 0.5 s: 3. All 3 donors never published dynamic, so inherit_motion correctly does nothing.
+  - Donor within 1.5 m / 1.0 s: 8, all never published dynamic.
+  - Farther: 15 (5 ever published dynamic).
+  - No donor: 5.
+  - Donor age at birth p50 0.60 / p90 1.65 s. Distance to the donor's KF position p50 1.00 / p90 2.17 m; to its last
+    observation 1.48 / 3.51 m. Donor max dyn_ticks p50 0 / p90 13.
+  - So these are chains of short tracks that were never dynamic. Widening inheritance would not help.
+- Older tracks (>= 2 s, 231 rows on 18 tracks, age p50 4.9 s): status static 149, missed 74; dyn_ticks 0 in 120 rows.
+  - Matched rows are mostly disocc = 1, often with large_travel = 1 (the track has already travelled far), out of FOV and
+    unclassified (43 + 30 + 25 rows).
+  - So these are long-lived walking tracks held static by the disocclusion block despite a large travel.
+Reading: the clearest physical rule is that disocclusion must not block a track whose own net travel is already large (it
+is the object moving, not a newly revealed background). Re-birth inheritance is not the lever.

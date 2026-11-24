@@ -56,7 +56,7 @@ for w in 'w1 w2 w3 10_w1 10_w2 10_w3 10_w4 10_w5 16_w1'.split():
             if not len(dd) or dd.min() > 1.0: continue
             r = D.loc[dd.idxmin()]; key = (w, int(g.track_id), int(r.id))
             rr = d.loc[r.lm_idx] if (r.matched == 0 and r.lm_idx >= 0) else r
-            rec = dict(rng=g.rng, spd=g.spd, motion_ev=rr.motion_ev, pm_frac=rr.pm_frac, pm_dist=rr.pm_dist, pm_dt=rr.pm_dt, pm_n=rr.pm_n,
+            rec = dict(w=w, tid=int(r.id), tn=int(r.tn), age=(r.tn - d[d.id == r.id].tn.min()) / 1e9, rng=g.rng, spd=g.spd, motion_ev=rr.motion_ev, pm_frac=rr.pm_frac, pm_dist=rr.pm_dist, pm_dt=rr.pm_dt, pm_n=rr.pm_n,
                        veto=bool(0 <= rr.pm_frac < 0.5 and rr.cls == '-'), status=r.status, dyn_ticks=r.dyn_ticks, gates=gates(rr))
             pd_ = prev_dyn.get(key)
             if pd_ is not None and r.dyn_ticks < pd_ and pd_ > 0 and key in ep:
@@ -93,3 +93,4 @@ M1 = H[H.motion_ev == 1]
 print(f'held with motion_ev=1: {len(M1)} ({100 * len(M1) / max(1, len(H)):.0f}%) | status ' + ', '.join(f'{k} {v}' for k, v in M1.status.value_counts().items())
       + f' | disocc {100 * M1.gates.apply(lambda g: "disocc" in g).mean():.0f}% | dyn_ticks p10/50/90 ' + '/'.join(f'{v:.0f}' for v in np.percentile(M1.dyn_ticks, [10, 50, 90]))
       + f' | dyn_ticks < 5: {100 * (M1.dyn_ticks < 5).mean():.0f}%')
+H.drop(columns=['gates']).to_csv(Path(__file__).resolve().parent / f'held_rows_{TAG}.csv', index=False)
