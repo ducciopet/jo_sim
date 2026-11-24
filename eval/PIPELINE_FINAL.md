@@ -159,3 +159,8 @@ EMMC is labelled the "in-domain upper reference" on CODa. CMT/BEVFusion are like
 - **A never-run dataset pipeline breaks after the freeze.** Mitigation: smoke tests in P1 and the contingency window.
 - **Disk on both PCs:** the external PC has 37 GB free, not 133; its KITTI zips (~52 GB) in ~/Downloads can go after the NAS md5, with the user's OK there.
 - **The laptop has no NAS mount** right now (GVFS dropped): tables are built from repo JSONs.
+
+## User decisions 24/11 (explicit)
+- Plan v2: "OK".
+- New unseen CODa sequences: **2 + 3 + 18** (~20 GB, annotated spans only, to the NAS; downloaded by the external PC; not converted or run before the 05/12 freeze).
+- Latency for the paper: a **quiet window on the lab PC** after the freeze (other users' jobs paused or idle, arranged with the user; load logged).
