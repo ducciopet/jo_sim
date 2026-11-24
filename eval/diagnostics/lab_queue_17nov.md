@@ -842,3 +842,19 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - Street: 52.7 -> 53.2 (vehicle recall 54.1 -> 51.5). Lab: ~equal within rep spread. Latency equal (CODa 99/100 ms median).
 - Files: eval/diagnostics/*_chainG.txt; results coda N0*/NE*, lab_chaing, lab_chaing2.
 - Next: smoke tests KITTI testing 0000, DOALS hauptgebaeude_1, JRDB bytes (one at a time).
+
+## 34. Smoke tests (24/11 22:50-23:10, FINAL_RUN_SPEC 7, never scored): KITTI test_0000, DOALS hauptgebaeude_1, JRDB bytes all PASS
+| run | scans in/out | nodes died | latency med/p90 (tracks) | BEV (eval/diagnostics/smoke/) |
+|---|---|---|---|---|
+| SMK kitti test_0000 (kitti_tracking) | 465/465 | 0 | 100/175 ms | obstacles in odom, on objects of the scan |
+| SMK doals hauptgebaeude_1 (doals) | 1079/1079 | 0 | 103/104 ms | same |
+| SMK jrdb bytes (JRDB_ENV=jrdb) | 1726/1726 | 0 | 25/42 ms (raw 17/33) | same (robot still) |
+- DOALS conversion: 10 annotated (0 stamps not found); fitted sensor height 1.92 m (54 fits), a bit above the 1.2-1.8 m expected.
+  GT flat indices land on compact person-sized blobs (median extent 0.6-0.7 m, 32-39 blobs/scan, 0% NaN): assumption OK
+  (smoke_doals_gt.py, doals_h1_gt.png). Stored cloud is 1x131072 (order kept).
+- KITTI: p90 175 ms (HDL-64, dense); 21 warnings 'Invalid frame ID cam2_refined' (tracker canTransform).
+- JRDB: converted on the lab PC (bags/jrdb/bytes: 1726 scans, 37 people, LiDAR 1.24 m). New local venv eval/datasets/.venv
+  (kiss-icp 1.3.0, python-lzf, pillow; git-excluded): odometry may differ from laptop conversions if kiss-icp versions differ.
+- Fix: convert_kitti.sh / convert_doals.sh fall back to ~/.venvs/sins_eval when eval/datasets/.venv is missing.
+- Note: bags/replay/run_method.sh has DUR +3 s, the repo version +15 s (all lab runs so far used +3).
+- New tools: eval/diagnostics/smoke_bev.py, smoke_doals_gt.py.

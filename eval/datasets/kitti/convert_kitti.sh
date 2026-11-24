@@ -4,7 +4,8 @@
 #   smoke test (unlabelled): convert_kitti.sh $NAS/KITTI_tracking testing 0000   -> bags/kitti/test_0000
 ROOT=$1; SPLIT=${2:-training}; shift 2
 cd $(dirname $0)/../../..
-PY=${PY:-eval/datasets/.venv/bin/python}; mkdir -p bags/kitti
+PY=${PY:-eval/datasets/.venv/bin/python}; [ -x $PY ] || PY=$HOME/.venvs/sins_eval/bin/python;  # lab PC fallback
+ mkdir -p bags/kitti
 for s in ${@:-$(seq -f '%04g' 0 20)}; do
   name=$s; [ $SPLIT = testing ] && name=test_$s
   [ -e bags/kitti/$name ] && continue
