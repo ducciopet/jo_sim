@@ -832,3 +832,13 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
   - Checks before deleting: rsync, a checksum dry-run (no content differences), and a size check of all 3069 files.
   - Free space: 5.6 -> 79 GB.
 - Chain G (chainG.sh, sins e82f9ea): N0 r1lccbma vs NE r1lccbmae (extent association), x3 CODa + street (control lccbmak), lab x6 (lab_chaing/lab_chaing2).
+
+## 33. Chain G result (24/11 22:50): NE (extent association, r1lccbmae) REJECTED; base stays r1lccbma (N0)
+- Sign test 27 pairs (errors FP+FN+IDSW): e3 all 11/27 (p 0.88), testing 9/27; e3ib 11/27 and 11/27. Rule needs >= 19/27 -> no.
+- Pooled MOTA e3 all N0/NE 58.2/56.9 (gain -1.3, spread 1.0); testing 55.6/54.2 (-1.4).
+- Per seq all N0 -> NE: seq 0 64.3 -> 61.7; seq 10 52.6 -> 50.2; seq 16 60.6 -> 60.5. Veto on seq 0 and 10.
+- Vehicles (coda_vehicle_e2, moving): 44.8 -> 33.5 (rep 3 very low, 21.2). Funnel seq 10 (w1,w4,w5, rep 1): TP 53.8 -> 57.9%, vehicle FP 222 -> 202, held static 18% unchanged.
+- Persons: IDSW all 171/163/157 vs 185/176/96 (NEr3 low but also fewer bike/vehicle TP: noisy rep). No clear crowd gain.
+- Street: 52.7 -> 53.2 (vehicle recall 54.1 -> 51.5). Lab: ~equal within rep spread. Latency equal (CODa 99/100 ms median).
+- Files: eval/diagnostics/*_chainG.txt; results coda N0*/NE*, lab_chaing, lab_chaing2.
+- Next: smoke tests KITTI testing 0000, DOALS hauptgebaeude_1, JRDB bytes (one at a time).
