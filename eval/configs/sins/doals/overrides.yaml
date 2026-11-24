@@ -1,0 +1,22 @@
+# DOALS (eval/datasets/doals/doals_to_bag.py), UNSEEN dataset of the final runs (FINAL_RUN_SPEC.md), LiDAR-only: the
+# dataset has no camera, so SINS runs in its LiDAR-only mode by configuration (run_doals.sh: camera_names
+# lidar_only_none, YOLO and semantic segmentation off, as run_coda_lidaronly.sh). No semantics and no PD by design.
+# SENSOR overrides only on top of the CODa method profile (rebased on the frozen one at the 05/12 freeze):
+#  - Ouster OS1-64 Gen1: 64 rings over 33.2 deg -> ring spacing ~0.53 deg (CODa OS1-128: 0.35 deg);
+#  - handheld (sensor ~1.5 m above the ground, height fitted per sequence by the converter), deskewed and levelled clouds;
+#  - LiDAR crop 25 m (the authors' evaluation range is 20 m; CODa: 25 m crop for a 20 m evaluation).
+# Written 24/11 on the laptop; first run = the smoke test (hauptgebaeude/sequence_1, not scored before the final run).
+base: coda_vjsye2i2pcar1lccbma
+files:
+  preprocessing.yaml:
+    preprocessing_node:
+      lidar_range_x: 25.0
+      lidar_range_y: 25.0
+      yolo_leaf_connect_radius_per_m: 0.0111
+  static_structures.yaml:
+    static_structures_node:
+      lidar_range_x: 25.0
+      lidar_range_y: 25.0
+  dbscan_detector.yaml:
+    dbscan_detector_node:
+      lidar_eps_vertical_angle_deg: 0.53
