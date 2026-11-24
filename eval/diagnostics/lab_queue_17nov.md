@@ -703,3 +703,19 @@ E0 18/35/30, EB 47/19/36 (mostly D person tracks, as in chain D): the anchor doe
 Person funnel, moving: lost E0 15.4% vs EB 15.4%. Anchor counter: 2-18k candidate pairs rejected per window (not tens).
 Reading: EB is consistently better (+1.2 in all 3 CODa reps, lab +2.7 and much more stable) but does not pass the pooled rule
 because E0's own spread is 3.3. Decision for the user/laptop.
+
+## 27. Crowd-swap diagnosis (24/11, offline; user adopted EB = r1lccbma as the base)
+
+eval/diagnostics/crowd_absorb.py, crowd_absorb_chainE.txt. Per D/PD takeover A -> B (B a pre-existing D/PD track, B on the
+tracker topic at the tick before), B's position in the 5 ticks before vs fused detections in the same run and in DC0
+(r1lcc, no merge_fragments) at the same stamps; the person's own cluster excluded.
+- 53 takeovers over E0 + EB (6 runs): B had its own separate cluster within 0.5 m in the last 2 ticks in 42 (79%).
+- "absorbed" (B's position inside a neighbour's YOLO-refined F box, no own cluster): 0.
+- B already on the person's cluster (no separate one) in 11; in 10 of those DC0 had a separate cluster at B's position.
+- In all 10 "yes" cases B never had its own camera leaf (an F detection) in the 2 s before: a YOLO 2D-instance-id rule
+  cannot separate them.
+- The YOLO 2D instance id is not carried downstream: it is Detection2D.id on /yolo_seg_track/*/detections (e.g. '1'). Fused
+  detections and /sins/tracker/tracks carry only id (fused_N / track_N) and results (label or state, class).
+Reading: the merge_fragments absorption hypothesis does not hold for most crowd swaps; about 19% look like two persons in one
+cluster that DC0 kept apart, and those have no camera instance. Crowd swaps go to after the freeze (association).
+Held-static gate per track: not observable from the bags (needs track_debug_csv: a diagnostic run).
