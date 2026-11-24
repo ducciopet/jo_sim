@@ -1,0 +1,40 @@
+# KITTI tracking (eval/datasets/kitti/kitti_to_bag.py), UNSEEN dataset of the final runs (FINAL_RUN_SPEC.md). SENSOR
+# overrides only on top of the CODa method profile (rebased on the frozen CODa profile at the 05/12 freeze):
+#  - one camera, cam2 (left color, rectified, ~1242x375, 10 Hz), no depth sensor: depth = the scan projected online into
+#    the image (eval/adapters/lidar_depth_node.py), valid to the LiDAR crop (depth_max_value = 45 m);
+#  - HDL-64E: ring spacing ~0.4 deg (vs 0.35 deg for the OS1-128 of CODa) -> lidar_eps_vertical_angle_deg 0.4 and the
+#    mask-leaf link radius per metre = 1.2 x 0.4 deg = 0.0084 rad (CODa: 1.2 x 0.0062);
+#  - LiDAR crop 45 m (KITTI evaluation range 40 m, FINAL_RUN_SPEC 3.1; CODa: 25 m crop for a 20 m evaluation);
+#  - floor from the projected depth: lowest near-horizontal plane below the sensor (as JRDB, no depth camera).
+# Written 24/11 on the laptop; first run = the smoke test on KITTI testing 0000 (unlabelled).
+base: coda_vjsye2i2pcar1lccbma
+files:
+  preprocessing.yaml:
+    preprocessing_node:
+      camera_names: [cam2]
+      lidar_range_x: 45.0
+      lidar_range_y: 45.0
+      cam2: {aligned_depth_transport: zstd, aligned_depth_cloud_topic: /cam2/camera/depth/color/points, depth_max_value: 45.0}
+      yolo_leaf_connect_radius_per_m: 0.0084
+  static_structures.yaml:
+    static_structures_node:
+      camera_names: [cam2]
+      lidar_range_x: 45.0
+      lidar_range_y: 45.0
+      floor_lowest_below_sensor: true
+  semantic_segmentation.yaml:
+    yolo_semantic_seg_detector:
+      camera_names: [cam2]
+  detection.yaml:
+    yolo_seg_track_detector:
+      camera_names: [cam2]
+  detection_yolo26.yaml:
+    yolo_seg_track_detector:
+      camera_names: [cam2]
+  tracker.yaml:
+    tracker_node:
+      camera_names: [cam2]
+  dbscan_detector.yaml:
+    dbscan_detector_node:
+      lidar_eps_vertical_angle_deg: 0.4
+      cam2: {eps_scale: 1.0}

@@ -136,7 +136,8 @@ def main():
     poses = oxts_poses(R / 'oxts' / f'{a.seq}.txt')                     # T_world_imu
     scans = sorted((R / 'velodyne' / a.seq).glob('*.bin'))
     frames = [int(s.stem) for s in scans]
-    labels = read_labels(R / 'label_02' / f'{a.seq}.txt')
+    lab_file = R / 'label_02' / f'{a.seq}.txt'
+    labels = read_labels(lab_file) if lab_file.exists() else {}      # testing split: no labels (smoke test)
     t_ns = {i: int(1_000_000_000 + i * 1e9 / a.rate) for i in frames}
 
     T_base_v = np.eye(4)
