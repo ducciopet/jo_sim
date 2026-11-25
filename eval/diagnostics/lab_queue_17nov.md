@@ -912,3 +912,6 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - veh_leaf_cover: missed vehicles with "classed + others" 42% -> 20% (the merge does what it is meant to); what remains is
   mostly unclassified-only (no YOLO piece) 55% -> 71% of a smaller set.
 - Lab ground-model check (labgrid.sh, LGP0/LGG x6) launched 16:35 right after.
+- Decision (peer, by the rule the user agreed, 25/11): HV2 DROPPED. HV (fragment_merge_vehicle_anchor) stays in the code, default off,
+  not adopted. Freeze base: r1lccbma; the lab ground model is decided by the LGP0/LGG check. Nothing else is launched until the
+  user decides whether to freeze earlier (no candidate left for a last chain).
