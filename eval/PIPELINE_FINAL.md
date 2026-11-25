@@ -183,4 +183,5 @@ Planned P6 additions:
 ## Decisions 25/11
 - Chain H (vehicle-anchored merge): rejected (17/27, 15/27; +31% person IDSW); HV2 dropped by the agreed rule.
 - External review (Deep Review, via the paper session): adopted the PD views A-D, the transition buffer and threshold sensitivity, raw/debounced baseline states, reps averaged per window and exact tests (bootstrap only with >= 10 clusters), ablation also on unseen CODa with core mechanisms (switches in sins 4d7d5c3), the JRDB frame-rate override (x1.5 scan counts), the 10-sweep zero-shot CenterPoint, the adaptive-radius rows for point methods; not adopted: accuracy reruns on the laptop.
-- User (relayed by the paper session): the Marina di Pisa street is NOT reported (no solid GT); replaced by a new CROSSLAB multi-person mocap experiment (people and robot with helmets), role to be fixed (unseen if processed after the freeze).
+- User (relayed by the paper session): the Marina di Pisa street is NOT reported (no solid GT); replaced by a new ForeLab multi-person mocap experiment (people and robot with helmets), role to be fixed (unseen if processed after the freeze).
+- User 25/11 (via the paper session): the multi-person lab is called **ForeLab**; its robot odometry comes from motion capture (the robot's helmet pose), the same for SINS and the baselines.

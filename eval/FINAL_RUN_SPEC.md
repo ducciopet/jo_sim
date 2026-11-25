@@ -31,7 +31,7 @@ dated, reasoned erratum.
 | CODa 11/12 | exposed (used 10-17/11) | 11 w1-3, 12 w1-3 | CODa profile | reported as "exposed held-out" |
 | JRDB | exposed | held-out 6: forbes-cafe_0, huang-basement_0, packard-poster-session_2, tressider-2019-04-26_2, clark-center_0, clark-center_1; bytes-cafe_0 = debug, never scored | `jrdb`: = CODa profile + 5 cameras, upper VLP-16 (2 deg), 15 m crop, `floor_lowest_below_sensor` (replaces jrdb_indoor/outdoor, which derived from old bases) | 15 Hz |
 | Street (Marina di Pisa) | NOT reported (user 25/11: no solid GT); used during development as a veto only | — | — | — |
-| CROSSLAB multi-person (new) | `[TBD: unseen if recorded/processed after the freeze]` | several people walking/stopping around the robot; people AND robot with mocap helmets | lab profile (same robot/sensors) | mocap evaluator with N persons, in_fov from the camera pose |
+| ForeLab multi-person (new; formerly called CROSSLAB) | `[TBD: unseen if recorded/processed after the freeze]` | several people walking/stopping around the robot; people AND robot with mocap helmets | lab profile (same robot/sensors); robot odometry = its mocap helmet pose for SINS and every baseline (user 25/11: no odometry drift) | mocap evaluator with N persons, in_fov from the camera pose |
 | Lab Qualisys | development | the 6 sequences | lab profile (`lab_uca...` final) | x6 reps |
 
 Repetitions: SINS x3 everywhere (CODa tuning x5, lab x6). Baselines: x3 if nondeterministic, x1 if deterministic.
