@@ -915,3 +915,6 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - Decision (peer, by the rule the user agreed, 25/11): HV2 DROPPED. HV (fragment_merge_vehicle_anchor) stays in the code, default off,
   not adopted. Freeze base: r1lccbma; the lab ground model is decided by the LGP0/LGG check. Nothing else is launched until the
   user decides whether to freeze earlier (no candidate left for a last chain).
+- Peer 25/11: container ultralytics 8.4.202 (torch 2.15.0+cu132, CUDA 13.2), now a manifest field. sins c5-semantic-birth 4d7d5c3
+  (ablation-only switches, default off) not pulled yet: pulled after the lab ground check. Street dropped from the reported
+  datasets (user): not in run_final.sh; CROSSLAB mocap experiment replaces it, nothing converted before the freeze.

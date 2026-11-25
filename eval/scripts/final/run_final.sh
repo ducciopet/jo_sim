@@ -6,6 +6,7 @@
 # verified). Inputs come from NAS derived/final_inputs/<ds>/ (converted once; converted here and uploaded if missing).
 # Outputs: NAS derived/sins_final/<ds>/<item>_r<k>/ (run bag + logs + manifest.json); JSONs eval/results/final/<ds>/<metric>/.
 # Tags: SF, SFr2, SFr3, ... (TAG=SFA_<fix> for the leave-one-out ablation). Rerun once if dropped > 2% or crash (manifest).
+# Street (Marina di Pisa) is NOT a reported dataset any more (user decision 25/11; a CROSSLAB mocap experiment replaces it, not before the freeze).
 # usage: DRY=0 REPS="1 2 3" bash eval/scripts/final/run_final.sh <coda|coda_new|kitti|doals|jrdb> <item ...>
 #   items: coda: w1 10_w1 ... (window names); kitti: 0000..0020; doals: hauptgebaeude_1 ...; jrdb: forbes huangb ...
 cd $(dirname $0)/../../..
