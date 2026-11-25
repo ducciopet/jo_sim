@@ -939,5 +939,5 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - eval/results/final/PROFILES.md DRAFT: md5 of the 5 final cfg folders (coda method, kitti_tracking, doals, jrdb, lab);
   md5 stable across make_cfg regeneration. Recomputed at the tag on 27/11.
 - CODa new 2/3/18 on the NAS: 3d_comp / 2d_rect cam0+cam1 complete per seq (2: 1720 frames, 985 bbox; 3: 900/500; 18: 1000/400),
-  what coda_to_bag.py + coda_stereo_bag.py read. md5sum -c over MD5SUMS_new_sequences_2_3_18.txt (12796 files) running.
+  what coda_to_bag.py + coda_stereo_bag.py read. md5sum -c over MD5SUMS_new_sequences_2_3_18.txt: 12796 files OK, 0 failed.
 - Disk 58 GB free.
