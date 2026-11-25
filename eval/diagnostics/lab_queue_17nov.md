@@ -858,3 +858,16 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - Fix: convert_kitti.sh / convert_doals.sh fall back to ~/.venvs/sins_eval when eval/datasets/.venv is missing.
 - Note: bags/replay/run_method.sh has DUR +3 s, the repo version +15 s (all lab runs so far used +3).
 - New tools: eval/diagnostics/smoke_bev.py, smoke_doals_gt.py.
+
+## 35. Chain H launched (25/11 10:45): H0 r1lccbma vs HV r1lccbmav (vehicle-anchored fragment merge), user "parti"
+- Why (veh_leaf_cover.py on N0 seq 10 w1/w4/w5, 250 missed vehicle rows): in the camera FOV 52% hold a YOLO vehicle-classed
+  piece next to unclassified pieces; the classed piece covers ~46% of the vehicle length (30% for >= 6 m). Side/back: 78%
+  only unclassified pieces (no camera, not addressed). yolo_refine_merge_fragments (already in the base) only absorbs pieces
+  inside the leaf box, which is itself partial.
+- sins 7cb2245: fragment_merge_vehicle_anchor (default off) in mergeAtObjectScale: unclassified piece + car/truck/bus piece only,
+  gap <= fragment_merge_max_gap (0.8), height overlap >= 50%, union width <= fragment_merge_vehicle_max_width (2.8), size filter.
+  Counter/cost: object-scale merge line (10_w1: 1.4-1.8 merges/scan, 0.65-1.1 ms/scan).
+- Smoke 10_w1 (HSM, 1 rep): errors 512 vs N0 r1-r3 567/533/524; vehicle funnel TP 50.0 -> 70.9%, vehicle FP 174 -> 100,
+  >= 6 m TP 33.9 -> 39.4%. Latency p90 175 vs 125 ms (machine load 4-7 from another user's jobs; check in the chain).
+- Chain: CODa x3 9 windows, street lccbmah (control copy) vs lccbmav, lab LJ0/LJV + LJ1/LJV1 (lab_chainh, lab_chainh2).
+  Risk to check: a pedestrian within 0.8 m of a classed vehicle absorbed into it (takeover/person funnel chainH).
