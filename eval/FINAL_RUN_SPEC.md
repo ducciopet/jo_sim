@@ -49,7 +49,7 @@ Repetitions: SINS x3 everywhere (CODa tuning x5, lab x6). Baselines: x3 if nonde
 
 Columns per table:
 - MOTA (primary), IDF1, recall, precision, FP/min, IDSW;
-- HOTA via TrackEval: `[TBD: converter coda_eval -> TrackEval written by the laptop before the freeze]`;
+- HOTA / DetA / AssA: computed inside `eval/harness/metrics.py` (TrackEval's HOTA algorithm on the same frames and objects as CLEAR-MOT, centre-distance similarity S = max(0, 1 - d / 1 m) instead of box IoU, alpha 0.05-0.95; pooled over windows from the per-alpha sums `hota_alpha` with `hota_from_sums`). Stated as "HOTA with a centre-distance similarity". KITTI additionally gets the official TrackEval HOTA (2D IoU) where the method outputs image boxes;
 - moving-only and PD columns.
 - Vehicles: also with a 2 m gate (sensitivity).
 

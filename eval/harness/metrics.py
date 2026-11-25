@@ -96,6 +96,13 @@ class EvalResult:
     latencies: list = field(default_factory=list)        # dicts: gt_id, t, from, to, latency (nan = censored)
     latency_mean: dict = field(default_factory=dict)     # 'to_dynamic' / 'to_potentially_dynamic' -> mean [s]
     latency_censored: dict = field(default_factory=dict)
+    # HOTA (Luiten et al. 2021, TrackEval's algorithm) on the same frames/objects as CLEAR-MOT, with a centre-distance
+    # similarity S = max(0, 1 - d / match_dist) instead of box IoU (the 1 m gate of MOTA = S > 0); mean over alpha
+    # 0.05..0.95. Sums kept so windows can be pooled: hota_tp/fn/fp per alpha and the per-alpha AssA numerators.
+    hota: float = float('nan')
+    deta: float = float('nan')
+    assa: float = float('nan')
+    hota_alpha: dict = field(default_factory=dict)       # tp, fn, fp, assa_num (lists over the 19 alphas)
 
     def to_dict(self):
         return asdict(self)
@@ -202,6 +209,67 @@ def _mcc(conf_matched, labels):
     return float((c * n - (tk * pk).sum()) / den) if den > 0 else float('nan')
 
 
+ALPHAS = np.arange(0.05, 0.99, 0.05)
+
+
+def _hota(G, P, gate):
+    """TrackEval HOTA.eval_sequence on per-frame lists of (id, x, y, state), similarity 1 - d/gate (clipped at 0)."""
+    gid = sorted({g[0] for gs in G for g in gs})
+    pid = sorted({p[0] for ps in P for p in ps})
+    gi, pi = {g: k for k, g in enumerate(gid)}, {p: k for k, p in enumerate(pid)}
+    ng, npd = len(gid), len(pid)
+    out = dict(tp=[0] * len(ALPHAS), fn=[0] * len(ALPHAS), fp=[0] * len(ALPHAS), assa_num=[0.0] * len(ALPHAS))
+    if ng == 0 or npd == 0:
+        n_gt, n_pr = sum(len(g) for g in G), sum(len(p) for p in P)
+        out['fn'] = [n_gt] * len(ALPHAS)
+        out['fp'] = [n_pr] * len(ALPHAS)
+        return out
+    pot = np.zeros((ng, npd))
+    gcount, pcount = np.zeros(ng), np.zeros(npd)
+    sims = []
+    for gs, ps in zip(G, P):
+        ig = np.array([gi[g[0]] for g in gs], int)
+        ip = np.array([pi[p[0]] for p in ps], int)
+        if len(gs) and len(ps):
+            d = np.linalg.norm(np.array([[g[1], g[2]] for g in gs])[:, None] - np.array([[p[1], p[2]] for p in ps])[None], axis=2)
+            S = np.clip(1.0 - d / gate, 0.0, 1.0)
+            den = S.sum(0)[None, :] + S.sum(1)[:, None] - S
+            pot[np.ix_(ig, ip)] += np.divide(S, den, out=np.zeros_like(S), where=den > 1e-10)
+        else:
+            S = np.zeros((len(gs), len(ps)))
+        gcount[ig] += 1
+        pcount[ip] += 1
+        sims.append((ig, ip, S))
+    gas = pot / np.maximum(gcount[:, None] + pcount[None, :] - pot, 1e-10)
+    mc = np.zeros((len(ALPHAS), ng, npd))
+    for ig, ip, S in sims:
+        if len(ig) == 0 or len(ip) == 0:
+            for a in range(len(ALPHAS)):
+                out['fn'][a] += len(ig)
+                out['fp'][a] += len(ip)
+            continue
+        r, c = linear_sum_assignment(-(gas[np.ix_(ig, ip)] * S))
+        for a, al in enumerate(ALPHAS):
+            ok = S[r, c] >= al - 1e-10
+            n = int(ok.sum())
+            out['tp'][a] += n
+            out['fn'][a] += len(ig) - n
+            out['fp'][a] += len(ip) - n
+            mc[a, ig[r[ok]], ip[c[ok]]] += 1
+    for a in range(len(ALPHAS)):
+        ass = mc[a] / np.maximum(gcount[:, None] + pcount[None, :] - mc[a], 1)
+        out['assa_num'][a] = float((mc[a] * ass).sum())
+    return out
+
+
+def hota_from_sums(h):
+    """(HOTA, DetA, AssA) from summed hota_alpha dicts (one window or several pooled)."""
+    tp, fn, fp, an = (np.asarray(h[k], float) for k in ('tp', 'fn', 'fp', 'assa_num'))
+    deta = tp / np.maximum(tp + fn + fp, 1)
+    assa = an / np.maximum(tp, 1)
+    return float(np.mean(np.sqrt(deta * assa))), float(np.mean(deta)), float(np.mean(assa))
+
+
 def evaluate(gt, pred, cfg=None):
     cfg = cfg or EvalConfig()
     grid = make_grid(gt, cfg)
@@ -292,6 +360,8 @@ def evaluate(gt, pred, cfg=None):
 
     if res.num_gt:
         res.mota = 1.0 - (res.fn + res.fp + res.idsw) / res.num_gt
+    res.hota_alpha = _hota(G, P, cfg.match_dist)
+    res.hota, res.deta, res.assa = hota_from_sums(res.hota_alpha)
     if res.tp:
         res.motp = dist_sum / res.tp
 
