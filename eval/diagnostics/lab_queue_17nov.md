@@ -878,7 +878,8 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - run_method DUR: ALL development runs so far (lab PC) used bags/replay/run_method.sh with +3 s. Align bags/replay to the repo's
   +15 s ONLY at the freeze (05/12), for all final runs; not during chain H (A/B arms must stay identical).
 - "Invalid frame ID <cam>_refined" (tracker canTransform, enable_calibration false) is not KITTI-only: JRDB bytes 46 (cam0_refined),
-  CODa N0 10_w1 16 and 0_w1 24 (front_camera_refined, 1 stereo_camera_refined), DOALS 0 (no camera). Peer to look at a fallback.
+  CODa N0 10_w1 16 and 0_w1 24 (front_camera_refined, 1 stereo_camera_refined), DOALS 0 (no camera). Peer 25/11: harmless, tf2
+  prints it per canTransform on an unknown frame; tracker falls back to the optical frame (logged once). No fix before the freeze.
 - Chain H: HV anchors on the car/truck/bus class with a constant width cap (2.8 m). Peer flags the standing rule "no per-cluster-type
   thresholds; class-agnostic fixes". Chain runs; HV is NOT adopted even if it passes until the user accepts a class-anchored rule or a
   class-agnostic form is found (candidate: any dynamic-class YOLO piece anchors, width limit from that piece's own 2D box/mask extent).
