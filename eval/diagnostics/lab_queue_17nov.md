@@ -930,3 +930,14 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
   planes rep) and 1.3 of dynamic-only MOTA; it gains ~1 point of full MOTA (fewer FP). The dynamic-recall drop is consistent, not
   rep noise -> "clear regression" on the lab's primary quantity: the frozen lab profile keeps ground_model planes, declared as a
   per-environment option (indoor flat floor), both numbers reported. Files: eval/diagnostics/lab_ground.txt, results lab_ground(2).
+
+## 38. Freeze prep 25/11 evening (freeze 27/11 morning, user)
+- Pulled: repo has aa382d84 (coda_eval) and the peer's HOTA commit; sins c5-semantic-birth 4d7d5c3 (ablation switches, default off).
+- Peer agreed: lab keeps ground_model planes ("planes for flat indoor floors"), both numbers reported; final lab profile lab_ucar1lccbma.
+- JRDB 15 Hz counts: the 19 keys recomputed from the frozen CODa tracker.yaml = 1.5 x value with Python round (half-to-even:
+  10.5 -> 10, 31.5 -> 32), 0 mismatches with jrdb/overrides.yaml: no change.
+- eval/results/final/PROFILES.md DRAFT: md5 of the 5 final cfg folders (coda method, kitti_tracking, doals, jrdb, lab);
+  md5 stable across make_cfg regeneration. Recomputed at the tag on 27/11.
+- CODa new 2/3/18 on the NAS: 3d_comp / 2d_rect cam0+cam1 complete per seq (2: 1720 frames, 985 bbox; 3: 900/500; 18: 1000/400),
+  what coda_to_bag.py + coda_stereo_bag.py read. md5sum -c over MD5SUMS_new_sequences_2_3_18.txt (12796 files) running.
+- Disk 58 GB free.
