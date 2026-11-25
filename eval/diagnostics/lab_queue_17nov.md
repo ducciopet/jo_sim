@@ -871,3 +871,14 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
   >= 6 m TP 33.9 -> 39.4%. Latency p90 175 vs 125 ms (machine load 4-7 from another user's jobs; check in the chain).
 - Chain: CODa x3 9 windows, street lccbmah (control copy) vs lccbmav, lab LJ0/LJV + LJ1/LJV1 (lab_chainh, lab_chainh2).
   Risk to check: a pedestrian within 0.8 m of a classed vehicle absorbed into it (takeover/person funnel chainH).
+
+## 35a. Peer answers (25/11) and rule hold on chain H
+- DOALS sensor height 1.92 m accepted (per-sequence fit, goes in the manifest). kiss-icp 1.3.0 for the final JRDB conversion
+  (laptop matches): pinned in eval/datasets/jrdb/requirements_convert.txt.
+- run_method DUR: ALL development runs so far (lab PC) used bags/replay/run_method.sh with +3 s. Align bags/replay to the repo's
+  +15 s ONLY at the freeze (05/12), for all final runs; not during chain H (A/B arms must stay identical).
+- "Invalid frame ID <cam>_refined" (tracker canTransform, enable_calibration false) is not KITTI-only: JRDB bytes 46 (cam0_refined),
+  CODa N0 10_w1 16 and 0_w1 24 (front_camera_refined, 1 stereo_camera_refined), DOALS 0 (no camera). Peer to look at a fallback.
+- Chain H: HV anchors on the car/truck/bus class with a constant width cap (2.8 m). Peer flags the standing rule "no per-cluster-type
+  thresholds; class-agnostic fixes". Chain runs; HV is NOT adopted even if it passes until the user accepts a class-anchored rule or a
+  class-agnostic form is found (candidate: any dynamic-class YOLO piece anchors, width limit from that piece's own 2D box/mask extent).
