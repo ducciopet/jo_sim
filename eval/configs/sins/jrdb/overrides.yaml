@@ -39,6 +39,8 @@ files:
   tracker.yaml:
     tracker_node:
       camera_names: [cam0, cam2, cam4, cam6, cam8]
+      # FRAME-RATE override (25/11, external review): JRDB runs at 15 Hz, so every scan-count parameter is scaled by
+      # 15/10 (rounded) to keep the same time constants as at 10 Hz. Recompute from the frozen CODa profile at the freeze.
   dbscan_detector.yaml:
     dbscan_detector_node:
       lidar_eps_vertical_angle_deg: 2.0
