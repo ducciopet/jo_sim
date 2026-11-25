@@ -918,3 +918,15 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - Peer 25/11: container ultralytics 8.4.202 (torch 2.15.0+cu132, CUDA 13.2), now a manifest field. sins c5-semantic-birth 4d7d5c3
   (ablation-only switches, default off) not pulled yet: pulled after the lab ground check. Street dropped from the reported
   datasets (user): not in run_final.sh; CROSSLAB mocap experiment replaces it, nothing converted before the freeze.
+
+## 37. Lab ground model check (25/11 16:35-18:20): planes (LGP) vs grid (LGG), 6 reps each alternated -> PLANES stays (declared)
+| mean of 6 reps [range] | planes (lab_ucar1lccbma) | grid (lab_ucar1lccbmag) |
+|---|---|---|
+| MOTA (summary) | 94.6 [91.6-96.7] | 95.5 [94.0-96.9] |
+| MOTA dynamic-only | 88.3 [86.2-90.2] | 87.0 [85.7-88.8] |
+| recall dynamic | 94.1 [92.2-95.2] | 91.9 [91.0-93.0] |
+| latency med / p90 | 91 / 114 ms | 90 / 113 ms |
+- Grid loses ~2.2 points of dynamic recall in every rep (its best rep 93.0 is below the planes mean; 4/6 grid reps below the worst
+  planes rep) and 1.3 of dynamic-only MOTA; it gains ~1 point of full MOTA (fewer FP). The dynamic-recall drop is consistent, not
+  rep noise -> "clear regression" on the lab's primary quantity: the frozen lab profile keeps ground_model planes, declared as a
+  per-environment option (indoor flat floor), both numbers reported. Files: eval/diagnostics/lab_ground.txt, results lab_ground(2).
