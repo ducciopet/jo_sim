@@ -164,3 +164,18 @@ EMMC is labelled the "in-domain upper reference" on CODa. CMT/BEVFusion are like
 - Plan v2: "OK".
 - New unseen CODa sequences: **2 + 3 + 18** (~20 GB, annotated spans only, to the NAS; downloaded by the external PC; not converted or run before the 05/12 freeze).
 - Latency for the paper: first a quiet window on the lab PC was decided; then (user, same day) **on this laptop** after the freeze, only for the latency test (exception to the no-tests rule).
+
+## Paper emphasis (user 25/11): one SINS across sensor setups
+Highlight that SINS runs on every dataset with different sensors and ONE behaviour (sensor/scale overrides only):
+
+| Dataset | Sensors SINS uses | Depth for the camera |
+|---|---|---|
+| Lab | VLP-16 + RealSense RGB-D | RGB-D sensor |
+| CODa | OS1-128 + ZED / stereo | ZED depth / stereo |
+| KITTI, JRDB | LiDAR + RGB only | scan projected online |
+| DOALS | LiDAR only | no camera: no semantics, no PD |
+
+Planned P6 additions:
+- a "sensor configuration x dataset x method" table, marking which method can run where and why it can't (LV-DOT needs RGB-D; CenterPoint trackers need in-domain training; Dynablox/M-detector have no semantics/PD);
+- latency per sensor setup;
+- in the ablation (P4), the LiDAR-only arm and the camera count quantify what each modality adds.
