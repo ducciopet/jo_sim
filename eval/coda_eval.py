@@ -50,6 +50,57 @@ BASELINES = {'dynablox': ('/motion_detector/visualization/clusters', True),
 CSV_METHODS = ('simpletrack', 'eagermot', 'deepfusionmot')
 
 
+def convert_states(pred, mode, v_d=0.25, v_s=0.07, n_d=3):
+    """(25/11) motion state for methods that output no state ('dynamic' everywhere): from the track's speed (vx, vy
+    when given, else the centre displacement between consecutive outputs). raw: D if speed >= v_d on that output, else
+    PD. debounced: the speed over the last 0.5 s (smoothed like SINS's Kalman velocity) and the debounce SINS applies to
+    classified tracks: D after n_d consecutive outputs >= v_d, back to PD after n_d consecutive outputs < v_d."""
+    obj = objects(pred).copy()
+    if obj.empty or mode == 'none':
+        return pred
+    obj = obj.sort_values(['track_id', 't_ns'])
+    sp = np.full(len(obj), np.nan)
+    if {'vx', 'vy'} <= set(obj.columns):
+        sp = np.hypot(pd.to_numeric(obj['vx'], errors='coerce'), pd.to_numeric(obj['vy'], errors='coerce')).to_numpy()
+    dx = obj.groupby('track_id')['x'].diff().to_numpy()
+    dy = obj.groupby('track_id')['y'].diff().to_numpy()
+    dt = obj.groupby('track_id')['t_ns'].diff().to_numpy() / 1e9
+    fd = np.where(dt > 0, np.hypot(dx, dy) / np.where(dt > 0, dt, 1), np.nan)
+    has_v = np.isfinite(sp)
+    sp = np.where(has_v, sp, fd)
+    if mode == 'debounced':
+        # a smoothed speed, as SINS's Kalman velocity: displacement over the last 0.5 s (causal), when no vx/vy is given
+        sm = np.full(len(obj), np.nan)
+        for _, idx in obj.groupby('track_id').indices.items():
+            t = obj['t_ns'].to_numpy()[idx] / 1e9
+            xy = obj[['x', 'y']].to_numpy(float)[idx]
+            j = np.searchsorted(t, t - 0.5)
+            ok = (t - t[j]) >= 0.3
+            sm[idx] = np.where(ok, np.hypot(*(xy - xy[j]).T) / np.maximum(t - t[j], 1e-3), np.nan)
+        sp = np.where(has_v, sp, sm)            # the method's own velocity where it gives one, else the 0.5 s speed
+    state = []
+    for _, idx in obj.groupby('track_id').indices.items():
+        cur, up, down = 'potentially_dynamic', 0, 0
+        for v in sp[idx]:
+            v = 0.0 if not np.isfinite(v) else v
+            if mode == 'raw':
+                state.append('dynamic' if v >= v_d else 'potentially_dynamic')
+                continue
+            up = up + 1 if v >= v_d else 0
+            down = down + 1 if v < v_d else 0          # SINS drops D when the speed falls below the D bar (no v_s hysteresis)
+            if cur != 'dynamic' and up >= n_d:
+                cur = 'dynamic'
+            elif cur == 'dynamic' and down >= n_d:
+                cur = 'potentially_dynamic'
+            state.append(cur)
+    order = np.concatenate(list(obj.groupby('track_id').indices.values()))
+    st = np.empty(len(obj), object)
+    st[order] = state
+    obj['state'] = st
+    empty = [dict(t_ns=int(t), track_id=EMPTY_FRAME_ID) for t in set(pred['t_ns']) - set(obj['t_ns'])]
+    return make_tracks(obj.to_dict('records') + empty)
+
+
 def load_csv_tracks(path):
     df = pd.read_csv(path)
     if 'track_id' in df:                    # already the unified tracks CSV (run_eagermot_jo.py)
@@ -105,8 +156,30 @@ def build_gt(gt_csv, odom, a):
     if a.camera_only:   # camera-view evaluation: every object outside the camera image is ignored
         hidden |= np.array([not ann.at[(t, i), 'fov'] for t, i in zip(gt['t_ns'], gt['track_id'])], bool)
     elif not a.pd_everywhere:
-        hidden |= np.array([not ann.at[(t, i), 'fov'] for t, i in zip(gt['t_ns'], gt['track_id'])], bool) & \
+        out_fov_still = np.array([not ann.at[(t, i), 'fov'] for t, i in zip(gt['t_ns'], gt['track_id'])], bool) & \
             (gt['state'] != 'dynamic').to_numpy()
+        if a.pd_prev_observable:
+            # (view B, 25/11) a still agent outside the FOV is scored if its track was observable before: an earlier
+            # annotated row inside a camera FOV, or an earlier dynamic row (it moved); never-observable ones stay ignored
+            fov_rows = ped[ped['in_fov'].astype(str) == 'True'].groupby('track_id')['t_ns'].min()
+            dyn_rows = gt[gt['state'] == 'dynamic'].groupby('track_id')['t_ns'].min()
+            first = {i: min(fov_rows.get(i, np.inf), dyn_rows.get(i, np.inf)) for i in gt['track_id'].unique()}
+            prev = np.array([t > first[i] for t, i in zip(gt['t_ns'], gt['track_id'])], bool)
+            out_fov_still &= ~prev
+        hidden |= out_fov_still
+    if a.state_buffer > 0:
+        # (25/11) rows within --state-buffer s of a GT D<->PD transition of the same track become ignored regions
+        # (for the STATE metrics: run this view separately; the primary MOTA-all is computed without it)
+        near_tr = pd.Series(False, index=gt.index)
+        for i, g in gt.groupby('track_id'):
+            g = g.sort_values('t_ns')
+            st = g['state'].to_numpy()
+            tt = g['t_ns'].to_numpy() / 1e9
+            ch = tt[1:][st[1:] != st[:-1]]
+            if len(ch):
+                close = np.min(np.abs(tt[:, None] - ch[None, :]), axis=1) <= a.state_buffer
+                near_tr.loc[g.index] = close
+        hidden |= near_tr.to_numpy()
     rd = robot_dist(gt, odom)
     near = rd < a.min_range
     far = (rd > a.range) | near
@@ -224,6 +297,13 @@ def main():
     ap.add_argument('--ignore-undefined', action='store_true', help='17/11 evaluation (e3): annotated rows whose motion '
                     'state is undefined (track ends, gaps) become ignored regions instead of being dropped')
     ap.add_argument('--dyn-speed', type=float, default=0.3)
+    ap.add_argument('--pd-prev-observable', action='store_true', help='(25/11, view B) still agents outside the camera '
+                    'FOV are scored if their track was inside a FOV, or moving, earlier; never-observable ones stay ignored')
+    ap.add_argument('--state-buffer', type=float, default=0.0, help='(25/11) [s] GT rows this close to a D<->PD '
+                    'transition of the same track are ignored; for the state metrics only (run separately)')
+    ap.add_argument('--baseline-state', default='none', choices=['none', 'raw', 'debounced'],
+                    help='(25/11) motion state of CSV baselines without one: none = all dynamic (default, MOTA-all), '
+                    'raw = single-output speed >= 0.25 m/s, debounced = 0.5 s speed + SINS classified-track debounce (3 outputs in and out)')
     ap.add_argument('--match-dist', type=float, default=1.0)
     ap.add_argument('--points-min-cluster', type=int, default=20, help='point-output baselines (M-detector): minimum '
                     'cluster size; 20 for the OS1-128 (CODa), 5 for the VLP-16 (lab, street), as in the lab evaluation')
@@ -254,6 +334,7 @@ def main():
             raise SystemExit(f'predictions in {frame_id}, expected odom')
     elif a.method in CSV_METHODS:
         pred, topic = load_csv_tracks(a.run), a.run
+        pred = convert_states(pred, a.baseline_state)
     else:                                   # baselines publish in the odom frame of the same odometry (global frame)
         topic, ids = BASELINES[a.method]
         # OS1-128 clouds are ~8x denser than the lab VLP-16: dynamic points are clustered with Dynablox's own default
