@@ -41,6 +41,25 @@ files:
       camera_names: [cam0, cam2, cam4, cam6, cam8]
       # FRAME-RATE override (25/11, external review): JRDB runs at 15 Hz, so every scan-count parameter is scaled by
       # 15/10 (rounded) to keep the same time constants as at 10 Hz. Recompute from the frozen CODa profile at the freeze.
+      track_min_hits: 6   # 4 at 10 Hz
+      track_max_missed: 10   # 7 at 10 Hz
+      track_max_missed_classified: 32   # 21 at 10 Hz
+      track_dynamic_confirm_ticks: 4   # 3 at 10 Hz
+      track_dynamic_confirm_ticks_unclassified: 12   # 8 at 10 Hz
+      track_dynamic_confirm_ticks_unclassified_out_fov: 8   # 5 at 10 Hz
+      track_motion_pd_min_dynamic_ticks: 30   # 20 at 10 Hz
+      track_dynamic_kf_confidence_window: 8   # 5 at 10 Hz
+      track_dynamic_sticky_frames: 30   # 20 at 10 Hz
+      track_dynamic_sticky_window: 45   # 30 at 10 Hz
+      track_disocclusion_pos_hist_window: 15   # 10 at 10 Hz
+      track_stationary_max_ticks: 75   # 50 at 10 Hz
+      track_first_class_confirm_ticks: 3   # 2 at 10 Hz
+      track_first_class_established_hits: 15   # 10 at 10 Hz
+      track_first_class_established_confirm_ticks: 3   # 2 at 10 Hz
+      track_first_class_static_confirm_ticks: 8   # 5 at 10 Hz
+      track_max_non_yolo_in_fov_frames: 4   # 3 at 10 Hz
+      track_max_non_yolo_fov_border_frames: 22   # 15 at 10 Hz
+      track_max_yolo_base_mismatch_frames: 8   # 5 at 10 Hz
   dbscan_detector.yaml:
     dbscan_detector_node:
       lidar_eps_vertical_angle_deg: 2.0
