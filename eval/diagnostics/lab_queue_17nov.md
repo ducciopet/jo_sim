@@ -883,3 +883,7 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - Chain H: HV anchors on the car/truck/bus class with a constant width cap (2.8 m). Peer flags the standing rule "no per-cluster-type
   thresholds; class-agnostic fixes". Chain runs; HV is NOT adopted even if it passes until the user accepts a class-anchored rule or a
   class-agnostic form is found (candidate: any dynamic-class YOLO piece anchors, width limit from that piece's own 2D box/mask extent).
+- User (via peer, 25/11): HV2 NOT written yet. If chain H shows a real pooled gain for HV (sign test near/above 19/27, no vetoes),
+  write HV2 (class-agnostic: any track_semantic_dynamic_classes piece anchors; candidate >= 80% of points inside the anchor's YOLO
+  2D box + 5% margin; generic gap fragment_merge_max_gap and 50% height overlap; no width cap; detector subscribes to the per-camera
+  Detection2DArray + camera_info only when on) and launch chain H2 by 01/12. Otherwise HV2 is dropped. HV is not adoptable either way.
