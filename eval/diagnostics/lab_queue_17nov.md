@@ -887,3 +887,28 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
   write HV2 (class-agnostic: any track_semantic_dynamic_classes piece anchors; candidate >= 80% of points inside the anchor's YOLO
   2D box + 5% margin; generic gap fragment_merge_max_gap and 50% height overlap; no width cap; detector subscribes to the per-camera
   Detection2DArray + camera_info only when on) and launch chain H2 by 01/12. Otherwise HV2 is dropped. HV is not adoptable either way.
+
+## 36. Chain H result (25/11 16:29): HV (class-anchored vehicle fragment merge) — no real gain; not adoptable anyway
+| | H0 | HV |
+|---|---|---|
+| sign test e3 all / testing | — | 17/27 (p 0.12) / 15/27 (p 0.35) |
+| sign test e3ib all / testing | — | 17/27 / 17/27 |
+| pooled MOTA all (spread) | 57.1 [55.5-58.2] | 57.7, gain +0.6 (-1.7 +0.2 +3.2) <= spread |
+| pooled MOTA testing | 54.6 | 55.1, gain +0.5 (-0.8 -0.6 +2.8) <= spread |
+| per seq all 0 / 10 / 16 | 56.2 / 52.5 / 60.8 | 59.0 / 53.9 / 60.1 |
+| per seq testing 0 / 10 / 16 | 53.4 / 52.5 / 56.6 | 60.1 / 53.2 / 55.1 |
+| vehicles moving (coda_vehicle_e2) | 38.0 [35.8-41.3] | 44.7 [33.4-51.2] |
+| seq-10 vehicle funnel (w1/w4/w5, r1-r3) TP / vehicle FP | 49.5% / 246 | 56.7% / 163 |
+| >= 6 m vehicles TP | 38.5% | 33.9% |
+| person IDSW all (r1/r2/r3) | 71/147/125 = 343 | 134/153/162 = 449 |
+| person IDSW testing | 39/52/49 = 140 | 54/48/55 = 157 |
+| takeover events (r1/r2/r3) | 18/101/77 = 196 | 78/120/94 = 292 |
+| street MOTA / vehicle recall | 52.6 / 52.9 | 52.4 / 48.5 |
+| lab (12 runs/arm) | MOTA 92.5-95.8 | 93.0-96.3, within noise |
+| latency CODa med/p90 | 100/173 | 100/175 |
+- Reading: vehicles improve (TP +7 points, vehicle FP -34%, offset 13.5 -> 6.3%), but the sign test stays below 19 (17/27, 15/27),
+  pooled gain within the rep spread, seq 16 testing -1.5, street vehicle recall -4.4. Persons: IDSW +31% (all) and takeovers +49%:
+  the risk of merging a pedestrian into a nearby vehicle/piece shows up. H0 r1 is unusually low (71 IDSW, 18 takeovers).
+- veh_leaf_cover: missed vehicles with "classed + others" 42% -> 20% (the merge does what it is meant to); what remains is
+  mostly unclassified-only (no YOLO piece) 55% -> 71% of a smaller set.
+- Lab ground-model check (labgrid.sh, LGP0/LGG x6) launched 16:35 right after.
