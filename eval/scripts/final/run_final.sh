@@ -14,8 +14,8 @@ DS=$1; shift; ITEMS="$@"; DRY=${DRY:-1}; TAG=${TAG:-SF}; REPS=${REPS:-1 2 3}
 N=/mnt/nas-imperatore/datasets_SINS; NI=$N/derived/final_inputs/$DS; NO=$N/derived/sins_final/$DS
 S=bags/final_scratch/$DS; RES=eval/results/final/$DS
 export PATH=$HOME/.venvs/sins_eval/bin:$PATH
-case $DS in   # profile per dataset (FINAL_RUN_SPEC 2) [TBD at the freeze: final profile names]
-  coda|coda_new) PROF=${PROF:-coda_FINAL}; LOCAL=bags/coda ;;
+case $DS in   # profile per dataset (FINAL_RUN_SPEC 2, eval/results/final/PROFILES.md)
+  coda|coda_new) PROF=${PROF:-coda_vjsye2i2pcar1lccbma}; LOCAL=bags/coda; NI=$N/derived/coda_windows ;;   # windows already converted there
   kitti) PROF=${PROF:-kitti_tracking}; LOCAL=bags/kitti ;;
   doals) PROF=${PROF:-doals}; LOCAL=bags/doals ;;
   jrdb)  PROF=${PROF:-jrdb}; LOCAL=bags/jrdb ;;
@@ -88,10 +88,11 @@ stage() { local it=$1   # 1. stage the item into the scratch folder and link it 
   do_ mkdir -p $S $LOCAL/runs $RES
   for f in $(inputs $it); do
     do_ "[ -e $S/$f ] || [ -e $NI/$f ] && { [ -e $S/$f ] || rsync -a $NI/$f $S/; } || echo '[TBD] convert $DS $it into $S, then rsync -a $S/$f $NI/'"
-    do_ "[ -e $LOCAL/$f ] && [ ! -L $LOCAL/$f ] && { echo 'real file in the way: $LOCAL/$f'; exit 1; } || ln -sfn ../final_scratch/$DS/$f $LOCAL/$f"
+    # a REAL local file of the same name (CODa tuning _gt.csv/_odom used in development) is kept as it is; only links are made/removed
+    do_ "[ -e $LOCAL/$f ] && [ ! -L $LOCAL/$f ] && echo 'keeping local $LOCAL/$f' || ln -sfn ../final_scratch/$DS/$f $LOCAL/$f"
   done; }
 unstage() { local it=$1   # inputs out of scratch (scratch only) and the links
-  for f in $(inputs $it); do do_ rm -rf $S/$f; do_ rm -f $LOCAL/$f; done; }
+  for f in $(inputs $it); do do_ rm -rf $S/$f; do_ "[ -L $LOCAL/$f ] && rm -f $LOCAL/$f || true"; done; }   # links only, never real files
 run_one() { local it=$1 k=$2 sfx=$3   # one rep; sfx "" or "_rerun"
   local t=$TAG; [ $k = 1 ] || t=${TAG}r$k; local run=$(runname $t $it); local dst=$NO/${it}_r$k$sfx
   [ -e $dst/manifest.json ] && { echo "done: $DS $it r$k$sfx"; return; }

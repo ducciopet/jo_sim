@@ -998,3 +998,11 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
   with coda_stereo_bag.py (same settings; same sizes 1.9/2.4 GB), copied and verified. Full check: all 9 windows re-converted locally
   (deterministic converter) and compared file by file with the NAS: 72/72 md5 OK. Reference list now on the NAS:
   derived/coda_windows/MD5SUMS_coda_2_3_18.txt. Videos MD5SUMS also OK. Scratch copies deleted after verify.
+
+## 42. Freeze handoff (26/11 17:10): coordinator offline from 17:15; freeze 27/11 to be done by this session
+- A scheduled 07:30 autonomous freeze (tags, sins merge into main, push, start of the final runs) was DENIED by this session's
+  permission system: it needs the user present in this session. The freeze starts when the user next activates the session.
+- run_final.sh made ready: CODa profile coda_vjsye2i2pcar1lccbma, CODa inputs from derived/coda_windows; stage keeps real local
+  files (CODa tuning _gt.csv/_odom) and unstage removes only symlinks (it would have deleted them).
+- OPEN: KITTI training, DOALS and JRDB held-out inputs are not converted yet (derived/final_inputs does not exist); the user approved
+  early conversion only for CODa 2/3/18, so these are converted after the tag (KITTI ~21 seqs, DOALS 8, JRDB 6).
