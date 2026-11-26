@@ -970,3 +970,15 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
   (EB 58.4-61.1, H0 55.5-58.2), HOTA 56.1 -> 55.3. sins changed only by default-off options between chains (c15a337 -> e82f9ea ->
   7cb2245); machine load differed (other user's jobs, load 4-7 during H). To check before the final runs: rep spread and load
   for the final x5 CODa tuning, and possibly one EB-vs-H0 build comparison.
+
+## 41. Same-profile drift check (26/11, peer): QD under load inconclusive; QE queued for a quiet machine
+- QD/QDr2/QDr3 = sins 4d7d5c3, r1lccbma, w1/10_w4/16_w1 (largest H0-EB gaps). The wait gate (load1 < 3) passed at 2.92 and the
+  GLIM job came back: load1 during the runs median 5.5, max 8.9 (eval/diagnostics/drift_qd_load.txt); latency p90 on w1 329-400 ms.
+| errors e3 all, mean of 3 (reps) | EB | N0 | H0 | QD |
+|---|---|---|---|---|
+| w1 | 447 | 426 | 525 | 519 (498 500 558) |
+| 10_w4 | 648 | 683 | 704 | 668 (627 734 644) |
+| 16_w1 | 2316 | 2474 | 2466 | 2382 (2473 2248 2424) |
+- Reading: under load QD reproduces H0 on w1 and sits between EB and H0 elsewhere; latency is clearly degraded by load. Consistent with
+  load, not proof. QE (same setup) waits for load1 AND load5 < 1.5 (until 06:00 27/11), load logged -> eval/diagnostics/drift_qe_load.txt.
+- Code audit by the peer (c15a337..4d7d5c3, defaults): no behaviour change.
