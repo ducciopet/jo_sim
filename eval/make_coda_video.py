@@ -13,6 +13,7 @@ usage: make_coda_video.py --window w1|10_w1 --run bags/coda/runs/B1_v2_coda0_w1 
        CSV baselines (coda_eval.CSV_METHODS): --baseline <...>/eagermot_coda0_w1.csv --baseline-method eagermot --baseline-name EagerMOT
 """
 import argparse
+import io
 import subprocess
 import sys
 from pathlib import Path
@@ -56,7 +57,7 @@ def read_data(bag, cam='front_camera', cam_bag=None):
     # cam_bag: the separate *_stereo window bag holding the stereo camera (seq 16 has no front camera)
     imgs, clouds, statics, K = [], [], {}, None
     with AnyReader([Path(bag)] + ([Path(cam_bag)] if cam_bag else [])) as r:
-        want = {f'/{cam}/camera/color/image_raw', '/velodyne_points', '/tf_static',
+        want = {f'/{cam}/camera/color/image_raw', f'/{cam}/camera/color/image_raw/compressed', '/velodyne_points', '/tf_static',
                 f'/{cam}/camera/color/camera_info'}
         for c, _, raw in r.messages([c for c in r.connections if c.topic in want]):
             m = r.deserialize(raw, c.msgtype)
@@ -67,6 +68,8 @@ def read_data(bag, cam='front_camera', cam_bag=None):
                 K = np.array(m.k).reshape(3, 3)
             elif c.topic.endswith('image_raw'):
                 imgs.append((stamp(m.header), np.frombuffer(m.data, np.uint8).reshape(m.height, m.width, 3)))
+            elif c.topic.endswith('compressed'):   # KITTI / JRDB converted bags (jpeg/png)
+                imgs.append((stamp(m.header), np.asarray(Image.open(io.BytesIO(bytes(m.data))).convert('RGB'))))
             else:
                 n = m.width * m.height
                 xyz = np.frombuffer(m.data, np.uint8).reshape(n, m.point_step)[:, :12].copy().view(np.float32)
@@ -91,8 +94,10 @@ def read_yolo(bag, cam='front_camera'):
     out = {}
     with AnyReader([Path(bag)]) as r:
         # the camera shown (front_camera), from whichever YOLO node ran (box detector or instance segmentation)
-        for c, _, raw in r.messages([c for c in r.connections if c.topic.endswith(f'{cam}/detections')
-                                     and c.msgtype == 'vision_msgs/msg/Detection2DArray']):
+        cs = [c for c in r.connections if c.topic.endswith(f'{cam}/detections') and c.msgtype == 'vision_msgs/msg/Detection2DArray']
+        if not cs:      # no 2D detections recorded (smoke runs): messages([]) would yield every topic
+            return out
+        for c, _, raw in r.messages(cs):
             m = r.deserialize(raw, c.msgtype)
             out[stamp(m.header)] = [(d.bbox.center.position.x, d.bbox.center.position.y, d.bbox.size_x, d.bbox.size_y)
                                     for d in m.detections]
@@ -137,17 +142,23 @@ def main():
     ap.add_argument('--t0', type=float, default=0.0, help='start [s] into the window')
     ap.add_argument('--dur', type=float, default=1e9)
     ap.add_argument('--out', required=True)
+    # other datasets, SINS only and no GT (qualitative videos, 25/11): --bag/--odom/--cam override the CODa window paths
+    ap.add_argument('--bag', help='input bag (default: the CODa window bag)')
+    ap.add_argument('--odom', help='odometry bag (default: bags/coda/coda<w>_odom)')
+    ap.add_argument('--cam', help='camera shown (default: front_camera, else stereo_camera)')
+    ap.add_argument('--no-gt', action='store_true', help='no GT boxes (unlabelled sequences)')
+    ap.add_argument('--title', default=None, help='text drawn top-left of the camera image')
     a = ap.parse_args()
     R = E.parent / 'bags/coda'
     w = a.window if '_' in a.window else f'0_{a.window}'          # w1 (seq 0) or 10_w1, 16_w1 ...
-    WB = R / f'coda{w}'
-    if not (WB / 'metadata.yaml').exists():                       # window bags live on the NAS (local copy only during runs)
+    WB = Path(a.bag) if a.bag else R / f'coda{w}'
+    if not a.bag and not (WB / 'metadata.yaml').exists():                       # window bags live on the NAS (local copy only during runs)
         WB = Path('/mnt/nas-imperatore/datasets_SINS/derived/coda_windows') / f'coda{w}'
     with AnyReader([Path(a.run)]) as r:                           # camera shown: front, else stereo (seq 16 has no front camera)
-        cam = 'front_camera' if any(c.topic.endswith('front_camera/detections') for c in r.connections) else 'stereo_camera'
+        cam = a.cam or ('front_camera' if any(c.topic.endswith('front_camera/detections') for c in r.connections) else 'stereo_camera')
     SB = WB.parent / f'{WB.name}_stereo'
     imgs, clouds, st, K = read_data(WB, cam, SB if cam == 'stereo_camera' and SB.exists() else None)
-    ot, oT = read_odom(R / f'coda{w}_odom')
+    ot, oT = read_odom(Path(a.odom) if a.odom else R / f'coda{w}_odom')
     if ('base_link', 'velodyne') not in st:                   # NAS window bags carry an empty /tf_static: take the run's
         with AnyReader([Path(a.run)]) as r:
             for c, _, raw in r.messages([c for c in r.connections if c.topic == '/tf_static']):
@@ -159,7 +170,8 @@ def main():
     tracks = objects(tracks)
     yolo = read_yolo(a.run, cam)
     yts = np.array(sorted(yolo))
-    gt = pd.read_csv(R / f'coda{w}_gt.csv', keep_default_na=False)
+    gt = pd.DataFrame(columns=['t_ns', 'track_id', 'x', 'y', 'z', 'l', 'w', 'h', 'yaw']) if a.no_gt else \
+        pd.read_csv(R / f'coda{w}_gt.csv', keep_default_na=False)
     gt = gt[gt['track_id'].astype(int) >= 0]
     for k in ('x', 'y', 'z', 'l', 'w', 'h', 'yaw'):
         gt[k] = gt[k].astype(float)
@@ -251,10 +263,13 @@ def main():
         lg = ImageDraw.Draw(frame)
         lx, ly = 12, Hh - 28
         for lab, col in (('in movimento (D)', COL['dynamic']), ('fermo, può muoversi (PD)', COL['potentially_dynamic']),
-                         ('annotato in CODa', GT_COL)) + ((('rilevato da ' + a.baseline_name, BASE_COL),) if base is not None else ()):
+                         ) + ((('annotato in CODa', GT_COL),) if not a.no_gt else ()) + ((('rilevato da ' + a.baseline_name, BASE_COL),) if base is not None else ()):
             lg.rectangle([lx, ly + 3, lx + 14, ly + 17], fill=col)
             lg.text((lx + 20, ly), lab, fill=(235, 235, 235), font=small)
             lx += 30 + int(lg.textlength(lab, font=small))
+        if a.title:
+            lg.rectangle([6, 6, 18 + int(lg.textlength(a.title, font=font)), 34], fill=(20, 22, 28))
+            lg.text((12, 10), a.title, fill=(255, 255, 255), font=font)
         lg.text((W - 90, Hc + 10), f'{(t - imgs[0][0]) / 1e9:5.1f} s', fill=(235, 235, 235), font=small)
         ff.stdin.write(np.asarray(frame).tobytes())
         if n % 100 == 0:
