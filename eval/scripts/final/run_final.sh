@@ -55,19 +55,25 @@ runname() { case $DS in coda|coda_new) c=$2; [[ $c == *_* ]] || c=0_$c; echo "$1
 # (the tables take the run named by <item>_r<k>/selected.json when a rerun exists). Lab: scored once per dataset (score_lab).
 CE() { do_ "python3 eval/coda_eval.py $* > /dev/null 2>&1 || echo 'SCORE FAILED: $*'"; }
 score() { local it=$1 t=$2 run=$3 sfx=$4 c=$1; [[ $c == *_* ]] || c=0_$c; local o
+  # view C + identity (persistence.py, repo 21c1a757): CODa all sets and JRDB; pooled later with --pool
+  PERS() { do_ mkdir -p $RES/persistence; do_ "python3 eval/scripts/analysis/persistence.py $1 --out $RES/persistence/${t}_$it$sfx.json > /dev/null 2>&1 || echo 'SCORE FAILED persistence $run'"; }
   case $DS in
     coda|coda_new) local B="--run $S/$run --gt $S/coda${c}_gt.csv --odom $S/coda${c}_odom"
       for v in "e3|--ignore-undefined" "e3ib|--ignore-undefined --ignore-box" "state|--ignore-undefined --state-buffer 0.5" \
                "pdprev|--ignore-undefined --pd-prev-observable" "dyn0.2|--ignore-undefined --state-buffer 0.5 --dyn-speed 0.2" \
                "dyn0.4|--ignore-undefined --state-buffer 0.5 --dyn-speed 0.4"; do
         for F in all testing; do o=$RES/${v%%|*}; [ $F = testing ] && o=$o/test; do_ mkdir -p $o
-          CE ${v#*|} --frames $F $B --out $o/${t}_$it$sfx.json; done; done ;;
+          CE ${v#*|} --frames $F $B --out $o/${t}_$it$sfx.json; done; done
+      PERS "$B" ;;
     kitti) local B="--run $S/$run --gt $S/${it}_gt.csv --odom $S/${it}_odom --camera-only --cam-json $S/${it}_cam.json --range 40"
       for v in "e3|--ignore-undefined" "state|--ignore-undefined --state-buffer 0.5" "pdprev|--ignore-undefined --pd-prev-observable"; do
-        o=$RES/${v%%|*}; do_ mkdir -p $o; CE ${v#*|} $B --out $o/${t}_$it$sfx.json; done ;;
+        o=$RES/${v%%|*}; do_ mkdir -p $o; CE ${v#*|} $B --out $o/${t}_$it$sfx.json; done
+      do_ mkdir -p $RES/trackeval/$t$sfx/data   # KITTI tracking 2D results for TrackEval (run on the external PC)
+      do_ "python3 eval/scripts/analysis/sins_to_kitti.py --run $S/$run --cam $S/${it}_cam.json --gt-json $S/${it}_gt.json --out $RES/trackeval/$t$sfx/data/$it.txt > /dev/null 2>&1 || echo 'SCORE FAILED sins_to_kitti $run'" ;;
     jrdb)  local B="--run $S/$run --gt $S/${it}_gt.csv --odom $S/${it}_odom --range 15 --extra-ignore $S/${it}_pano.csv"
       for v in "e3|--ignore-undefined" "state|--ignore-undefined --state-buffer 0.5"; do
-        o=$RES/${v%%|*}; do_ mkdir -p $o; CE ${v#*|} $B --out $o/${t}_$it$sfx.json; done ;;
+        o=$RES/${v%%|*}; do_ mkdir -p $o; CE ${v#*|} $B --out $o/${t}_$it$sfx.json; done
+      PERS "--run $S/$run --gt $S/${it}_gt.csv --odom $S/${it}_odom --range 15" ;;
     doals) for v in "d|dynamic" "dpd|dynamic potentially_dynamic"; do o=$RES/doals_${v%%|*}; do_ mkdir -p $o
         do_ "python3 eval/doals_eval.py --run $S/$run --bag $S/$it --odom $S/${it}_odom --gt $S/${it}_doals_gt.json --states ${v#*|} --out $o/${t}_$it$sfx.json > /dev/null 2>&1 || echo 'SCORE FAILED doals $run'"; done ;;
   esac; }
