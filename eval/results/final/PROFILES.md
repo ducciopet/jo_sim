@@ -1,6 +1,6 @@
-# Final SINS profiles (DRAFT 25/11; final md5s recomputed at the paper-v1 tag on 27/11, before any final run)
+# Final SINS profiles (FROZEN 26/11 evening, user decision; md5s recomputed at the paper-v1 tag, identical to the 25/11 draft, before any final run)
 
-sins 4d7d5c3 (c5-semantic-birth), jo_sim c9543605. md5 = md5 over the sorted relative paths + contents of sins/cfg/<profile>/ (as make_manifest.py).
+sins paper-v1 = 9ea5942 (c5-semantic-birth, merged into main; the 5 generated cfg folders are committed in it). jo_sim paper-v1 = the commit adding this file in its final form. md5 = md5 over the sorted relative paths + contents of sins/cfg/<profile>/ (as make_manifest.py).
 
 | profile | used for | md5 of the generated cfg folder |
 |---|---|---|

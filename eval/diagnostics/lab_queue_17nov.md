@@ -1006,3 +1006,10 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
   files (CODa tuning _gt.csv/_odom) and unstage removes only symlinks (it would have deleted them).
 - OPEN: KITTI training, DOALS and JRDB held-out inputs are not converted yet (derived/final_inputs does not exist); the user approved
   early conversion only for CODa 2/3/18, so these are converted after the tag (KITTI ~21 seqs, DOALS 8, JRDB 6).
+
+## 43. FREEZE (26/11 evening, user in this session: "Procedi stasera con tutto")
+- Final inputs: KITTI training 0000-0020, DOALS 8, JRDB held-out 6 (+ pano ignore) converting since 17:04 into
+  NAS derived/final_inputs/<ds>/ (one item at a time via bags/final_scratch, rsync checksum verify, MD5SUMS.txt per dataset).
+- Profiles regenerated, md5s identical to the 25/11 draft; the 5 generated cfg folders committed in sins.
+- sins: tag paper-v1 = 9ea5942 on c5-semantic-birth (includes the ablation switches, default off); main fast-forwarded to it; pushed.
+- jo_sim: tag paper-v1 at the commit with the final PROFILES.md (this one). From here: no code/parameter change without a dated erratum.
