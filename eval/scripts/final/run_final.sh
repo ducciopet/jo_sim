@@ -34,11 +34,11 @@ case $DS in   # quiet latency p90 [ms] per dataset, fixed 26/11 from quiet-hours
   coda|coda_new) Q=125 ;; kitti) Q=175 ;; doals) Q=104 ;; jrdb) Q=42 ;; lab) Q=115 ;;
 esac; QUIET_P90=${QUIET_P90:-$Q}
 # GATE switched 26/11 (peer/user, FINAL_RUN_SPEC 5): SINS alone pushes load1 to ~2.5-3, so the gate uses the CPU and GPU used OUTSIDE
-# the jo_sim_sins container (foreign_load.py): start only when foreign CPU < 100% (one core) and foreign GPU SM < 30% for 2 min
+# the jo_sim_sins container (foreign_load.py): start only when foreign CPU < 150% (1.5 cores; idle baseline 81-89%) and foreign GPU SM < 30% for 2 min
 # (4 consecutive 30 s samples); deadline GATE_MAX, then run anyway flagged "loaded". load1/load5 stay logged for information.
 FL="python3 eval/scripts/final/foreign_load.py --dt 5"
 gate() { local t0=$(date +%s) ok=0; while [ $ok -lt 4 ]; do
-  read c g <<< "$($FL)"; if [ "${c:-999}" -lt 100 ] && [ "${g:-999}" -lt 30 ]; then ok=$((ok+1)); else ok=0; fi
+  read c g <<< "$($FL)"; if [ "${c:-999}" -lt 150 ] && [ "${g:-999}" -lt 30 ]; then ok=$((ok+1)); else ok=0; fi
   [ $(( $(date +%s) - t0 )) -ge $GATE_MAX ] && { echo loaded; return; }; [ $ok -lt 4 ] && sleep 25; done; echo quiet; }
 do_() { echo "+ $*"; [ "$DRY" = 1 ] || eval "$@" || { echo "FAILED: $*"; exit 1; }; }
 guard() { [ $(df -B1G --output=avail / | tail -1) -lt 3 ] && { echo "DISK < 3 GB, stop"; exit 1; }; }
