@@ -982,3 +982,15 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - Reading: under load QD reproduces H0 on w1 and sits between EB and H0 elsewhere; latency is clearly degraded by load. Consistent with
   load, not proof. QE (same setup) waits for load1 AND load5 < 1.5 (until 06:00 27/11), load logged -> eval/diagnostics/drift_qe_load.txt.
 - Code audit by the peer (c15a337..4d7d5c3, defaults): no behaviour change.
+- QE (26/11 13:08-13:25, gate passed at load 0.10/1.47; load1 during runs median 2.9 = mostly SINS itself, max 5.4):
+| errors e3 all, mean of 3 | EB | N0 | H0 | QD (loaded) | QE (quiet) |
+|---|---|---|---|---|---|
+| w1 | 447 | 426 | 525 | 519 | 431 (384 411 498) |
+| 10_w4 | 648 | 683 | 704 | 668 | 721 (673 785 705) |
+| 16_w1 | 2316 | 2474 | 2466 | 2382 | 2367 (2378 2380 2344) |
+  Testing frames w1: EB 62, H0 78, QD 79, QE 59. Reading: on w1 (crowd, heaviest per scan) the quiet rerun returns to EB: the
+  H0/QD loss there was load. 10_w4 and 16_w1 differences are within the per-window rep spread (10_w4 QE reps span 112 errors).
+  No sign of a code change; the "drift" = load on w1 + rep noise. QE latency p90 on w1 still 226-276 ms (SINS self-load on w1).
+- Gate note: SINS alone pushes load1 to ~2.5-3, so "load5 < 1.5" makes each run wait several minutes after the previous one. The
+  GLIM job runs from a tmux session under the same uid (another person's, not touched). Proposal: gate on CPU used outside the
+  jo_sim_sins container (cgroup) instead of the global load.
