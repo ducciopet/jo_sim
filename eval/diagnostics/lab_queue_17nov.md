@@ -1025,3 +1025,8 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - Final chain started (eval/scripts/final/final_chain.sh, log bags/final_scratch/logs/final_chain.log): waits for the JRDB
   conversion and the dry run, then coda_new x3, KITTI x3, DOALS x3, CODa tuning x5, 11/12 x3, JRDB x3, lab x6. Ablation (spec 6) not
   yet queued.
+- 20:37 final inputs complete: KITTI 21, DOALS 8, JRDB 6 (+pano) on NAS final_inputs/<ds>/ with MD5SUMS.txt. Dry run lab 1952 end to end
+  (mocap scoring over the selected run; requeue + select_run with both flagged -> orig kept, loaded). Final chain started ~20:40 (SF 2_w1).
+- Baselines PC ("Generazione 2D box e conversione KITTI"): eval code at jo_sim paper-v1 exported to NAS
+  derived/final_inputs/jo_sim_paper_v1/jo_sim_paper_v1_eval.tar.gz (git archive of the tag, md5 alongside) with the exact e3/state
+  command lines; told the CODa 2/3/18 GT is final and may be opened (after the freeze). SINS output paths and 2D detection topics sent.
