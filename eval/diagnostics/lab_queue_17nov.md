@@ -951,3 +951,22 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
   bags/final_scratch, copied to NAS derived/coda_windows/ (45 entries, checksum verified), scratch deleted. Frames per window as
   expected; GT row counts only: 2_w1 400 (2 instances), 2_w2 3948, 2_w3 3937, 2_w4 3368, 3_w1 7857, 3_w2 2842, 18_w1 1384,
   18_w2 1202, 18_w3 3410. No SINS run, no scoring until after the paper-v1 tag.
+
+## 40. 26/11 local rescoring of the current base (NAS offline; peer request): HOTA/IDF1 and the state/PD views
+- Same profile r1lccbma, three chains x3 reps (EB chain E, N0 chain G, H0 chain H), 9 tuning windows, latest coda_eval (HOTA),
+  testing frames via the local CODa metadata (eval/datasets/coda_metadata). 810 JSONs in eval/results/coda_dev_views/<view>[/test]/.
+  Lab: run_own_eval on 18 reps (LN chain G, LJ chain H, LGP ground check), local mocap, dyn 0.3/0.2/0.4 -> eval/results/lab_dev_views/.
+  Tables: eval/diagnostics/dev_views_{coda,lab}.txt (eval/scripts/analysis/dev_views.py).
+| CODa e3 (mean of 3 reps) | MOTA all / test | IDF1 all / test | HOTA all / test | recall D / PD (all) |
+|---|---|---|---|---|
+| EB | 59.5 / 57.0 | 67.5 / 68.3 | 56.1 / 57.8 | 80.4 / 34.8 |
+| N0 | 58.2 / 55.6 | 66.7 / 68.0 | 55.5 / 57.2 | 80.7 / 36.1 |
+| H0 | 57.1 / 54.6 | 65.9 / 67.0 | 55.3 / 56.8 | 80.2 / 32.0 |
+- Views (all frames, EB/N0/H0 MOTA): state buffer 0.5 s 60.7/59.2/58.2 (~+1); pd-prev-observable 47.8/46.6/46.0 (~-12, PD recall
+  ~24 vs ~35); dyn 0.2 ~-0.5, dyn 0.4 ~+0.2 (recall D 78 / 81). HOTA moves little across views except pdprev (~49).
+- Lab (6 reps per group, dyn 0.3): MOTA 94.6 / 94.3 / 94.5, IDF1 90.7 / 83.1 / 95.0, HOTA 82.2 / 77.0 / 84.8 (LN / LJ / LGP), ranges
+  IDF1 72-98: identity metrics on the lab are dominated by rep noise.
+- WARNING, drift of the SAME profile across chains: CODa MOTA all 59.5 (E, 23/11) -> 58.2 (G) -> 57.1 (H); ranges barely overlap
+  (EB 58.4-61.1, H0 55.5-58.2), HOTA 56.1 -> 55.3. sins changed only by default-off options between chains (c15a337 -> e82f9ea ->
+  7cb2245); machine load differed (other user's jobs, load 4-7 during H). To check before the final runs: rep spread and load
+  for the final x5 CODa tuning, and possibly one EB-vs-H0 build comparison.

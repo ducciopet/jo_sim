@@ -1,0 +1,528 @@
+{
+ "run": "bags/coda/runs/EBr2_v2_coda16_w1",
+ "topic": "/perception/tracked_dynamic_obstacles",
+ "gt": {
+  "annotated_frames": 700,
+  "pedestrians": 45,
+  "gt_rows": 8440,
+  "ignored_hidden": 655,
+  "ignored_undefined": 486,
+  "out_of_range": 2594,
+  "dynamic_rows": 4146,
+  "rows_by_class": {
+   "Bike": 1844,
+   "Pedestrian": 4002,
+   "Pickup Truck": 70,
+   "Scooter": 2524
+  },
+  "split": "testing",
+  "split_frames": 87
+ },
+ "pred_dropped_out_of_range": 1637,
+ "pred_dropped_ignore": 1274,
+ "config": {
+  "run": "bags/coda/runs/EBr2_v2_coda16_w1",
+  "gt": "bags/coda/coda16_w1_gt.csv",
+  "odom": "bags/coda/coda16_w1_odom",
+  "topic": null,
+  "method": "sins",
+  "range": 20.0,
+  "ignore_dist": 1.0,
+  "ignore_box": false,
+  "min_range": 1.2,
+  "max_height": 2.5,
+  "min_pts": 1,
+  "pd_everywhere": false,
+  "camera_only": false,
+  "cam_json": null,
+  "ignore_gt": null,
+  "ignore_undefined": true,
+  "dyn_speed": 0.3,
+  "pd_prev_observable": true,
+  "state_buffer": 0.0,
+  "baseline_state": "none",
+  "match_dist": 1.0,
+  "points_min_cluster": 20,
+  "extra_ignore": null,
+  "extra_ignore_dist": 0.3,
+  "extra_ignore_dt": 0.5,
+  "frames": "testing",
+  "coda_root": "/tmp/claude-1000/-home-punk-opc-Desktop-jo-sim-sins/ba77d7c3-e0d3-4f13-b8a9-58cd3390ec55/scratchpad/coda_root",
+  "out": "eval/results/coda_dev_views/pdprev/test/EBr2_16_w1.json"
+ },
+ "metrics": {
+  "full": {
+   "num_frames": 87,
+   "num_frames_skipped": 613,
+   "num_gt": 1071,
+   "num_pred": 574,
+   "tp": 562,
+   "fp": 12,
+   "fn": 509,
+   "idsw": 33,
+   "mota": 0.48272642390289444,
+   "motp": 0.21029865906189785,
+   "idtp": 477,
+   "idf1": 0.5799392097264437,
+   "confusion": {
+    "dynamic": {
+     "dynamic": 433,
+     "potentially_dynamic": 8,
+     "static": 0,
+     "missed": 73
+    },
+    "potentially_dynamic": {
+     "dynamic": 5,
+     "potentially_dynamic": 116,
+     "static": 0,
+     "missed": 436
+    },
+    "static": {
+     "dynamic": 0,
+     "potentially_dynamic": 0,
+     "static": 0,
+     "missed": 0
+    }
+   },
+   "state_recall": {
+    "dynamic": 0.8424124513618677,
+    "potentially_dynamic": 0.20825852782764812,
+    "static": NaN
+   },
+   "state_precision": {
+    "dynamic": 0.9885844748858448,
+    "potentially_dynamic": 0.9354838709677419,
+    "static": NaN
+   },
+   "state_f1": {
+    "dynamic": 0.9852104664391353,
+    "potentially_dynamic": 0.946938775510204,
+    "static": NaN
+   },
+   "fp_by_state": {
+    "dynamic": 8,
+    "potentially_dynamic": 4
+   },
+   "num_pred_ignored_class": 0,
+   "mcc": 0.9322663561809785,
+   "latencies": [
+    {
+     "gt_id": 19,
+     "t": 1675881598.9214034,
+     "from": "dynamic",
+     "to": "potentially_dynamic",
+     "latency": 4.699995517730713
+    }
+   ],
+   "latency_mean": {
+    "to_dynamic": NaN,
+    "to_potentially_dynamic": 4.699995517730713
+   },
+   "latency_censored": {
+    "to_dynamic": "0/0",
+    "to_potentially_dynamic": "0/1"
+   },
+   "hota": 0.46957852403315803,
+   "deta": 0.39668325710363106,
+   "assa": 0.5606005282020687,
+   "hota_alpha": {
+    "tp": [
+     562,
+     560,
+     557,
+     555,
+     554,
+     551,
+     547,
+     538,
+     532,
+     521,
+     504,
+     494,
+     478,
+     454,
+     411,
+     347,
+     256,
+     120,
+     30
+    ],
+    "fn": [
+     509,
+     511,
+     514,
+     516,
+     517,
+     520,
+     524,
+     533,
+     539,
+     550,
+     567,
+     577,
+     593,
+     617,
+     660,
+     724,
+     815,
+     951,
+     1041
+    ],
+    "fp": [
+     12,
+     14,
+     17,
+     19,
+     20,
+     23,
+     27,
+     36,
+     42,
+     53,
+     70,
+     80,
+     96,
+     120,
+     163,
+     227,
+     318,
+     454,
+     544
+    ],
+    "assa_num": [
+     354.73462566104973,
+     352.40231796874207,
+     352.15789219843396,
+     351.75356401554785,
+     349.7393190013029,
+     347.7625618368986,
+     346.7622416911264,
+     341.34581763535425,
+     337.1333091395384,
+     332.550374169031,
+     327.0117859055641,
+     319.30215050922754,
+     302.05876295677876,
+     277.4242228426171,
+     235.06451643332744,
+     175.44645032440548,
+     103.68363454641187,
+     26.42277110362939,
+     2.4331799891220136
+    ]
+   }
+  },
+  "merged": {
+   "num_frames": 87,
+   "num_frames_skipped": 613,
+   "num_gt": 1071,
+   "num_pred": 574,
+   "tp": 562,
+   "fp": 12,
+   "fn": 509,
+   "idsw": 33,
+   "mota": 0.48272642390289444,
+   "motp": 0.21029865906189785,
+   "idtp": 477,
+   "idf1": 0.5799392097264437,
+   "confusion": {
+    "dynamic": {
+     "dynamic": 562,
+     "potentially_dynamic": 0,
+     "static": 0,
+     "missed": 509
+    },
+    "potentially_dynamic": {
+     "dynamic": 0,
+     "potentially_dynamic": 0,
+     "static": 0,
+     "missed": 0
+    },
+    "static": {
+     "dynamic": 0,
+     "potentially_dynamic": 0,
+     "static": 0,
+     "missed": 0
+    }
+   },
+   "state_recall": {
+    "dynamic": 0.5247432306255836,
+    "potentially_dynamic": NaN,
+    "static": NaN
+   },
+   "state_precision": {
+    "dynamic": 1.0,
+    "potentially_dynamic": NaN,
+    "static": NaN
+   },
+   "state_f1": {
+    "dynamic": 1.0,
+    "potentially_dynamic": NaN,
+    "static": NaN
+   },
+   "fp_by_state": {
+    "dynamic": 12
+   },
+   "num_pred_ignored_class": 0,
+   "mcc": NaN,
+   "latencies": [],
+   "latency_mean": {
+    "to_dynamic": NaN,
+    "to_potentially_dynamic": NaN
+   },
+   "latency_censored": {
+    "to_dynamic": "0/0",
+    "to_potentially_dynamic": "0/0"
+   },
+   "hota": 0.46957852403315803,
+   "deta": 0.39668325710363106,
+   "assa": 0.5606005282020687,
+   "hota_alpha": {
+    "tp": [
+     562,
+     560,
+     557,
+     555,
+     554,
+     551,
+     547,
+     538,
+     532,
+     521,
+     504,
+     494,
+     478,
+     454,
+     411,
+     347,
+     256,
+     120,
+     30
+    ],
+    "fn": [
+     509,
+     511,
+     514,
+     516,
+     517,
+     520,
+     524,
+     533,
+     539,
+     550,
+     567,
+     577,
+     593,
+     617,
+     660,
+     724,
+     815,
+     951,
+     1041
+    ],
+    "fp": [
+     12,
+     14,
+     17,
+     19,
+     20,
+     23,
+     27,
+     36,
+     42,
+     53,
+     70,
+     80,
+     96,
+     120,
+     163,
+     227,
+     318,
+     454,
+     544
+    ],
+    "assa_num": [
+     354.73462566104973,
+     352.40231796874207,
+     352.15789219843396,
+     351.75356401554785,
+     349.7393190013029,
+     347.7625618368986,
+     346.7622416911264,
+     341.34581763535425,
+     337.1333091395384,
+     332.550374169031,
+     327.0117859055641,
+     319.30215050922754,
+     302.05876295677876,
+     277.4242228426171,
+     235.06451643332744,
+     175.44645032440548,
+     103.68363454641187,
+     26.42277110362939,
+     2.4331799891220136
+    ]
+   }
+  },
+  "dynamic_only": {
+   "num_frames": 87,
+   "num_frames_skipped": 613,
+   "num_gt": 514,
+   "num_pred": 446,
+   "tp": 434,
+   "fp": 12,
+   "fn": 80,
+   "idsw": 14,
+   "mota": 0.7937743190661479,
+   "motp": 0.1711409685750874,
+   "idtp": 364,
+   "idf1": 0.7583333333333333,
+   "confusion": {
+    "dynamic": {
+     "dynamic": 434,
+     "potentially_dynamic": 0,
+     "static": 0,
+     "missed": 80
+    },
+    "potentially_dynamic": {
+     "dynamic": 0,
+     "potentially_dynamic": 0,
+     "static": 0,
+     "missed": 0
+    },
+    "static": {
+     "dynamic": 0,
+     "potentially_dynamic": 0,
+     "static": 0,
+     "missed": 0
+    }
+   },
+   "state_recall": {
+    "dynamic": 0.8443579766536965,
+    "potentially_dynamic": NaN,
+    "static": NaN
+   },
+   "state_precision": {
+    "dynamic": 1.0,
+    "potentially_dynamic": NaN,
+    "static": NaN
+   },
+   "state_f1": {
+    "dynamic": 1.0,
+    "potentially_dynamic": NaN,
+    "static": NaN
+   },
+   "fp_by_state": {
+    "dynamic": 12
+   },
+   "num_pred_ignored_class": 0,
+   "mcc": NaN,
+   "latencies": [
+    {
+     "gt_id": 19,
+     "t": 1675881598.9214034,
+     "from": "dynamic",
+     "to": "potentially_dynamic",
+     "latency": NaN
+    }
+   ],
+   "latency_mean": {
+    "to_dynamic": NaN,
+    "to_potentially_dynamic": NaN
+   },
+   "latency_censored": {
+    "to_dynamic": "0/0",
+    "to_potentially_dynamic": "1/1"
+   },
+   "hota": 0.6395553806342658,
+   "deta": 0.666205202793462,
+   "assa": 0.6175907201669656,
+   "hota_alpha": {
+    "tp": [
+     434,
+     434,
+     432,
+     431,
+     431,
+     431,
+     431,
+     430,
+     429,
+     426,
+     425,
+     420,
+     412,
+     394,
+     357,
+     299,
+     218,
+     106,
+     29
+    ],
+    "fn": [
+     80,
+     80,
+     82,
+     83,
+     83,
+     83,
+     83,
+     84,
+     85,
+     88,
+     89,
+     94,
+     102,
+     120,
+     157,
+     215,
+     296,
+     408,
+     485
+    ],
+    "fp": [
+     12,
+     12,
+     14,
+     15,
+     15,
+     15,
+     15,
+     16,
+     17,
+     20,
+     21,
+     26,
+     34,
+     52,
+     89,
+     147,
+     228,
+     340,
+     417
+    ],
+    "assa_num": [
+     307.8428276822562,
+     307.8428276822562,
+     307.69997053939903,
+     307.48542037279407,
+     307.48542037279407,
+     307.48542037279407,
+     307.48542037279407,
+     306.95246961381594,
+     304.9346124709588,
+     302.12843783478417,
+     300.2838224501688,
+     293.14470114262645,
+     279.53435718113826,
+     256.4516107794131,
+     215.13682336439518,
+     158.48545246373675,
+     92.76349172702656,
+     25.43142169757219,
+     2.4290586831236567
+    ]
+   }
+  }
+ }
+}
