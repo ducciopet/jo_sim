@@ -1,0 +1,282 @@
+<title>SINS, punto della situazione</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,650&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root {
+  --bg: #f5f6f3; --surface: #ffffff; --ink: #1c2321; --ink-2: #56615d; --rule: #d6dbd7; --plate: #121615;
+  --accent: #2f6b5a; --warn: #9a5b12; --run: #2a6fb0; --code-bg: #eef1ee;
+  --d: #d0402f; --pd: #c9820e; --s: #8c9692;
+  --series-1: #2a78d6; --bar-other: #b9c0bc; --bar-neg: #d7dbd8;
+  --f-head: "Source Serif 4", Georgia, serif; --f-body: "IBM Plex Sans", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121615; --surface: #1a201e; --ink: #e4e9e6; --ink-2: #9aa7a2; --rule: #2b3431; --plate: #0b0e0d;
+  --accent: #7fc4ad; --warn: #e3a95c; --run: #7fb2e5; --code-bg: #202825;
+  --d: #f07a68; --pd: #f2b24a; --s: #6f7a76;
+  --series-1: #3987e5; --bar-other: #56605c; --bar-neg: #39413e; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121615; --surface: #1a201e; --ink: #e4e9e6; --ink-2: #9aa7a2; --rule: #2b3431; --plate: #0b0e0d;
+  --accent: #7fc4ad; --warn: #e3a95c; --run: #7fb2e5; --code-bg: #202825;
+  --d: #f07a68; --pd: #f2b24a; --s: #6f7a76;
+  --series-1: #3987e5; --bar-other: #56605c; --bar-neg: #39413e; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 15.5px/1.6 var(--f-body); }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 36px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 52px; }
+header { display: grid; gap: 10px; }
+.eyebrow { font: 600 12px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+h1 { font: 650 clamp(30px, 5vw, 44px)/1.1 var(--f-head); margin: 0; text-wrap: balance; }
+h2 { font: 650 24px/1.25 var(--f-head); margin: 0; text-wrap: balance; }
+h3 { font: 600 16px/1.3 var(--f-body); margin: 0; }
+p { margin: 0; max-width: 70ch; }
+.lede { font-size: 17.5px; color: var(--ink-2); max-width: 66ch; }
+section { display: grid; gap: 16px; min-width: 0; }
+ul, ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 74ch; }
+code { font: 13px var(--f-mono); background: var(--code-bg); border-radius: 3px; padding: 0 4px; overflow-wrap: anywhere; }
+.d { color: var(--d); font-weight: 600; } .pd { color: var(--pd); font-weight: 600; } .s { color: var(--s); font-weight: 600; }
+.kpis { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.kpis > div { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 16px; display: grid; gap: 2px; min-width: 0; }
+.kpis .num { font: 600 30px/1.1 var(--f-mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+.kpis small { color: var(--ink-2); font-size: 13.5px; line-height: 1.45; }
+figure { margin: 0; display: grid; gap: 8px; min-width: 0; }
+.plate { background: var(--plate); border-radius: 8px; overflow: hidden; }
+.plate img, .plate video { display: block; width: 100%; height: auto; max-width: 100%; }
+figcaption { font-size: 14px; color: var(--ink-2); max-width: 78ch; }
+.steps { display: grid; gap: 10px; counter-reset: st; }
+.steps > div { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 14px 12px 52px; position: relative; min-width: 0; }
+.steps > div::before { counter-increment: st; content: counter(st); position: absolute; left: 14px; top: 12px;
+  width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--bg); font: 600 13px/26px var(--f-mono); text-align: center; }
+.steps p { font-size: 14.5px; color: var(--ink-2); max-width: none; }
+.steps .new { font: 600 11px/1.6 var(--f-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--run);
+  border: 1px solid currentColor; border-radius: 3px; padding: 0 6px; margin-left: 6px; white-space: nowrap; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs button { font: 600 13px var(--f-mono); padding: 6px 12px; border-radius: 4px; border: 1px solid var(--rule);
+  background: var(--surface); color: var(--ink); cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chart { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 16px 10px; display: grid; gap: 6px; min-width: 0; }
+.chart .sub { font-size: 13px; color: var(--ink-2); }
+.chart svg { display: block; width: 100%; height: auto; }
+.chart text { font-family: var(--f-body); }
+.note { border-left: 3px solid var(--warn); padding: 4px 0 4px 14px; color: var(--ink-2); max-width: 78ch; font-size: 14.5px; }
+.now { display: grid; gap: 10px; }
+.now > div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 14px; }
+.now .tag { font: 600 11px/1.6 var(--f-mono); letter-spacing: .05em; text-transform: uppercase; align-self: start; padding: 0 7px; border-radius: 3px; border: 1px solid currentColor; justify-self: start; white-space: nowrap; }
+.tag.done { color: var(--accent); } .tag.run { color: var(--run); } .tag.todo { color: var(--ink-2); } .tag.no { color: var(--warn); }
+.now p { font-size: 14.5px; color: var(--ink-2); max-width: none; }
+.now b { color: var(--ink); }
+details { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 16px; }
+details > summary { cursor: pointer; font-weight: 600; }
+details[open] > summary { margin-bottom: 12px; }
+details > div { display: grid; gap: 12px; min-width: 0; }
+.tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; }
+details .tablewrap { border: 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th { font-weight: 600; color: var(--ink-2); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+td.n, th.n { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+td.w { white-space: normal; min-width: 220px; color: var(--ink-2); font-size: 13.5px; }
+tr.me td { color: var(--accent); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+.yes { color: var(--accent); font-weight: 600; } .no { color: var(--ink-2); }
+footer { font: 13px var(--f-mono); color: var(--ink-2); }
+@media (max-width: 560px) { .now > div { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Stato del progetto · 26 novembre 2026 · congelamento il 27/11</span>
+    <h1>SINS, punto della situazione</h1>
+    <p class="lede">SINS segue persone e veicoli intorno a un robot e dice per ognuno se <span class="d">si muove</span>,
+      se è <span class="pd">fermo ma può ripartire</span> o se è <span class="s">statico</span>, con un solo YOLO per
+      camera e nessun modello addestrato sul LiDAR. Qui: come funziona oggi, come va contro gli altri metodi, i video
+      della versione attuale e cosa manca.</p>
+  </header>
+
+  <section aria-label="In breve">
+    <div class="kpis">
+      <div><span class="num">59,5 · 57,5</span><small><b>SINS contro EMMC su CODa</b> (MOTA, 9 finestre di sviluppo). EMMC usa
+        un rilevatore addestrato su CODa, SINS niente: alla pari, non "migliore".</small></div>
+      <div><span class="num">61,8 · 36,5</span><small><b>Folla di pedoni e bici</b> (CODa seq 0): qui SINS stacca nettamente
+        il migliore degli altri.</small></div>
+      <div><span class="num">95,6</span><small><b>MOTA in laboratorio</b> con il motion capture (6 sequenze, 6 ripetizioni,
+        tutte tra 94 e 96).</small></div>
+      <div><span class="num">5</span><small><b>configurazioni di sensori</b>: LiDAR + RGB-D, + stereo, + RGB semplice, solo
+        LiDAR. Stesso comportamento, cambiano solo i parametri del sensore.</small></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Come funziona oggi</h2>
+    <p>Sei passaggi per ogni scansione LiDAR (10 Hz). Le voci segnate "nuovo" sono entrate questa settimana, ognuna dopo una
+      prova ripetuta 3 volte contro la versione precedente.</p>
+    <div class="steps">
+      <div><h3>YOLO su ogni camera</h3><p>Un solo modello (YOLO26s-seg) per immagine: maschere delle classi che possono
+        muoversi (persona, bici, auto, bus, camion…). È l'unica fonte di "che cos'è".</p></div>
+      <div><h3>Dalla maschera ai punti 3D <span class="new">nuovo</span></h3><p>I punti di profondità o del LiDAR che cadono
+        nella maschera formano una <b>foglia</b>: il gruppo più grande di punti <b>connessi in 3D</b>. Nessuna finestra di
+        distanza (era l'errore più grosso: tagliava auto e persone a fette di 30 cm). Se la maschera ha pochi punti, stesso
+        criterio sul riquadro.</p></div>
+      <div><h3>Gruppi di punti e fusione dei sensori</h3><p>LiDAR e camere vengono raggruppati ciascuno per conto suo, con un
+        raggio che cresce con la distanza, e poi fusi in oggetti con un box orientato.</p></div>
+      <div><h3>La foglia rifinisce l'oggetto <span class="new">nuovo</span></h3><p>La foglia dà la classe all'oggetto e lo
+        ritaglia sui propri punti; ora <b>assorbe anche i pezzi</b> che stanno dentro la stessa istanza YOLO: un'auto vista
+        dal LiDAR in 3–4 pezzi torna un oggetto solo. Falsi positivi da "pezzi di veicolo" da 549 a 302.</p></div>
+      <div><h3>Tracciamento <span class="new">nuovo</span></h3><p>Filtro di Kalman e associazione globale. Novità:
+        l'<b>ancora statica</b>, cioè un oggetto mai mosso non può "saltare" di oltre mezzo metro sulla persona che gli passa
+        accanto. In laboratorio da 92,9 a 95,6, molto più stabile. Ragionamento sulle occlusioni lungo i raggi del LiDAR:
+        lo sfondo che riappare dietro chi cammina non viene scambiato per moto.</p></div>
+      <div><h3>Stato: D, PD, S</h3><p>Diventa <span class="d">D</span> dopo alcune scansioni di moto coerente;
+        <span class="pd">PD</span> se è fermo ma di una classe mobile, anche <b>fuori dal campo della camera</b> (persistenza
+        della classe); il resto è <span class="s">statico</span> e non viene pubblicato.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Gli stessi parametri su sensori diversi</h2>
+    <div class="tablewrap"><table>
+      <tr><th>Dataset</th><th>LiDAR</th><th>Camere</th><th>Profondità per la camera</th><th>Ruolo</th></tr>
+      <tr><td>Laboratorio</td><td>VLP-16</td><td>RealSense RGB-D</td><td>dal sensore</td><td>sviluppo (motion capture)</td></tr>
+      <tr><td>CODa</td><td>OS1-128</td><td>ZED / stereo</td><td>stereo</td><td>sviluppo; seq 2, 3, 18 mai viste</td></tr>
+      <tr><td>KITTI tracking</td><td>HDL-64</td><td>RGB sinistra</td><td>scansione proiettata</td><td>mai visto</td></tr>
+      <tr><td>JRDB</td><td>VLP-16</td><td>5 RGB a 360°</td><td>scansione proiettata</td><td>esposto (usato a novembre)</td></tr>
+      <tr><td>DOALS</td><td>OS1-64, a mano</td><td>nessuna</td><td>—</td><td>mai visto, solo LiDAR</td></tr>
+      <tr><td>ForeLab, più persone</td><td>VLP-16</td><td>RealSense RGB-D</td><td>dal sensore</td><td>da registrare</td></tr>
+    </table></div>
+    <p>Gli altri metodi sono legati a un solo assetto: LV-DOT vuole una camera RGB-D (su CODa all'aperto trova quasi
+      niente), i tracker con CenterPoint vogliono un rilevatore addestrato sul dataset (senza, su CODa il MOTA è negativo),
+      Dynablox e M-detector usano solo il LiDAR e non hanno lo stato "fermo ma mobile".</p>
+  </section>
+
+  <section>
+    <h2>La versione attuale al lavoro</h2>
+    <div class="tabs" role="tablist" aria-label="Video" id="tabs"></div>
+    <figure>
+      <div class="plate"><video id="vid" controls muted playsinline preload="metadata"></video></div>
+      <figcaption id="cap"></figcaption>
+    </figure>
+    <p class="note" id="vidnote" hidden>Video della versione attuale (base del 24/11) da sequenze di sviluppo; nessun video
+      dai dati mai visti prima delle run finali.</p>
+  </section>
+
+  <section>
+    <h2>Come va contro gli altri su CODa</h2>
+    <p>9 finestre delle sequenze 0, 10 e 16, tutti i fotogrammi. SINS: media di 3 ripetizioni.</p>
+    <div class="chart">
+      <span class="sub">MOTA su tutti gli oggetti mobili annotati (metrica principale)</span>
+      <svg viewBox="0 0 440 290" role="img" aria-label="Barre: SINS 59,5; EMMC 57,5; EagerMOT 52,1; SimpleTrack 52,1; DeepFusionMOT 19,2; LV-DOT 0; Dynablox −45,5; M-detector −84,0">
+        <line x1="170" y1="8" x2="170" y2="268" stroke="var(--rule)"/>
+        <text x="170" y="284" font-size="11" fill="var(--ink-2)" text-anchor="middle">0</text>
+        <text x="370" y="284" font-size="11" fill="var(--ink-2)" text-anchor="middle">60</text>
+        <g font-size="13" fill="var(--ink)">
+          <text x="0" y="27">SINS</text><rect x="170" y="14" width="198" height="20" rx="4" fill="var(--series-1)"/><text x="372" y="29" font-family="var(--f-mono)" font-weight="600">59,5</text>
+          <text x="0" y="59">EMMC*</text><rect x="170" y="46" width="192" height="20" rx="4" fill="var(--bar-other)"/><text x="366" y="61" font-family="var(--f-mono)">57,5</text>
+          <text x="0" y="91">EagerMOT*</text><rect x="170" y="78" width="174" height="20" rx="4" fill="var(--bar-other)"/><text x="348" y="93" font-family="var(--f-mono)">52,1</text>
+          <text x="0" y="123">SimpleTrack*</text><rect x="170" y="110" width="174" height="20" rx="4" fill="var(--bar-other)"/><text x="348" y="125" font-family="var(--f-mono)">52,1</text>
+          <text x="0" y="155">DeepFusionMOT</text><rect x="170" y="142" width="64" height="20" rx="4" fill="var(--bar-other)"/><text x="238" y="157" font-family="var(--f-mono)">19,2</text>
+          <text x="0" y="187">LV-DOT</text><rect x="170" y="174" width="2" height="20" fill="var(--bar-other)"/><text x="178" y="189" font-family="var(--f-mono)">≈0</text>
+          <text x="0" y="219">Dynablox</text><rect x="130" y="206" width="40" height="20" rx="4" fill="var(--bar-neg)"/><text x="176" y="221" font-family="var(--f-mono)">−45,5</text>
+          <text x="0" y="251">M-detector</text><rect x="130" y="238" width="40" height="20" rx="4" fill="var(--bar-neg)"/><text x="176" y="253" font-family="var(--f-mono)">−84,0</text>
+        </g>
+      </svg>
+      <span class="sub">* con rilevatore CenterPoint addestrato su CODa (in casa). LV-DOT: 14 finestre su 15.</span>
+    </div>
+    <div class="tablewrap"><table>
+      <tr><th>MOTA per sequenza</th><th class="n">seq 0</th><th class="n">seq 10</th><th class="n">seq 16</th><th class="n">tutte</th><th class="n">solo test</th><th class="n">IDF1</th></tr>
+      <tr class="me"><td>SINS (3 ripetizioni)</td><td class="n">61,8</td><td class="n">53,7</td><td class="n">63,1</td><td class="n">59,5</td><td class="n">57,0</td><td class="n">67,5</td></tr>
+      <tr><td>EMMC (EagerMOT, più camere)*</td><td class="n">36,5</td><td class="n">69,3</td><td class="n">54,3</td><td class="n">57,5</td><td class="n">55,9</td><td class="n">71,3</td></tr>
+      <tr><td>EagerMOT, una camera*</td><td class="n">33,1</td><td class="n">57,4</td><td class="n">53,3</td><td class="n">52,1</td><td class="n">50,4</td><td class="n">67,7</td></tr>
+      <tr><td>CenterPoint + SimpleTrack*</td><td class="n">31,5</td><td class="n">57,0</td><td class="n">53,9</td><td class="n">52,1</td><td class="n">49,3</td><td class="n">72,9</td></tr>
+      <tr><td>DeepFusionMOT</td><td class="n">3,2</td><td class="n">19,1</td><td class="n">23,5</td><td class="n">19,2</td><td class="n">19,8</td><td class="n">32,8</td></tr>
+      <tr><td>Dynablox</td><td class="n">−284</td><td class="n">−74,9</td><td class="n">38,8</td><td class="n">−45,5</td><td class="n">−59,8</td><td class="n">27,3</td></tr>
+      <tr><td>M-detector</td><td class="n">−389</td><td class="n">−59,5</td><td class="n">−21,7</td><td class="n">−84,0</td><td class="n">−91,9</td><td class="n">1,1</td></tr>
+    </table></div>
+    <p class="note"><b>Come leggerla.</b> SINS vince nettamente dove ci sono molti pedoni e bici (seq 0, seq 16) e perde su
+      seq 10, piena di veicoli: un'auto vista dal LiDAR fuori dal campo della camera resta spezzata in pezzi, e nessuna
+      regola basata sulla camera la può riunire. Sull'identità (IDF1) i tracker con CenterPoint addestrato su CODa fanno
+      meglio. Con 9 finestre la statistica dice "comparabile" con EMMC: il verdetto vero viene dai dati mai visti.</p>
+  </section>
+
+  <section>
+    <h2>Gli altri metodi riproducono i loro articoli</h2>
+    <div class="tablewrap"><table>
+      <tr><th>Metodo</th><th>Dove</th><th class="n">nostro</th><th class="n">articolo</th><th>Esito</th></tr>
+      <tr><td>Dynablox</td><td>DOALS, IoU oggetto</td><td class="n">85,7</td><td class="n">86,0</td><td class="yes">riprodotto (3 ripetizioni)</td></tr>
+      <tr><td>M-detector</td><td>KITTI, IoU frame-out</td><td class="n">0,728</td><td class="n">0,746</td><td class="yes">riprodotto (3 ripetizioni)</td></tr>
+      <tr><td>SimpleTrack</td><td>nuScenes val, AMOTA</td><td class="n">0,696</td><td class="n">0,687</td><td class="yes">riprodotto</td></tr>
+      <tr><td>EagerMOT</td><td>KITTI auto, MOTA</td><td class="n">87,3</td><td class="n">87,8</td><td class="yes">coerente</td></tr>
+      <tr><td>DeepFusionMOT</td><td>KITTI auto, HOTA</td><td class="n">77,9</td><td class="n">75,5</td><td class="yes">coerente</td></tr>
+      <tr><td>CenterPoint (pesi CODa)</td><td>CODa, mAP</td><td class="n">pedoni ok</td><td class="n">—</td><td class="no">non confermato: protocollo non dichiarato</td></tr>
+      <tr><td>CMT, BEVFusion</td><td>CODa</td><td class="n">—</td><td class="n">—</td><td class="no">saltati: codice del modello non pubblicato</td></tr>
+    </table></div>
+    <p>Su DOALS, sugli stessi punti annotati (IoU sui punti, 0,5–20 m): Dynablox 0,83, M-detector 0,68 (3 ripetizioni,
+      più basso su tutte le 8 sequenze), CenterPoint senza addestramento su DOALS 0,39. SINS su DOALS arriva con le run
+      finali, in modalità solo LiDAR. Tutti i metodi di confronto girano anche su JRDB e laboratorio (stanotte sul portatile), su
+      KITTI e sulle nuove sequenze di CODa.</p>
+  </section>
+
+  <section>
+    <h2>Cosa è stato provato questa settimana</h2>
+    <div class="now">
+      <div><span class="tag done">adottato</span><p><b>Foglie connesse in 3D, senza finestra di distanza</b> (+2,4 su CODa),
+        <b>assorbimento dei pezzi + limite per i bus</b> (+1,8 / +2,5), <b>ancora statica</b> (+1,2 su CODa, +2,7 in
+        laboratorio).</p></div>
+      <div><span class="tag no">scartato</span><p>Splitter guidato dalla maschera, prova di moto più rapida per le persone,
+        esenzione dalla disocclusione per chi percorre strada, associazione dei pezzi per estensione, fusione ancorata ai
+        veicoli: nessuna supera la regola (almeno 19 confronti vinti su 27). Restano nel codice, spente.</p></div>
+      <div><span class="tag done">deciso</span><p><b>Laboratorio</b>: il pavimento resta a piani (con la griglia le persone in
+        moto trovate calano in modo costante); dichiarato come opzione per i pavimenti al chiuso. <b>Strada</b>: non
+        riportata, sostituita da ForeLab con più persone.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Cosa manca</h2>
+    <div class="now">
+      <div><span class="tag run">27/11</span><p><b>Congelamento</b> del codice (tag <code>paper-v1</code>) e profili con le
+        loro impronte, scritti prima di qualsiasi run finale.</p></div>
+      <div><span class="tag todo">28–29/11</span><p><b>Run finali</b>: prima i dati mai visti (CODa 2/3/18, KITTI, DOALS),
+        poi CODa di sviluppo, JRDB, laboratorio. Latenza misurata sul portatile scarico.</p></div>
+      <div><span class="tag todo">30/11–2/12</span><p><b>Ablation</b>: si spegne un meccanismo alla volta (foglie connesse,
+        assorbimento, ancora, occlusioni, persistenza fuori campo, YOLO…), sia sui dati di sviluppo sia su quelli mai
+        visti.</p></div>
+      <div><span class="tag todo">~5/12</span><p><b>Tabelle finali</b> con intervallo di confidenza e test esatti; poi ForeLab
+        appena registrato.</p></div>
+    </div>
+  </section>
+
+  <footer>Aggiornato il 26/11/2026 · base SINS r1lccbma, sins 4d7d5c3 · piano in eval/PIPELINE_FINAL.md, specifiche in
+    eval/FINAL_RUN_SPEC.md</footer>
+</div>
+
+<script>
+const VIDEOS = [
+  ['CODa · folla e bici', 'v/sins_r1lccbma_coda0_w1_vs_emmc_web.mp4',
+   'CODa seq 0, 50 s, cortile con rastrelliere. Sopra la camera con i box di SINS (rosso = si muove, arancio = fermo ma mobile); sotto la vista dall\'alto: a sinistra SINS, a destra EMMC (blu), in verde ciò che CODa annota. Qui SINS fa 61,8 di MOTA contro 36,5 di EMMC.'],
+  ['CODa · pedoni', 'v/sins_r1lccbma_coda10_w2_vs_emmc_web.mp4',
+   'CODa seq 10, finestra 2, 33 s: pedoni sul viale. Una delle finestre di seq 10 in cui SINS fa meglio di EMMC.'],
+  ['CODa · veicoli', 'v/sins_r1lccbma_coda10_w4_vs_emmc_web.mp4',
+   'CODa seq 10, finestra 4, 30 s: il punto debole. I veicoli che passano fuori dal campo della camera arrivano al LiDAR in pezzi e SINS non li riunisce; EMMC, con un rilevatore addestrato su CODa, li vede interi.'],
+  ['CODa · traffico', 'v/sins_r1lccbma_coda16_w1_vs_emmc_web.mp4',
+   'CODa seq 16, 90 s, incrocio con traffico e pedoni: la finestra più lunga, metà delle annotazioni di sviluppo.'],
+  ['KITTI · strada', 'v/sins_r1lccbma_kitti_test0000_nogt_web.mp4',
+   'KITTI tracking, sequenza di test 0000 (senza annotazioni: solo qualitativo), 46 s. LiDAR a 64 righe e una camera RGB, profondità dalla scansione proiettata. Auto parcheggiate in arancio (ferme ma mobili); si vede anche qualche auto spezzata in più box.'],
+  ['JRDB · interno', 'v/sins_r1lccbma_jrdb_bytes_cam0_nogt_web.mp4',
+   'JRDB bytes-cafe (sequenza di prova, mai valutata), 115 s, camera 0 di 5: persone in una caffetteria, LiDAR a 16 righe a 15 Hz.'],
+];
+const tabsEl = document.getElementById('tabs'), vid = document.getElementById('vid'), cap = document.getElementById('cap');
+function show(i) {
+  [...tabsEl.children].forEach((b, k) => b.setAttribute('aria-selected', k === i ? 'true' : 'false'));
+  vid.src = VIDEOS[i][1]; cap.textContent = VIDEOS[i][2]; vid.load();
+}
+if (VIDEOS.length) {
+  VIDEOS.forEach((v, i) => { const b = document.createElement('button'); b.setAttribute('role', 'tab'); b.textContent = v[0];
+    b.addEventListener('click', () => show(i)); tabsEl.appendChild(b); });
+  document.getElementById('vidnote').hidden = false;
+  show(0);
+} else {
+  vid.closest('figure').hidden = true;
+  cap.textContent = '';
+}
+</script>
