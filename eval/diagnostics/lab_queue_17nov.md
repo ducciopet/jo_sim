@@ -1030,3 +1030,12 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - Baselines PC ("Generazione 2D box e conversione KITTI"): eval code at jo_sim paper-v1 exported to NAS
   derived/final_inputs/jo_sim_paper_v1/jo_sim_paper_v1_eval.tar.gz (git archive of the tag, md5 alongside) with the exact e3/state
   command lines; told the CODa 2/3/18 GT is final and may be opened (after the freeze). SINS output paths and 2D detection topics sent.
+
+## 44. CODa 2/3/18 final runs done (26/11 22:08)
+- 9 windows x3 (tags SF, SFr2, SFr3), profile coda_vjsye2i2pcar1lccbma (paper-v1). All 27 runs: gate quiet, no flags,
+  0% dropped on all three topics, latency p90 77-176 ms (2_w2 highest, as in the dry run). Requeue empty, no reruns.
+- Scores in eval/results/final/coda_new/{e3,e3ib,state,pdprev,dyn0.2,dyn0.4}[/test] and persistence/ (not read here:
+  no analysis while timed runs continue). Bags + manifests on NAS derived/sins_final/coda_new/<w>_r<k>/.
+- Baselines PC told the files exist (2D detections in the SINS replay bags). KITTI 0000-0020 x3 started 22:08.
+- Ablation (FINAL_RUN_SPEC 6): 9 coda_abl_* overrides written and cfgs generated, NOT installed or queued; the automatic
+  ablation chain was blocked by the permission system, waiting for the user's decision.
