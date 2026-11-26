@@ -34,6 +34,11 @@ Un oggetto è "trovato" se il centro previsto è entro 1 m da quello vero.</p>
 continuità delle identità, non solo il trovarle.</p>
 <p><b>HOTA</b> = media su α di √(DetA·AssA) — bilancia trovare gli oggetti (<b>DetA</b> = TP/(TP+FN+FP)) e mantenerne
 l'identità (<b>AssA</b>), con soglie di somiglianza α da 0,05 a 0,95; qui la somiglianza è 1 − distanza/1 m.</p>
+<p><b>Recall</b> = TP / GT — quanti oggetti veri vengono trovati; <b>Precisione</b> = TP / (TP + FP) — quante delle
+cose segnalate esistono davvero. Un oggetto vero e uno previsto si abbinano se i centri distano meno di 1 m (non la
+sovrapposizione dei box: i box di oggetti visti in parte sono più piccoli del vero).</p>
+<p><b>F1 dello stato</b> = 2·P·R / (P + R) per lo stato <b>D</b> (si muove) e <b>PD</b> (fermo ma mobile), sugli oggetti
+abbinati: misura se il metodo dice giusto <i>che cosa sta facendo</i> l'oggetto, non solo se lo trova.</p>
 <p><b>Verdetto</b>: "migliore"/"peggiore" solo se l'intervallo di confidenza al 95% (bootstrap sulle sequenze) esclude lo
 zero e i test esatti (segni e permutazione sulle finestre, ripetizioni mediate) danno p &lt; 0,05; altrimenti
 "comparabile". Con meno di 10 sequenze nessun intervallo: valgono i test esatti per finestra.</p>
@@ -44,8 +49,29 @@ def load(d, tag, w):
     f = Path(d) / f'{tag}_{w}.json'
     if not f.exists():
         return None
-    m = json.load(open(f))['metrics']['merged']
+    J = json.load(open(f))['metrics']
+    m = dict(J['merged'])
+    m['confusion'] = J.get('full', {}).get('confusion', {})
     return m
+
+
+def state_f1(ms):
+    """F1 of the D and PD labels from the summed confusion of the 'full' level (matched pairs; recall counts misses)."""
+    C = {}
+    for m in ms:
+        for g, row in m['confusion'].items():
+            for p, n in row.items():
+                C.setdefault(g, {}).setdefault(p, 0)
+                C[g][p] += n
+    out = {}
+    for s in ('dynamic', 'potentially_dynamic'):
+        tp = C.get(s, {}).get(s, 0)
+        row = sum(v for k, v in C.get(s, {}).items())          # GT rows of that state, misses included
+        col = sum(C.get(g, {}).get(s, 0) for g in C)            # matched predictions with that label
+        pr = tp / col if col else np.nan
+        rc = tp / row if row else np.nan
+        out[s] = 100 * 2 * pr * rc / (pr + rc) if col and row and (pr + rc) > 0 else np.nan
+    return out
 
 
 def pooled(d, tags, W):
@@ -58,7 +84,11 @@ def pooled(d, tags, W):
         h = {k: list(np.sum([m['hota_alpha'][k] for m in ms if m.get('hota_alpha')], axis=0)) for k in ('tp', 'fn', 'fp', 'assa_num')} \
             if all(m.get('hota_alpha') for m in ms) else None
         hv = hota_from_sums(h) if h else (np.nan, np.nan, np.nan)
+        f1 = state_f1(ms)
+        tp = s['num_gt'] - s['fn']
         reps.append(dict(mota=100 * (1 - (s['fp'] + s['fn'] + s['idsw']) / s['num_gt']),
+                         recall=100 * tp / s['num_gt'], precision=100 * tp / max(1, tp + s['fp']),
+                         f1d=f1['dynamic'], f1pd=f1['potentially_dynamic'],
                          idf1=200 * s['idtp'] / max(1, s['num_gt'] + s['num_pred']),
                          hota=100 * hv[0], deta=100 * hv[1], assa=100 * hv[2],
                          err=[(m['fp'] + m['fn'] + m['idsw']) for m in ms], gt=[m['num_gt'] for m in ms]))
@@ -122,13 +152,15 @@ def main():
             if b:
                 rows.append((name, b, verdict(s, b, W)))
         t = ['<div class="tablewrap"><table><tr><th>Metodo</th><th class="n">MOTA</th><th class="n">IDF1</th>'
-             '<th class="n">HOTA</th><th class="n">DetA</th><th class="n">AssA</th><th>SINS rispetto a lui</th></tr>']
+             '<th class="n">HOTA</th><th class="n">DetA</th><th class="n">AssA</th><th class="n">Recall</th><th class="n">Precisione</th>'
+             '<th class="n">F1 D</th><th class="n">F1 PD</th><th>SINS rispetto a lui</th></tr>']
         for name, r, v in rows:
             vt = '' if v is None else f'{v["verdict"]} ({v["wins"]}/{v["n"]} finestre' + \
                 (f', IC {v["ci"][0]:+.1f}…{v["ci"][1]:+.1f}' if v['ci'] else '') + ')'
             t.append(f'<tr{" class=me" if name == "SINS" else ""}><td>{html.escape(name)}</td><td class="n">{fmt(r, "mota")}</td>'
                      f'<td class="n">{fmt(r, "idf1")}</td><td class="n">{fmt(r, "hota")}</td><td class="n">{fmt(r, "deta")}</td>'
-                     f'<td class="n">{fmt(r, "assa")}</td><td>{html.escape(vt)}</td></tr>')
+                     f'<td class="n">{fmt(r, "assa")}</td><td class="n">{fmt(r, "recall")}</td><td class="n">{fmt(r, "precision")}</td>'
+                     f'<td class="n">{fmt(r, "f1d")}</td><td class="n">{fmt(r, "f1pd")}</td><td>{html.escape(vt)}</td></tr>')
         t.append('</table></div>')
         parts.append(f'<section><h3>{html.escape(ds["name"])}</h3>{FORMULAS}{"".join(t)}'
                      f'<p class="note">{html.escape(ds.get("note", ""))}</p></section>')
