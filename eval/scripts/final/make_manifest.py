@@ -10,6 +10,9 @@ ap = argparse.ArgumentParser()
 ap.add_argument('--run', required=True); ap.add_argument('--input', required=True); ap.add_argument('--profile', required=True)
 ap.add_argument('--load-start', type=float, required=True); ap.add_argument('--rate', type=float, default=1.0)
 ap.add_argument('--rerun-of', default=None)
+ap.add_argument('--gate', default='quiet', help='load gate outcome: quiet | loaded (deadline passed)')
+ap.add_argument('--load-log', default=None, help='file of "<epoch> <load1> <load5>" samples taken every 30 s during the run')
+ap.add_argument('--quiet-p90', type=float, default=0.0, help='dataset quiet latency p90 [ms]; 0 = not set')
 a = ap.parse_args()
 git = lambda d: subprocess.run(['git', '-C', str(d), 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True).stdout.strip()
 def md5_tree(d):
@@ -37,6 +40,20 @@ m = dict(date=datetime.datetime.now().isoformat(timespec='seconds'), host=socket
          load1_start=a.load_start, load1_end=os.getloadavg()[0], replay_rate=a.rate, input_scans=scans,
          outputs=nodes, dropped_pct={k: round(100.0 * (1 - v / scans), 2) if scans else None for k, v in nodes.items()},
          rerun_of=a.rerun_of, container=container_versions())
-m['rerun_needed'] = any(v is not None and v > 2.0 for v in m['dropped_pct'].values())
+import statistics
+L = [list(map(float, l.split()[1:3])) for l in open(a.load_log)] if a.load_log and Path(a.load_log).exists() else []
+m['load_gate'] = a.gate
+m['load_during'] = dict(n=len(L), load1_median=statistics.median(x[0] for x in L) if L else None, load1_max=max((x[0] for x in L), default=None),
+                        load5_median=statistics.median(x[1] for x in L) if L else None, load5_max=max((x[1] for x in L), default=None))
+lat = subprocess.run(['docker', 'exec', 'jo_sim_sins', 'bash', '-lc', 'source /opt/ros/jazzy/setup.bash; source /home/ros/local_install/setup.bash; '
+                      f'python3 /home/ros/bags/replay/lat_tracks.py /home/ros/{Path(a.run).resolve().relative_to(ROOT)}'],
+                     capture_output=True, text=True).stdout.strip().splitlines()
+import re
+mm = re.search(r'mediana (\d+) ms\s+p90 (\d+) ms', lat[-1]) if lat else None
+m['latency_ms'] = dict(median=int(mm.group(1)), p90=int(mm.group(2))) if mm else None
+m['flags'] = [f for f, on in [('dropped>2%', any(v is not None and v > 2.0 for v in m['dropped_pct'].values())),
+                              ('loaded', a.gate == 'loaded'),
+                              ('p90>1.5x quiet', bool(mm and a.quiet_p90 > 0 and int(mm.group(2)) > 1.5 * a.quiet_p90))] if on]
+m['rerun_needed'] = bool(m['flags'])
 json.dump(m, open(Path(a.run) / 'manifest.json', 'w'), indent=1)
 print(json.dumps({k: m[k] for k in ('profile', 'input_scans', 'dropped_pct', 'rerun_needed')}))

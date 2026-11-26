@@ -21,6 +21,13 @@ case $DS in   # profile per dataset (FINAL_RUN_SPEC 2) [TBD at the freeze: final
   jrdb)  PROF=${PROF:-jrdb}; LOCAL=bags/jrdb ;;
   *) echo "unknown dataset $DS"; exit 1 ;;
 esac
+# LOAD GATE (26/11, same-profile drift under another user's load, lab_queue 41): a run starts only when load5 < 1.5 and
+# load1 < 2, waiting up to GATE_MAX s (2 h); past the deadline it runs anyway and is flagged "loaded" in the manifest and
+# requeued once at the end of the dataset. During each run load1/load5 are sampled every 30 s (median/max in the manifest);
+# latency p90 > 1.5 x QUIET_P90 (ms, the dataset's quiet value [TBD per dataset]) also flags a rerun.
+GATE_MAX=${GATE_MAX:-7200}; QUIET_P90=${QUIET_P90:-0}
+gate() { local t0=$(date +%s); while awk '{exit !($2 >= 1.5 || $1 >= 2.0)}' /proc/loadavg; do
+  [ $(( $(date +%s) - t0 )) -ge $GATE_MAX ] && { echo loaded; return; }; sleep 60; done; echo quiet; }
 do_() { echo "+ $*"; [ "$DRY" = 1 ] || eval "$@" || { echo "FAILED: $*"; exit 1; }; }
 guard() { [ $(df -B1G --output=avail / | tail -1) -lt 3 ] && { echo "DISK < 3 GB, stop"; exit 1; }; }
 inputs() {   # names of the input folders/files of one item (bag, odom, gt...) as the dataset runner expects them
@@ -42,7 +49,8 @@ for it in $ITEMS; do
   for k in $REPS; do
     t=$TAG; [ $k = 1 ] || t=${TAG}r$k; run=$(runname $t $it)
     [ -e $NO/${it}_r$k/manifest.json ] && { echo "done: $DS $it r$k"; continue; }
-    guard; L0=$(cut -d' ' -f1 /proc/loadavg)
+    guard; G=quiet; [ "$DRY" = 1 ] || G=$(gate); L0=$(cut -d' ' -f1 /proc/loadavg)
+    LL=$S/${run}_load.txt; [ "$DRY" = 1 ] || { : > $LL; ( while true; do echo "$(date +%s) $(cut -d' ' -f1-2 /proc/loadavg)" >> $LL; sleep 30; done ) & SAMP=$!; }
     # 2. run (container), same runners as development
     case $DS in
       coda|coda_new) do_ "docker exec -u ros jo_sim_sins bash -c \"TAG=$t ENV=$PROF STEREO=1 bash /home/ros/bags/replay/run_coda.sh $it\" > /dev/null 2>&1" ;;
@@ -50,11 +58,14 @@ for it in $ITEMS; do
       doals) do_ "docker exec -u ros jo_sim_sins bash -c \"TAG=$t DOALS_ENV=$PROF bash /home/ros/bags/replay/run_doals.sh $it\" > /dev/null 2>&1" ;;
       jrdb)  do_ "docker exec -u ros jo_sim_sins bash -c \"JRDB_ENV=$PROF TAG=$t bash /home/ros/bags/replay/run_jrdb.sh $it\" > /dev/null 2>&1" ;;
     esac
+    [ "$DRY" = 1 ] || kill $SAMP 2>/dev/null
     # 3. move the run into scratch, manifest (dropped scans, load, commits, md5s), latency log
     do_ mv $LOCAL/runs/$run $LOCAL/runs/${run}_logs $S/
     do_ rm -f $LOCAL/runs/$run.done
-    do_ python3 eval/scripts/final/make_manifest.py --run $S/$run --input $S/$(inputs $it | cut -d' ' -f1) --profile $PROF --load-start $L0
-    # [TBD] rerun once if manifest says rerun_needed (keep both, the rerun counts)
+    do_ python3 eval/scripts/final/make_manifest.py --run $S/$run --input $S/$(inputs $it | cut -d' ' -f1) --profile $PROF --load-start $L0 --gate $G --load-log $LL --quiet-p90 $QUIET_P90
+    # rerun once at the end of the dataset if the manifest says rerun_needed (dropped > 2%, gate "loaded", or p90 > 1.5x quiet);
+    # both runs are kept, the rerun counts [TBD: requeue loop]
+    do_ "python3 -c \"import json,sys; sys.exit(0 if json.load(open('$S/$run/manifest.json'))['rerun_needed'] else 1)\" && echo '$it $k' >> $S/requeue.txt || true"
     # 4. score into eval/results/final/$DS/<metric>/ [TBD: evaluator + metrics per dataset, FINAL_RUN_SPEC 3]
     # 5. copy to the NAS and verify (checksum dry run, -r only: SMB time/perm differences are not listed, must list nothing), then remove the run from scratch
     do_ mkdir -p $NO/${it}_r$k
