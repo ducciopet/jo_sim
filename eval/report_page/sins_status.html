@@ -188,6 +188,8 @@ footer { font: 13px var(--f-mono); color: var(--ink-2); }
       <tr><td>EMMC (EagerMOT, più camere)*</td><td class="n">36,5</td><td class="n">69,3</td><td class="n">54,3</td><td class="n">57,5</td><td class="n">55,9</td><td class="n">71,3</td></tr>
       <tr><td>EagerMOT, una camera*</td><td class="n">33,1</td><td class="n">57,4</td><td class="n">53,3</td><td class="n">52,1</td><td class="n">50,4</td><td class="n">67,7</td></tr>
       <tr><td>CenterPoint + SimpleTrack*</td><td class="n">31,5</td><td class="n">57,0</td><td class="n">53,9</td><td class="n">52,1</td><td class="n">49,3</td><td class="n">72,9</td></tr>
+      <tr><td>CenterPoint senza addestramento CODa, 10 scansioni + SimpleTrack</td><td class="n">0,1</td><td class="n">37,9</td><td class="n">19,9</td><td class="n">23,9</td><td class="n">23,0</td><td class="n">54,8</td></tr>
+      <tr><td>&nbsp;&nbsp;stesso, 1 scansione</td><td class="n">−58,1</td><td class="n">−29,4</td><td class="n">−8,4</td><td class="n">−22,7</td><td class="n">−23,4</td><td class="n">31,8</td></tr>
       <tr><td>DeepFusionMOT</td><td class="n">3,2</td><td class="n">19,1</td><td class="n">23,5</td><td class="n">19,2</td><td class="n">19,8</td><td class="n">32,8</td></tr>
       <tr><td>Dynablox</td><td class="n">−284</td><td class="n">−74,9</td><td class="n">38,8</td><td class="n">−45,5</td><td class="n">−59,8</td><td class="n">27,3</td></tr>
       <tr><td>M-detector</td><td class="n">−389</td><td class="n">−59,5</td><td class="n">−21,7</td><td class="n">−84,0</td><td class="n">−91,9</td><td class="n">1,1</td></tr>
@@ -195,7 +197,8 @@ footer { font: 13px var(--f-mono); color: var(--ink-2); }
     <p class="note"><b>Come leggerla.</b> SINS vince nettamente dove ci sono molti pedoni e bici (seq 0, seq 16) e perde su
       seq 10, piena di veicoli: un'auto vista dal LiDAR fuori dal campo della camera resta spezzata in pezzi, e nessuna
       regola basata sulla camera la può riunire. Sull'identità (IDF1) i tracker con CenterPoint addestrato su CODa fanno
-      meglio. Con 9 finestre la statistica dice "comparabile" con EMMC: il verdetto vero viene dai dati mai visti.</p>
+      meglio. Lo stesso CenterPoint addestrato altrove (nuScenes) scende a 23,9 anche con 10 scansioni accumulate: senza
+      addestramento sul dataset, SINS è di gran lunga il migliore. Con 9 finestre la statistica dice "comparabile" con EMMC: il verdetto vero viene dai dati mai visti.</p>
   </section>
 
   <section>
