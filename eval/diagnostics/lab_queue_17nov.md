@@ -994,3 +994,7 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - Gate note: SINS alone pushes load1 to ~2.5-3, so "load5 < 1.5" makes each run wait several minutes after the previous one. The
   GLIM job runs from a tmux session under the same uid (another person's, not touched). Proposal: gate on CPU used outside the
   jo_sim_sins container (cgroup) instead of the global load.
+- 26/11 afternoon: coda2_w1_stereo and coda2_w2_stereo were missing on the NAS after the maintenance (existed at 10:57). Regenerated
+  with coda_stereo_bag.py (same settings; same sizes 1.9/2.4 GB), copied and verified. Full check: all 9 windows re-converted locally
+  (deterministic converter) and compared file by file with the NAS: 72/72 md5 OK. Reference list now on the NAS:
+  derived/coda_windows/MD5SUMS_coda_2_3_18.txt. Videos MD5SUMS also OK. Scratch copies deleted after verify.
