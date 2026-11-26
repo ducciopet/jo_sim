@@ -13,11 +13,16 @@ case $S in
   12) W="2430 2929 w1|10200 10599 w2|11280 11749 w3" ;;
   # seq 16 (TUNING, 04/11): the annotated stretches with moving vehicles; no ZED archive -> stereo pair only (--no-camera)
   16) W="2900 3799 w1|8450 9249 w2|10320 11559 w3|14700 15849 w4"; NOCAM=--no-camera ;;
-  *) echo "usage: $0 10|11|12|16"; exit 1 ;;
+  # UNSEEN seqs 2/3/18 (26/11, user OK to convert before the freeze; nothing run or scored until after the tag): one window per
+  # annotated span (span limits from the external PC), same 200-frame lead-in; no ZED archive -> stereo pair only, as seq 16
+  2)  W="2200 2599 w1|4840 5339 w2|5275 5659 w3|6650 7149 w4"; NOCAM=--no-camera ;;
+  3)  W="1600 2099 w1|11750 12149 w2"; NOCAM=--no-camera ;;
+  18) W="1450 1749 w1|1830 2129 w2|6300 6699 w3"; NOCAM=--no-camera ;;
+  *) echo "usage: $0 10|11|12|16|2|3|18"; exit 1 ;;
 esac
 IFS='|' read -ra WS <<< "$W"
 for w in "${WS[@]}"; do
-  set -- $w; out=bags/coda/coda${S}_$3
+  set -- $w; out=${OUT:-bags/coda}/coda${S}_$3   # OUT=bags/final_scratch/coda_new: unseen windows streamed to the NAS
   [ -e $out.done ] && continue
   [ -n "$ONLY" ] && [ "$ONLY" != "$3" ] && continue   # ONLY=w2: just that window (tight disk)
   rm -rf $out ${out}_odom ${out}_stereo
