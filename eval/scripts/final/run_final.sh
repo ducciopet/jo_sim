@@ -24,8 +24,14 @@ esac
 # LOAD GATE (26/11, same-profile drift under another user's load, lab_queue 41): a run starts only when load5 < 1.5 and
 # load1 < 2, waiting up to GATE_MAX s (2 h); past the deadline it runs anyway and is flagged "loaded" in the manifest and
 # requeued once at the end of the dataset. During each run load1/load5 are sampled every 30 s (median/max in the manifest);
-# latency p90 > 1.5 x QUIET_P90 (ms, the dataset's quiet value [TBD per dataset]) also flags a rerun.
-GATE_MAX=${GATE_MAX:-7200}; QUIET_P90=${QUIET_P90:-0}
+# latency p90 > 1.5 x QUIET_P90 (ms, the dataset's quiet value) also flags a rerun. REQUEUE: at the end of the dataset each flagged
+# item/rep is rerun once through the same gate into <item>_r<k>_rerun/; the rerun replaces the flagged run in the tables, both
+# manifests kept; if the rerun is flagged too, the better-gated one is kept (quiet over loaded, then lower load5 median) and is
+# marked loaded in the tables. The choice is written to <item>_r<k>/selected.json on the NAS.
+GATE_MAX=${GATE_MAX:-7200}
+case $DS in   # quiet latency p90 [ms] per dataset, fixed 26/11 from quiet-hours dev medians (FINAL_RUN_SPEC 5), never from a final run
+  coda|coda_new) Q=125 ;; kitti) Q=175 ;; doals) Q=104 ;; jrdb) Q=42 ;; lab) Q=115 ;;
+esac; QUIET_P90=${QUIET_P90:-$Q}
 gate() { local t0=$(date +%s); while awk '{exit !($2 >= 1.5 || $1 >= 2.0)}' /proc/loadavg; do
   [ $(( $(date +%s) - t0 )) -ge $GATE_MAX ] && { echo loaded; return; }; sleep 60; done; echo quiet; }
 do_() { echo "+ $*"; [ "$DRY" = 1 ] || eval "$@" || { echo "FAILED: $*"; exit 1; }; }
@@ -38,43 +44,54 @@ inputs() {   # names of the input folders/files of one item (bag, odom, gt...) a
     jrdb)  echo "$1 ${1}_odom ${1}_gt.csv ${1}_gt.json" ;;
   esac; }
 runname() { case $DS in coda|coda_new) c=$2; [[ $c == *_* ]] || c=0_$c; echo "$1_v2_coda$c" ;; *) echo "$1_v2_${DS}_$2" ;; esac; }
-for it in $ITEMS; do
-  guard
-  # 1. stage the item into the scratch folder (convert + upload to final_inputs once if missing) and link it where the runner reads
+stage() { local it=$1   # 1. stage the item into the scratch folder and link it where the runner reads
   do_ mkdir -p $S $LOCAL/runs $RES
   for f in $(inputs $it); do
-    do_ "[ -e $NI/$f ] && rsync -a $NI/$f $S/ || echo '[TBD] convert $DS $it into $S, then rsync -a $S/$f $NI/'"
+    do_ "[ -e $S/$f ] || [ -e $NI/$f ] && { [ -e $S/$f ] || rsync -a $NI/$f $S/; } || echo '[TBD] convert $DS $it into $S, then rsync -a $S/$f $NI/'"
     do_ "[ -e $LOCAL/$f ] && [ ! -L $LOCAL/$f ] && { echo 'real file in the way: $LOCAL/$f'; exit 1; } || ln -sfn ../final_scratch/$DS/$f $LOCAL/$f"
-  done
-  for k in $REPS; do
-    t=$TAG; [ $k = 1 ] || t=${TAG}r$k; run=$(runname $t $it)
-    [ -e $NO/${it}_r$k/manifest.json ] && { echo "done: $DS $it r$k"; continue; }
-    guard; G=quiet; [ "$DRY" = 1 ] || G=$(gate); L0=$(cut -d' ' -f1 /proc/loadavg)
-    LL=$S/${run}_load.txt; [ "$DRY" = 1 ] || { : > $LL; ( while true; do echo "$(date +%s) $(cut -d' ' -f1-2 /proc/loadavg)" >> $LL; sleep 30; done ) & SAMP=$!; }
-    # 2. run (container), same runners as development
-    case $DS in
-      coda|coda_new) do_ "docker exec -u ros jo_sim_sins bash -c \"TAG=$t ENV=$PROF STEREO=1 bash /home/ros/bags/replay/run_coda.sh $it\" > /dev/null 2>&1" ;;
-      kitti) do_ "docker exec -u ros jo_sim_sins bash -c \"TAG=$t KITTI_ENV=$PROF bash /home/ros/bags/replay/run_kitti.sh $it\" > /dev/null 2>&1" ;;
-      doals) do_ "docker exec -u ros jo_sim_sins bash -c \"TAG=$t DOALS_ENV=$PROF bash /home/ros/bags/replay/run_doals.sh $it\" > /dev/null 2>&1" ;;
-      jrdb)  do_ "docker exec -u ros jo_sim_sins bash -c \"JRDB_ENV=$PROF TAG=$t bash /home/ros/bags/replay/run_jrdb.sh $it\" > /dev/null 2>&1" ;;
-    esac
-    [ "$DRY" = 1 ] || kill $SAMP 2>/dev/null
-    # 3. move the run into scratch, manifest (dropped scans, load, commits, md5s), latency log
-    do_ mv $LOCAL/runs/$run $LOCAL/runs/${run}_logs $S/
-    do_ rm -f $LOCAL/runs/$run.done
-    do_ python3 eval/scripts/final/make_manifest.py --run $S/$run --input $S/$(inputs $it | cut -d' ' -f1) --profile $PROF --load-start $L0 --gate $G --load-log $LL --quiet-p90 $QUIET_P90
-    # rerun once at the end of the dataset if the manifest says rerun_needed (dropped > 2%, gate "loaded", or p90 > 1.5x quiet);
-    # both runs are kept, the rerun counts [TBD: requeue loop]
-    do_ "python3 -c \"import json,sys; sys.exit(0 if json.load(open('$S/$run/manifest.json'))['rerun_needed'] else 1)\" && echo '$it $k' >> $S/requeue.txt || true"
-    # 4. score into eval/results/final/$DS/<metric>/ [TBD: evaluator + metrics per dataset, FINAL_RUN_SPEC 3]
-    # 5. copy to the NAS and verify (checksum dry run, -r only: SMB time/perm differences are not listed, must list nothing), then remove the run from scratch
-    do_ mkdir -p $NO/${it}_r$k
-    do_ rsync -a $S/$run $S/${run}_logs $NO/${it}_r$k/
-    do_ "[ -z \"\$(rsync -rnc --out-format=%n $S/$run $S/${run}_logs $NO/${it}_r$k/)\" ] || { echo 'NAS verify FAILED $run'; exit 1; }"
-    do_ cp $S/$run/manifest.json $NO/${it}_r$k/manifest.json
-    do_ rm -rf $S/$run $S/${run}_logs
-  done
-  # 6. all reps of the item done and on the NAS: drop the staged inputs (scratch only) and the links
-  for f in $(inputs $it); do do_ rm -rf $S/$f; do_ rm -f $LOCAL/$f; done
+  done; }
+unstage() { local it=$1   # inputs out of scratch (scratch only) and the links
+  for f in $(inputs $it); do do_ rm -rf $S/$f; do_ rm -f $LOCAL/$f; done; }
+run_one() { local it=$1 k=$2 sfx=$3   # one rep; sfx "" or "_rerun"
+  local t=$TAG; [ $k = 1 ] || t=${TAG}r$k; local run=$(runname $t $it); local dst=$NO/${it}_r$k$sfx
+  [ -e $dst/manifest.json ] && { echo "done: $DS $it r$k$sfx"; return; }
+  guard; local G=quiet; [ "$DRY" = 1 ] || G=$(gate); local L0=$(cut -d' ' -f1 /proc/loadavg)
+  local LL=$S/${run}_load.txt SAMP=""; [ "$DRY" = 1 ] || { : > $LL; ( while true; do echo "$(date +%s) $(cut -d' ' -f1-2 /proc/loadavg)" >> $LL; sleep 30; done ) & SAMP=$!; }
+  # 2. run (container), same runners as development
+  case $DS in
+    coda|coda_new) do_ "docker exec -u ros jo_sim_sins bash -c \"TAG=$t ENV=$PROF STEREO=1 bash /home/ros/bags/replay/run_coda.sh $it\" > /dev/null 2>&1" ;;
+    kitti) do_ "docker exec -u ros jo_sim_sins bash -c \"TAG=$t KITTI_ENV=$PROF bash /home/ros/bags/replay/run_kitti.sh $it\" > /dev/null 2>&1" ;;
+    doals) do_ "docker exec -u ros jo_sim_sins bash -c \"TAG=$t DOALS_ENV=$PROF bash /home/ros/bags/replay/run_doals.sh $it\" > /dev/null 2>&1" ;;
+    jrdb)  do_ "docker exec -u ros jo_sim_sins bash -c \"JRDB_ENV=$PROF TAG=$t bash /home/ros/bags/replay/run_jrdb.sh $it\" > /dev/null 2>&1" ;;
+  esac
+  [ -n "$SAMP" ] && kill $SAMP 2>/dev/null
+  # 3. manifest (dropped scans, load gate + load during the run, latency p90, commits, md5s) while the run is where the container sees it
+  do_ python3 eval/scripts/final/make_manifest.py --run $LOCAL/runs/$run --input $S/$(inputs $it | cut -d' ' -f1) --profile $PROF \
+      --load-start $L0 --gate $G --load-log $LL --quiet-p90 $QUIET_P90 ${sfx:+--rerun-of $NO/${it}_r$k}
+  do_ mv $LOCAL/runs/$run $LOCAL/runs/${run}_logs $S/
+  do_ "mv $LL $S/$run/load.txt 2>/dev/null || true"
+  do_ rm -f $LOCAL/runs/$run.done
+  # 4. score into eval/results/final/$DS/<metric>/ [TBD: evaluator + metrics per dataset, FINAL_RUN_SPEC 3; rerun -> <TAG>_<item>_rerun.json]
+  # 5. copy to the NAS and verify (checksum dry run, -r only: SMB time/perm differences are not listed, must list nothing)
+  do_ mkdir -p $dst
+  do_ rsync -a $S/$run $S/${run}_logs $dst/
+  do_ "[ -z \"\$(rsync -rnc --out-format=%n $S/$run $S/${run}_logs $dst/)\" ] || { echo 'NAS verify FAILED $run'; exit 1; }"
+  do_ cp $S/$run/manifest.json $dst/manifest.json
+  do_ rm -rf $S/$run $S/${run}_logs
+  if [ -z "$sfx" ]; then   # flagged -> requeue at the end of the dataset
+    do_ "python3 -c \"import json,sys; sys.exit(0 if json.load(open('$dst/manifest.json'))['rerun_needed'] else 1)\" && echo '$it $k' >> $S/requeue.txt || true"
+  else                     # choose between the flagged run and its rerun
+    do_ python3 eval/scripts/final/select_run.py $NO/${it}_r$k $dst
+  fi; }
+for it in $ITEMS; do
+  stage $it
+  for k in $REPS; do run_one $it $k ""; done
+  unstage $it
 done
+# REQUEUE: each flagged item/rep once, same gate
+if [ -s $S/requeue.txt ]; then
+  echo "$(date +%T) requeue: $(wc -l < $S/requeue.txt) runs"
+  while read it k; do stage $it; run_one $it $k _rerun; unstage $it; done < $S/requeue.txt
+  do_ mv $S/requeue.txt $S/requeue_done_$(date +%Y%m%d_%H%M).txt
+fi
 echo "$(date +%T) $DS done"

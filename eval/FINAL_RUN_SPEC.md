@@ -96,7 +96,7 @@ Columns per table:
   - host, load average (1 min) at start and end, GPU;
   - dropped scans per node, replay rate;
   - date.
-- **Rerun rule:** a run is rerun (once, identical settings) if dropped scans > 2% or the process crashed. Both runs are logged; the rerun counts.
+- **Rerun rule (updated 26/11):** a run is rerun once, identical settings, at the end of its dataset, through the same load gate, if (a) dropped scans > 2% or crash, (b) it started "loaded" (load gate: start only when load5 < 1.5 and load1 < 2, wait up to 2 h, then run anyway flagged), or (c) its latency p90 > 1.5 x the dataset's quiet p90. Quiet p90 values fixed 26/11 from quiet-hours development medians, never from a final run: CODa 125, lab 115, JRDB 42, DOALS 104, KITTI 175 ms. The rerun replaces the flagged run in the tables; both manifests are kept; if the rerun is flagged too, the better-gated one is kept (quiet over loaded, then lower load5 median) and marked "loaded" in the tables (`select_run.py`, `<item>_r<k>/selected.json`). load1/load5 are sampled every 30 s during every run (median/max in the manifest). Reason: same-profile drift under another user's load, lab_queue 41.
 - **Disk on the lab PC:**
   - stream one sequence at a time from the NAS into a pre-authorised scratch folder (named by the user in the lab session);
   - delete it after the outputs are on the NAS and verified;
