@@ -941,3 +941,13 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - CODa new 2/3/18 on the NAS: 3d_comp / 2d_rect cam0+cam1 complete per seq (2: 1720 frames, 985 bbox; 3: 900/500; 18: 1000/400),
   what coda_to_bag.py + coda_stereo_bag.py read. md5sum -c over MD5SUMS_new_sequences_2_3_18.txt: 12796 files OK, 0 failed.
 - Disk 58 GB free.
+
+## 39. 26/11: videos of the current base; CODa 2/3/18 converted (user OK)
+- Videos (peer request): NAS derived/videos/current/ (12 files + MD5SUMS.txt), H0 rep 1 (r1lccbma) vs EMMC on CODa 0_w1, 10_w2, 10_w4,
+  16_w1; SINS-only KITTI test 0000 and JRDB bytes (smoke runs). Web versions two-pass <= 13.5 MB. Late (06:05): my web-encode wait
+  loop pgrep-matched its own command line overnight.
+- CODa 2/3/18 (user "Sì, converti oggi" in this session, overriding "not before the freeze" for the conversion only): 9 windows
+  fixed in FINAL_RUN_SPEC 2 from the span limits (901b5e07), converted with convert_coda_heldout.sh (--no-camera) into
+  bags/final_scratch, copied to NAS derived/coda_windows/ (45 entries, checksum verified), scratch deleted. Frames per window as
+  expected; GT row counts only: 2_w1 400 (2 instances), 2_w2 3948, 2_w3 3937, 2_w4 3368, 3_w1 7857, 3_w2 2842, 18_w1 1384,
+  18_w2 1202, 18_w3 3410. No SINS run, no scoring until after the paper-v1 tag.
