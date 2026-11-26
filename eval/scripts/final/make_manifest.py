@@ -11,7 +11,7 @@ ap.add_argument('--run', required=True); ap.add_argument('--input', required=Tru
 ap.add_argument('--load-start', type=float, required=True); ap.add_argument('--rate', type=float, default=1.0)
 ap.add_argument('--rerun-of', default=None)
 ap.add_argument('--gate', default='quiet', help='load gate outcome: quiet | loaded (deadline passed)')
-ap.add_argument('--load-log', default=None, help='file of "<epoch> <load1> <load5>" samples taken every 30 s during the run')
+ap.add_argument('--load-log', default=None, help='file of "<epoch> <load1> <load5> <foreign cpu%%> <foreign gpu%%>" samples, every ~30 s')
 ap.add_argument('--quiet-p90', type=float, default=0.0, help='dataset quiet latency p90 [ms]; 0 = not set')
 a = ap.parse_args()
 git = lambda d: subprocess.run(['git', '-C', str(d), 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True).stdout.strip()
@@ -41,10 +41,12 @@ m = dict(date=datetime.datetime.now().isoformat(timespec='seconds'), host=socket
          outputs=nodes, dropped_pct={k: round(100.0 * (1 - v / scans), 2) if scans else None for k, v in nodes.items()},
          rerun_of=a.rerun_of, container=container_versions())
 import statistics
-L = [list(map(float, l.split()[1:3])) for l in open(a.load_log)] if a.load_log and Path(a.load_log).exists() else []
+L = [list(map(float, l.split()[1:5])) for l in open(a.load_log) if len(l.split()) >= 5] if a.load_log and Path(a.load_log).exists() else []
 m['load_gate'] = a.gate
 m['load_during'] = dict(n=len(L), load1_median=statistics.median(x[0] for x in L) if L else None, load1_max=max((x[0] for x in L), default=None),
-                        load5_median=statistics.median(x[1] for x in L) if L else None, load5_max=max((x[1] for x in L), default=None))
+                        load5_median=statistics.median(x[1] for x in L) if L else None, load5_max=max((x[1] for x in L), default=None),
+                        foreign_cpu_median=statistics.median(x[2] for x in L) if L else None, foreign_cpu_max=max((x[2] for x in L), default=None),
+                        foreign_gpu_median=statistics.median(x[3] for x in L) if L else None, foreign_gpu_max=max((x[3] for x in L), default=None))
 lat = subprocess.run(['docker', 'exec', 'jo_sim_sins', 'bash', '-lc', 'source /opt/ros/jazzy/setup.bash; source /home/ros/local_install/setup.bash; '
                       f'python3 /home/ros/bags/replay/lat_tracks.py /home/ros/{Path(a.run).resolve().relative_to(ROOT)}'],
                      capture_output=True, text=True).stdout.strip().splitlines()

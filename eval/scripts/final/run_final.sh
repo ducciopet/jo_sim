@@ -33,8 +33,13 @@ GATE_MAX=${GATE_MAX:-7200}
 case $DS in   # quiet latency p90 [ms] per dataset, fixed 26/11 from quiet-hours dev medians (FINAL_RUN_SPEC 5), never from a final run
   coda|coda_new) Q=125 ;; kitti) Q=175 ;; doals) Q=104 ;; jrdb) Q=42 ;; lab) Q=115 ;;
 esac; QUIET_P90=${QUIET_P90:-$Q}
-gate() { local t0=$(date +%s); while awk '{exit !($2 >= 1.5 || $1 >= 2.0)}' /proc/loadavg; do
-  [ $(( $(date +%s) - t0 )) -ge $GATE_MAX ] && { echo loaded; return; }; sleep 60; done; echo quiet; }
+# GATE switched 26/11 (peer/user, FINAL_RUN_SPEC 5): SINS alone pushes load1 to ~2.5-3, so the gate uses the CPU and GPU used OUTSIDE
+# the jo_sim_sins container (foreign_load.py): start only when foreign CPU < 100% (one core) and foreign GPU SM < 30% for 2 min
+# (4 consecutive 30 s samples); deadline GATE_MAX, then run anyway flagged "loaded". load1/load5 stay logged for information.
+FL="python3 eval/scripts/final/foreign_load.py --dt 5"
+gate() { local t0=$(date +%s) ok=0; while [ $ok -lt 4 ]; do
+  read c g <<< "$($FL)"; if [ "${c:-999}" -lt 100 ] && [ "${g:-999}" -lt 30 ]; then ok=$((ok+1)); else ok=0; fi
+  [ $(( $(date +%s) - t0 )) -ge $GATE_MAX ] && { echo loaded; return; }; [ $ok -lt 4 ] && sleep 25; done; echo quiet; }
 do_() { echo "+ $*"; [ "$DRY" = 1 ] || eval "$@" || { echo "FAILED: $*"; exit 1; }; }
 guard() { [ $(df -B1G --output=avail / | tail -1) -lt 3 ] && { echo "DISK < 3 GB, stop"; exit 1; }; }
 inputs() {   # names of the input folders/files of one item (bag, odom, gt...) as the dataset runner expects them
@@ -85,7 +90,7 @@ run_one() { local it=$1 k=$2 sfx=$3   # one rep; sfx "" or "_rerun"
   local t=$TAG; [ $k = 1 ] || t=${TAG}r$k; local run=$(runname $t $it); local dst=$NO/${it}_r$k$sfx
   [ -e $dst/manifest.json ] && { echo "done: $DS $it r$k$sfx"; return; }
   guard; local G=quiet; [ "$DRY" = 1 ] || G=$(gate); local L0=$(cut -d' ' -f1 /proc/loadavg)
-  local LL=$S/${run}_load.txt SAMP=""; [ "$DRY" = 1 ] || { : > $LL; ( while true; do echo "$(date +%s) $(cut -d' ' -f1-2 /proc/loadavg)" >> $LL; sleep 30; done ) & SAMP=$!; }
+  local LL=$S/${run}_load.txt SAMP=""; [ "$DRY" = 1 ] || { : > $LL; ( while true; do echo "$(date +%s) $(cut -d' ' -f1-2 /proc/loadavg) $($FL)" >> $LL; sleep 25; done ) & SAMP=$!; }
   # 2. run (container), same runners as development
   case $DS in
     coda|coda_new) do_ "docker exec -u ros jo_sim_sins bash -c \"TAG=$t ENV=$PROF STEREO=1 bash /home/ros/bags/replay/run_coda.sh $it\" > /dev/null 2>&1" ;;
