@@ -1013,3 +1013,15 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - Profiles regenerated, md5s identical to the 25/11 draft; the 5 generated cfg folders committed in sins.
 - sins: tag paper-v1 = 9ea5942 on c5-semantic-birth (includes the ablation switches, default off); main fast-forwarded to it; pushed.
 - jo_sim: tag paper-v1 at the commit with the final PROFILES.md (this one). From here: no code/parameter change without a dated erratum.
+- Build from the tag OK (sins paper-v1 9ea5942; the 5 final cfgs installed). bags/replay/run_method.sh patched to DUR +15 (dev copy with
+  +3 kept in bags/final_scratch/logs/run_method.sh.dev_DUR3); run_coda/kitti/doals/jrdb.sh copied from the repo (note: the previous
+  bags/replay/run_coda.sh was overwritten without a diff; the dry run below on w3 behaves as the dev runs).
+- Inputs: KITTI 21 + DOALS 8 on NAS final_inputs with MD5SUMS (17:04-18:20). JRDB: jrdb_pano_ignore needs the converted bag/odom/gt in
+  bags/jrdb (links added in the conversion script), running.
+- Dry run (DRY=0, tag SMK2, outputs in bags/final_scratch/dryrun, gate 60 s so flagged "loaded"): CODa w3 end to end incl. gate,
+  manifest (sins 9ea5942, md5 7d3af8d3, 0 dropped, latency 123/151), all 6 CODa views + persistence, NAS-style copy, requeue + rerun.
+  w3 errors 27 vs dev H0 28-31 / EB 24. Lab 1952 dry run running.
+- Harness changes after the jo_sim tag (no method/parameter change): run_final NO/RES overridable for the dry run.
+- Final chain started (eval/scripts/final/final_chain.sh, log bags/final_scratch/logs/final_chain.log): waits for the JRDB
+  conversion and the dry run, then coda_new x3, KITTI x3, DOALS x3, CODa tuning x5, 11/12 x3, JRDB x3, lab x6. Ablation (spec 6) not
+  yet queued.

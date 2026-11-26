@@ -11,8 +11,8 @@
 #   items: coda: w1 10_w1 ... (window names); kitti: 0000..0020; doals: hauptgebaeude_1 ...; jrdb: forbes huangb ...
 cd $(dirname $0)/../../..
 DS=$1; shift; ITEMS="$@"; DRY=${DRY:-1}; TAG=${TAG:-SF}; REPS=${REPS:-1 2 3}
-N=/mnt/nas-imperatore/datasets_SINS; NI=$N/derived/final_inputs/$DS; NO=$N/derived/sins_final/$DS
-S=bags/final_scratch/$DS; RES=eval/results/final/$DS
+N=/mnt/nas-imperatore/datasets_SINS; NI=$N/derived/final_inputs/$DS; NO=${NO:-$N/derived/sins_final/$DS}   # NO/RES overridable for the dry run
+S=bags/final_scratch/$DS; RES=${RES:-eval/results/final/$DS}
 export PATH=$HOME/.venvs/sins_eval/bin:$PATH
 case $DS in   # profile per dataset (FINAL_RUN_SPEC 2, eval/results/final/PROFILES.md)
   coda|coda_new) PROF=${PROF:-coda_vjsye2i2pcar1lccbma}; LOCAL=bags/coda; NI=$N/derived/coda_windows ;;   # windows already converted there
