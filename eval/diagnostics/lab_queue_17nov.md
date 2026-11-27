@@ -1115,3 +1115,14 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
   w1 (IDOFF/IDON); (3) flag on (AC) on the 7 seqs with the most lab-PC drops: 0018 0009 0008 0004 0007 0019 0020; then
   reinstalls paper-v1. Profiles (dev only): kitti_tracking_tick_ac, kitti_tracking_ac, coda_vjsye2i2pcar1lccbmaac.
   NAS sins_final/dev/c7/, scores eval/results/dev/c7/.
+
+## 50. Official paper-v1 latency = the final runs (lab PC, quiet-gated; agreed with the laptop 27/11), from the manifests
+(selected run per item/rep; latency = rec - stamp of /sins/tracker/tracks, lat_tracks.py; values come in ~25 ms steps)
+| dataset | runs | median ms | p90 ms (median, range) | runs p90 > 100 | drops |
+| CODa 2/3/18 | 27 | 100 (50-125) | 124 (77-176) | 22/27 | 0 |
+| CODa tuning + 11/12 | 63 | 103 (51-149) | 171 (101-375) | 63/63 | max 2.0% |
+| KITTI | 63 | 275 (75-2700) | 1250 (100-6075) | 60/63 | median 10.4%, max 94.4%, 39 runs > 2% |
+| DOALS | 24 | 102 (100-149) | 125 (103-151) | 24/24 | 0 |
+| JRDB | 18 | 25 (17-42) | 33 (25-50) | 0/18 | max 0.1% |
+| lab | 36 | 90 (85-99) | 112 (104-121) | 36/36 | max 0.2% |
+Against the user's requirement (every scan <= 100 ms, no drops) only JRDB passes on the lab PC.
