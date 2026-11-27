@@ -109,13 +109,152 @@ footer { font: 13px var(--f-mono); color: var(--ink-2); }
 
 
 
+
+
+
+  <section>
+    <h2>Per classe e fuori dal campo della camera (CODa 2/3/18, mai viste)</h2>
+    <p class="note"><b>Su CODa 11/12 (set esposto, dove il distacco da EMMC è più grande: MOTA 44 contro 71)</b> la causa è la
+      stessa, più marcata: SINS trova il 60% degli oggetti, EMMC il 92%. Il 64% di quelli persi da SINS sono <b>veicoli</b>
+      (recall 26% contro 94%) e il 78% sono <b>fuori dal campo della camera</b>, dove SINS nel 78% dei casi non ha nulla entro
+      2 m. Sulle persone il divario è lo stesso di CODa 2/3/18 (77% contro 95%); su bici e altri oggetti SINS è avanti
+      (26% contro 18%, 59% contro 19%).</p>
+    <h3>Precisione e recall per classe</h3>
+    <p class="note"><b>Come si leggono.</b> <b>Recall</b> = quanti oggetti veri di quella classe sono trovati, da un box
+      qualsiasi; tra parentesi, quanti dal box con la <b>classe giusta</b>. <b>Precisione</b> = dei box che il metodo
+      etichetta con quella classe, quanti cadono su un oggetto vero di quella classe; tra parentesi quanti sono falsi
+      allarmi (su nessun oggetto). L'abbinamento è lo stesso di sempre: centri entro 1 m. SINS: media delle 3 ripetizioni.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Metodo</th><th class="n">Persone R</th><th class="n">Persone P</th><th class="n">Veicoli R</th><th class="n">Veicoli P</th><th class="n">Bici R</th><th class="n">Box senza classe</th></tr>
+      <tr class="me"><td>SINS</td><td class="n">76 (35)</td><td class="n">96 (falsi 2)</td><td class="n">33 (23)</td><td class="n">70 (falsi 30)</td><td class="n">10 (0)</td><td class="n">54% dei box, precisione 94%</td></tr>
+      <tr><td>EMMC</td><td class="n">96 (96)</td><td class="n">88 (falsi 11)</td><td class="n">99 (99)</td><td class="n">98 (falsi 2)</td><td class="n">14 (10)</td><td class="n">0%</td></tr>
+      <tr><td>EM (solo persone)</td><td class="n">96 (96)</td><td class="n">88 (falsi 11)</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">0%</td></tr>
+      <tr><td>CenterPoint + SimpleTrack</td><td class="n">98 (98)</td><td class="n">79 (falsi 20)</td><td class="n">99 (99)</td><td class="n">91 (falsi 9)</td><td class="n">17 (9)</td><td class="n">0%</td></tr>
+      <tr><td>CenterPoint nuScenes 10 sc.</td><td class="n">81 (76)</td><td class="n">82 (falsi 18)</td><td class="n">95 (95)</td><td class="n">20 (falsi 79)</td><td class="n">14 (10)</td><td class="n">0%</td></tr>
+      <tr><td>DeepFusionMOT</td><td class="n">29 (29)</td><td class="n">98 (falsi 3)</td><td class="n">22 (22)</td><td class="n">98 (falsi 2)</td><td class="n">1 (1)</td><td class="n">0%</td></tr>
+    </table></div>
+    <p class="note"><b>Cosa dice.</b> Sulle persone SINS è il più preciso di tutti (96%: quasi nulla di ciò che chiama
+      "persona" è falso), ma ne trova 76 su 100 contro 96–98 dei metodi addestrati. La classe "persona" la mette solo
+      su 35 su 100: più della metà dei box di SINS non ha classe, perché sono fuori dal campo della camera, dove YOLO non
+      arriva; quei box senza classe sono comunque giusti nel 94% dei casi. Sui <b>veicoli</b> SINS è debole (33% contro
+      99%) ed è il primo punto da migliorare. Le <b>bici</b> sono difficili per tutti (al massimo 17%). Dynablox e
+      M-detector non danno classi e non compaiono qui.</p>
+
+    <h3>Oggetti fermi già visti, valutati anche fuori dal campo della camera (vista "pdprev")</h3>
+    <p class="note"><b>Cos'è.</b> Nella valutazione principale un oggetto fermo fuori dal campo della camera non conta (non
+      si può sapere se è mobile senza averlo visto). Qui invece conta se era già stato visto prima: chi lo "dimentica"
+      appena esce dal campo viene penalizzato. È la prova più dura per la memoria di un metodo. Per gli altri metodi, che
+      non hanno uno stato proprio, "fermo ma mobile" è ricavato dalla velocità della traccia (media su 0,5 s).</p>
+    <div class="tablewrap"><table>
+      <tr><th>Metodo</th><th class="n">MOTA</th><th class="n">Recall</th><th class="n">Precisione</th><th class="n">IDF1</th><th class="n">F1 PD</th></tr>
+      <tr class="me"><td>SINS</td><td class="n">44,5</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">12</td></tr>
+      <tr><td>EMMC</td><td class="n">53,7</td><td class="n">71,9</td><td class="n">81,2</td><td class="n">65,3</td><td class="n">14</td></tr>
+      <tr><td>EM</td><td class="n">48,9</td><td class="n">66,1</td><td class="n">80,7</td><td class="n">61,8</td><td class="n">9</td></tr>
+      <tr><td>CenterPoint + SimpleTrack</td><td class="n">45,0</td><td class="n">73,1</td><td class="n">72,9</td><td class="n">66,3</td><td class="n">18</td></tr>
+      <tr><td>DeepFusionMOT</td><td class="n">17,7</td><td class="n">20,4</td><td class="n">89,2</td><td class="n">31,8</td><td class="n">3</td></tr>
+      <tr><td>CenterPoint nuScenes 10 sc.</td><td class="n">15,4</td><td class="n">60,7</td><td class="n">58,0</td><td class="n">53,0</td><td class="n">10</td></tr>
+      <tr><td>Dynablox</td><td class="n">6,0</td><td class="n">56,4</td><td class="n">54,3</td><td class="n">33,9</td><td class="n">0 (nessuno stato)</td></tr>
+      <tr><td>M-detector</td><td class="n">−45,0</td><td class="n">50,9</td><td class="n">51,8</td><td class="n">1,3</td><td class="n">0 (nessuno stato)</td></tr>
+    </table></div>
+    <p class="note"><b>Cosa dice, onestamente.</b> Con questa regola il vantaggio di SINS su "fermo ma mobile" sparisce: F1
+      PD 12 contro 14 di EMMC e 18 di CenterPoint + SimpleTrack, e il MOTA (44,5) è alla pari con CenterPoint + SimpleTrack
+      e sotto EMMC. Il motivo: i metodi addestrati vedono a 360°, quindi un oggetto fermo fuori dal campo della camera per
+      loro non è mai "uscito"; SINS invece deve ricordarlo, e lo ricorda per poco (sotto). Resta molto sopra tutti i
+      metodi non addestrati.</p>
+
+    <h3>Quanto resta seguito un oggetto dopo che esce dal campo della camera</h3>
+    <p class="note"><b>Cos'è.</b> Per ogni volta che un oggetto esce dal campo della camera: la quota di casi in cui dopo 2 e
+      5 secondi è ancora seguito (da un box qualsiasi) e con lo stesso numero di traccia. "Identità" = quante volte
+      l'oggetto ha lo stesso numero prima e dopo un'uscita dal campo o una sosta.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Metodo</th><th class="n">In moto, 2 s / 5 s (regola severa)</th><th class="n">In moto, 2 s / 5 s (buchi ≤ 0,5 s tollerati)</th><th class="n">Fermi, 2 s / 5 s (tollerata)</th><th class="n">Stessa identità dopo un'uscita / una sosta</th></tr>
+      <tr class="me"><td>SINS</td><td class="n">28% / 13%</td><td class="n"><b>65% / 61%</b></td><td class="n">70% / 43%</td><td class="n">86% / 88%</td></tr>
+      <tr><td>EMMC</td><td class="n">73% / 63%</td><td class="n">98% / 98%</td><td class="n">100% / 100%</td><td class="n">98% / 78%</td></tr>
+      <tr><td>EM</td><td class="n">68% / 61%</td><td class="n">97% / 97%</td><td class="n">100% / 100%</td><td class="n">98% / 58%</td></tr>
+      <tr><td>CenterPoint + SimpleTrack</td><td class="n">98% / 90%</td><td class="n">98% / 91%</td><td class="n">100% / 100%</td><td class="n">100% / 97%</td></tr>
+      <tr><td>CenterPoint nuScenes 10 sc.</td><td class="n">95% / 90%</td><td class="n">100% / 100%</td><td class="n">83% / 21%</td><td class="n">100% / 95%</td></tr>
+      <tr><td>DeepFusionMOT</td><td class="n">0% / 0%</td><td class="n">0% / 0%</td><td class="n">0% / 0%</td><td class="n">97% / 100%</td></tr>
+    </table></div>
+    <p class="note"><b>Cosa dice.</b> La regola severa (la sopravvivenza finisce al primo fotogramma senza box) penalizza
+      soprattutto SINS: più della metà delle sue "perdite" sono buchi di un solo fotogramma, e tollerando 0,5 s la quota di
+      oggetti in moto ancora seguiti dopo 2 s sale da 28% a 65%. Resta comunque sotto i metodi addestrati (97–98%), che
+      fuori dal campo della camera continuano a <i>vedere</i> l'oggetto con il rilevatore 3D a 360°, mentre SINS deve
+      <i>ricordarlo</i>. Le soste invece SINS le gestisce meglio di EagerMOT (identità 88% contro 58–78%). Gli oggetti fermi
+      che escono dal campo sono pochi (4–6 casi per metodo): quelle percentuali sono indicative. DeepFusionMOT a 0% non è
+      un difetto di memoria: quegli oggetti non li trova quasi mai.</p>
+    <p class="note"><b>Perché SINS perde gli oggetti fuori dal campo</b> (64 perdite vere, cioè più lunghe di 0,5 s, nelle 3
+      ripetizioni). Nel momento in cui l'oggetto viene perso, SINS aveva lì: <b>nessun punto LiDAR utile</b> (occlusione o
+      punti troppo radi, la perdita legittima) in 18 casi (28%); <b>un'altra traccia appena nata</b>, statica o non ancora
+      pubblicata, che ha preso il posto di quella vecchia, in 24 (38%); <b>un rilevamento LiDAR che nessuna traccia ha
+      preso</b> in 10 (16%); <b>la stessa traccia</b> ancora viva ma non pubblicata o spostata di oltre 1 m in 12 (19%).
+      Quindi in quasi 3 casi su 4 l'oggetto c'era e SINS lo aveva: è il tracker che non tiene insieme la traccia, non il
+      sensore. È la correzione più promettente: dare la precedenza alla traccia esistente con classe, e far ereditare
+      classe e stato a una traccia che nasce nello stesso punto.</p>
+  </section>
+  <section>
+    <h2>I metodi con cui ci confrontiamo</h2>
+    <p>Tutti girano con il codice originale degli autori: si adattano solo ingressi e uscite (topic, calibrazioni, modello
+      del sensore). "Addestrato su CODa" vuol dire che il rilevatore 3D ha visto in addestramento fotogrammi delle stesse
+      sequenze, a 100 ms da quelli valutati.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Metodo</th><th>Sensori</th><th>Come trova gli oggetti</th><th>Appreso?</th><th>Identità</th><th>Stato (D / PD)</th><th>Dove gira</th></tr>
+      <tr class="me"><td><b>SINS</b></td><td>LiDAR + qualsiasi camera (RGB, RGB-D, stereo) o solo LiDAR</td><td>gruppi di punti LiDAR (geometria) + classe da YOLO 2D; moto dal tracker</td><td>solo YOLO sulle immagini; niente sul LiDAR; mai addestrato sui dataset di prova</td><td>sì</td><td>sì: D, PD, statico</td><td>ovunque, stesso comportamento</td></tr>
+      <tr><td>EMMC (EagerMOT multiclasse)</td><td>LiDAR + camera</td><td>CenterPoint 3D (persone, auto, bici) + gli stessi box YOLO di SINS, fusi</td><td><b>sì, CenterPoint addestrato su CODa</b></td><td>sì</td><td>no (dalla velocità della traccia)</td><td>solo dove c'è un CenterPoint addestrato</td></tr>
+      <tr><td>EM (EagerMOT, solo persone)</td><td>LiDAR + camera</td><td>come EMMC, tracciando solo i pedoni</td><td><b>sì, su CODa</b></td><td>sì</td><td>no</td><td>come EMMC</td></tr>
+      <tr><td>CenterPoint + SimpleTrack (ST)</td><td>solo LiDAR</td><td>CenterPoint 3D (pesi CODa degli autori di UniMT) + tracker SimpleTrack</td><td><b>sì, su CODa</b></td><td>sì</td><td>no</td><td>come EMMC</td></tr>
+      <tr><td>DeepFusionMOT</td><td>LiDAR + camera</td><td>stessi rilevamenti di EMMC; tiene solo le tracce confermate dalla camera</td><td><b>sì, su CODa</b></td><td>sì</td><td>no</td><td>come EMMC</td></tr>
+      <tr><td>CenterPoint nuScenes (1 o 10 scansioni)</td><td>solo LiDAR</td><td>CenterPoint con i pesi pubblici nuScenes + SimpleTrack</td><td>sì, ma su <b>un altro</b> dataset</td><td>sì</td><td>no</td><td>ovunque, ma degrada fuori da nuScenes</td></tr>
+      <tr><td>UniMT</td><td>LiDAR 16 righe + camera</td><td>rilevatore 3D multimodale + SimpleTrack</td><td>sì (pesi degli autori per sedia a rotelle, su CODa a 16 righe)</td><td>sì</td><td>no (tutti i box = in moto)</td><td>laboratorio</td></tr>
+      <tr><td>Dynablox</td><td>solo LiDAR</td><td>mappa di occupazione: i punti che entrano in spazio prima libero sono "in moto"</td><td>no</td><td>debole (cluster)</td><td>solo D, niente PD</td><td>ovunque</td></tr>
+      <tr><td>M-detector</td><td>solo LiDAR</td><td>punti che occludono ciò che prima era visibile = in moto (ispirato alla retina)</td><td>no</td><td>no (box ricavati dai punti)</td><td>solo D</td><td>ovunque</td></tr>
+      <tr><td>LV-DOT</td><td>LiDAR + RGB-D + YOLO</td><td>fusione di rilevamenti da LiDAR e profondità, YOLO per le persone</td><td>solo YOLO</td><td>no</td><td>solo D</td><td>solo con camera RGB-D</td></tr>
+    </table></div>
+    <p class="note"><b>In breve.</b> I più forti su CODa (EMMC, EM, ST) devono la forza a un rilevatore 3D addestrato
+      proprio su CODa, e nessuno distingue "fermo ma mobile". Quelli che non usano modelli appresi (Dynablox, M-detector)
+      vedono solo ciò che si muove, senza classe e senza identità stabili. SINS è l'unico che dà classe, identità e
+      stato (in moto / fermo ma mobile) senza essere addestrato sui dati di prova, e con qualsiasi combinazione di sensori.</p>
+  </section>
+  <section>
+    <h2>La forza di SINS: funziona ovunque, senza addestramento</h2>
+    <p>Un metodo addestrato vince a casa sua. Qui, dataset per dataset, SINS (mai addestrato su nessuno di questi dati) contro
+      i metodi che <b>non</b> sono addestrati su quel dataset: è la situazione reale di un robot che entra in un ambiente
+      nuovo. Per ogni riga, il metodo migliore tra quelli non addestrati lì.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Dataset (sensori)</th><th>Metrica</th><th class="n">SINS</th><th>Migliore degli altri non addestrati lì</th><th class="n">Valore</th><th>Nota</th></tr>
+      <tr><td>CODa 2/3/18, mai viste (LiDAR 128 + stereo)</td><td>MOTA</td><td class="n"><b>55,7</b></td><td>CenterPoint nuScenes 10 sc.</td><td class="n">17,5</td><td class="w">SINS meglio in 8–9 finestre su 9; Dynablox 6,3, M-detector −58. DeepFusionMOT (22,7) usa il CenterPoint addestrato su CODa, eppure resta molto sotto SINS</td></tr>
+      <tr><td>CODa 0/10/16, sviluppo</td><td>MOTA</td><td class="n"><b>57,7</b></td><td>CenterPoint nuScenes 10 sc.</td><td class="n">23,9</td><td class="w">qui SINS è anche alla pari con EMMC addestrato su CODa (57,5)</td></tr>
+      <tr><td>DOALS (LiDAR 64, nessuna camera)</td><td>IoU punti</td><td class="n">0,61</td><td>CenterPoint nuScenes 10 sc.</td><td class="n">0,53</td><td class="w">SINS senza camere, quindi senza classi; Dynablox (0,83) e M-detector (0,69) sono pensati proprio per questo caso</td></tr>
+      <tr><td>Laboratorio (LiDAR 16 + RGB-D, motion capture)</td><td>MOTA</td><td class="n"><b>~95</b></td><td>LV-DOT / Dynablox / M-detector / EagerMOT</td><td class="n">82 / 49 / 46 / 48</td><td class="w">trovare la persona, ferma o in moto (MODA per chi non ha identità); run finali di SINS in corso</td></tr>
+      <tr><td>JRDB (LiDAR 16 + 5 camere 360°)</td><td>MOTA</td><td class="n">~33</td><td>Dynablox / M-detector</td><td class="n">7,4 / −9,8</td><td class="w">SINS: valore di novembre, run finali in corso</td></tr>
+      <tr><td>KITTI (LiDAR 64 + RGB)</td><td colspan="5" class="w">in revisione: sul PC del lab SINS non sta nel tempo reale sulle scene dense; diagnosi in corso</td></tr>
+    </table></div>
+    <h3>Tempo reale: chi sta nei 100 ms del LiDAR a 10 Hz</h3>
+    <p class="note">Misure preliminari sul PC esterno (Dell G15, i7-12700H; macchina non del tutto libera, quindi indicative),
+      su CODa 2_w2 (affollata) e 18_w1, riproduzione a velocità reale. Tempo dalla scansione LiDAR all'uscita: mediana /
+      90° percentile. Il test ufficiale, con SINS e gli stessi metodi sulla stessa macchina, si fa sul portatile.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Metodo</th><th class="n">Latenza (mediana / p90)</th><th class="n">Scansioni elaborate</th><th>Lettura</th></tr>
+      <tr><td>M-detector</td><td class="n">5–8 s / 15–21 s</td><td class="n">23–67%</td><td class="w"><b>non in tempo reale</b>: perde fino a 3 scansioni su 4 e accumula secondi di ritardo (per questo su CODa è stato fatto girare a 1/4 di velocità)</td></tr>
+      <tr><td>Dynablox</td><td class="n">97–98 / 116–118 ms</td><td class="n">97–98%</td><td class="w">al limite: sta al passo, ma 1 scansione su 10 supera i 100 ms</td></tr>
+      <tr><td>DeepFusionMOT (solo la parte di tracking)</td><td class="n">10–174 / 26–241 ms</td><td class="n">—</td><td class="w">sulla 18_w1 supera i 100 ms nel 35–89% delle scansioni <i>già senza</i> il rilevatore 3D e YOLO</td></tr>
+      <tr><td>EagerMOT / EMMC (solo tracking)</td><td class="n">2–12 / 3–16 ms</td><td class="n">—</td><td class="w">il tracker è leggero; manca il rilevatore CenterPoint su GPU, che è la parte pesante</td></tr>
+      <tr><td>CenterPoint + SimpleTrack, EMMC completo</td><td class="n" colspan="2">da misurare</td><td class="w">la GPU del PC esterno va resettata; serve un rilevatore 3D su GPU per ogni scansione</td></tr>
+      <tr><td>UniMT (versione originale)</td><td class="n" colspan="2">—</td><td class="w">per scelta degli autori elabora <b>una scansione su due</b> (5 Hz con un LiDAR a 10 Hz)</td></tr>
+    </table></div>
+    <p class="note"><b>Onestamente su SINS:</b> anche SINS va ancora verificato. Sul PC del laboratorio, carico, il 90°
+      percentile era 115–125 ms su CODa e laboratorio, e su KITTI perde scansioni nelle scene dense (diagnosi in corso).
+      Il confronto vale solo sulla stessa macchina scarica: è il test ufficiale sul portatile.</p>
+    <p class="note"><b>In arrivo, il confronto più diretto:</b> EMMC e CenterPoint + SimpleTrack <b>con i pesi addestrati su
+      CODa</b>, fatti girare così come sono su JRDB, laboratorio, DOALS e KITTI. Lo stesso CenterPoint, portato da nuScenes a
+      CODa, scende da "migliore" a 18 di MOTA: ci aspettiamo che succeda lo stesso fuori da CODa, mentre SINS resta stabile.</p>
+  </section>
   <section>
     <h2>Il quadro finale, dataset per dataset</h2>
     <p>Versione congelata <code>paper-v1</code>. MOTA su tutti i fotogrammi (tra parentesi solo test); per DOALS IoU sui
       punti. SINS: media delle ripetizioni. Formule nella sezione sotto.</p>
     <div class="tablewrap"><table>
       <tr><th>Dataset</th><th>Ruolo</th><th class="n">SINS</th><th class="n">EMMC*</th><th class="n">EagerMOT*</th><th class="n">CP+SimpleTrack*</th><th class="n">CP non addestr.</th><th class="n">DeepFusionMOT</th><th class="n">Dynablox</th><th class="n">M-detector</th></tr>
-      <tr><td>CODa 2/3/18</td><td>mai visti</td><td class="n">55,7 (57,8)</td><td class="n">65,7 (70,0)</td><td class="n">61,4 (66,1)</td><td class="n">53,8 (61,0)</td><td class="n">17,5 (28,1)</td><td class="n">22,7 (24,7)</td><td class="n">in calcolo</td><td class="n">in calcolo</td></tr>
+      <tr><td>CODa 2/3/18</td><td>mai visti</td><td class="n">55,7 (57,8)</td><td class="n">65,7 (70,0)</td><td class="n">61,4 (66,1)</td><td class="n">53,8 (61,0)</td><td class="n">17,5 (28,1)</td><td class="n">22,7 (24,7)</td><td class="n">6,3 (10,1)</td><td class="n">−58,4 (−50,6)</td></tr>
       <tr><td>CODa 0/10/16</td><td>sviluppo (×5)</td><td class="n">57,7 (55,0)</td><td class="n">57,5 (55,9)</td><td class="n">52,1 (50,4)</td><td class="n">52,1 (49,3)</td><td class="n">23,9 (23,0)</td><td class="n">19,2 (19,8)</td><td class="n">−45,5</td><td class="n">−84,0</td></tr>
       <tr><td>CODa 11/12</td><td>esposti</td><td class="n">44,2 (43,3)</td><td class="n">71,4 (70,7)</td><td class="n">48,1 (48,7)</td><td class="n">58,0 (61,6)</td><td class="n">—</td><td class="n">35,6 (34,7)</td><td class="n">—</td><td class="n">—</td></tr>
       <tr><td>DOALS (solo LiDAR)</td><td>mai visti</td><td class="n">0,61 · 0,64 con PD</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">0,53</td><td class="n">—</td><td class="n">0,83</td><td class="n">0,69</td></tr>
@@ -156,18 +295,39 @@ footer { font: 13px var(--f-mono); color: var(--ink-2); }
       <tr><td>CenterPoint zero-shot 1 sc.</td><td class="n">-24,1 (-15,5)</td><td class="n">41,6</td><td class="n">39,2</td><td class="n">35,0</td><td class="n">25,6</td><td class="n">55,4</td><td class="n">7,9</td><td class="w">SINS meglio in 9/9 finestre (p segni 0,004)</td></tr>
       <tr><td>DeepFusionMOT</td><td class="n">22,7 (24,7)</td><td class="n">26,2</td><td class="n">89,1</td><td class="n">38,8</td><td class="n">34,6</td><td class="n">40,6</td><td class="n">17,7</td><td class="w">SINS meglio in 8/9 finestre (p segni 0,039)</td></tr>
       <tr><td>LV-DOT</td><td class="n">-0,1 (-0,2)</td><td class="n">0,0</td><td class="n">24,8</td><td class="n">0,0</td><td class="n">0,1</td><td class="n">0,1</td><td class="n">—</td><td class="w">SINS meglio in 9/9 finestre (p segni 0,004)</td></tr>
-      <tr><td>Dynablox, M-detector</td><td class="n" colspan="8">in calcolo</td></tr>
+      <tr><td>Dynablox (3 ripetizioni)</td><td class="n">6,3 (10,1)</td><td class="n">71,5</td><td class="n">54,1</td><td class="n">38,2</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="w">SINS meglio in tutte le finestre</td></tr>
+      <tr><td>M-detector (3 ripetizioni)</td><td class="n">−58,4 (−50,6)</td><td class="n">63,1</td><td class="n">50,7</td><td class="n">1,4</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="w">SINS meglio in tutte le finestre; nessuna identità stabile</td></tr>
     </table></div>
-    <p class="note"><b>Come leggerla.</b> Sui dati mai visti <b>EMMC ed EagerMOT fanno meglio di SINS</b> nel complesso (circa
-      10 e 6 punti di MOTA, 6 di HOTA; SINS fa meno errori solo in 3 finestre su 9). Usano CenterPoint addestrato su CODa (*:
-      ha visto in addestramento fotogrammi vicinissimi a questi) e, per il 2D, gli stessi rilevamenti YOLO di SINS. Con
-      CenterPoint + SimpleTrack SINS è alla pari. Lo stile è diverso: SINS segnala meno ma sbaglia meno (precisione 86–93),
-      i metodi addestrati trovano di più (recall ~89). Su <span class="pd">fermo ma mobile</span> SINS fa meglio di EMMC ed
-      EagerMOT (F1 24 contro 14). Contro tutti i metodi che non sono addestrati su CODa, SINS vince in 8–9 finestre su 9.
-      Le 3 ripetizioni di SINS sono quasi identiche (MOTA 55,6–55,9).</p>
-    <p class="note"><b>Fuori dal campo della camera</b> (150 uscite dal campo): SINS mantiene la stessa identità all'86% e
-      dopo una sosta all'88%, ma tiene l'oggetto fuori campo per poco (metà dei fermi persa entro 2 s). È un risultato da
-      dichiarare: la persistenza fuori campo funziona meno di quanto atteso.</p>
+    <div class="steps" style="counter-reset:none">
+      <div style="padding-left:14px"><h3>Cosa vuol dire ogni numero, letto su questa tabella</h3><p>
+        <b>MOTA 55,7</b>: su 100 oggetti veri, SINS accumula circa 44 errori tra mancati, falsi allarmi e scambi di
+        identità. EMMC ne accumula circa 34 (MOTA 65,7). <b>Recall 67,7</b>: SINS trova 2 oggetti veri su 3; EMMC quasi 9
+        su 10. <b>Precisione 86,5</b>: di quello che SINS segnala, l'86,5% esiste davvero; per EMMC l'80,6%: SINS sbaglia
+        meno quando segnala, ma segnala molto meno. <b>IDF1 65 contro 72</b>: EMMC tiene la stessa identità più a lungo.
+        <b>HOTA 53 contro 60</b>: la sintesi tra trovare e mantenere l'identità, stessa conclusione. <b>F1 D 80</b>: sugli
+        oggetti trovati, SINS dice bene "si muove" 8 volte su 10; EMMC 94 su 100 (vede il moto con un rilevatore
+        addestrato). <b>F1 PD 24 contro 14</b>: su "fermo ma mobile" SINS è meglio di EMMC, ma per entrambi è difficile
+        (pochi casi e soglia di velocità vicina al rumore). <b>Confronto per finestra</b>: in quante finestre SINS fa meno
+        errori; con 9 finestre serve almeno 8/9 per un risultato netto.</p></div>
+    </div>
+    <p class="note"><b>Il verdetto onesto: EMMC è più forte di SINS sui dati mai visti</b> (circa 10 punti di MOTA, 6 di HOTA,
+      21 di recall; SINS fa meglio solo in 3 finestre su 9). Il motivo è uno solo: EMMC usa un rilevatore 3D (CenterPoint)
+      <b>addestrato su CODa</b>, che riconosce persone e auto dalla forma dei punti LiDAR <b>a 360°</b>; SINS, per scelta, non
+      usa modelli appresi sul LiDAR e fuori dal campo della camera deve dimostrare che un oggetto si muove prima di
+      pubblicarlo. L'analisi dei mancati lo conferma: l'81% degli oggetti che EMMC trova e SINS no è fuori dal campo della
+      camera, quasi tutti in movimento, e la maggior parte con più di 100 punti LiDAR (il LiDAR li vede: è SINS che non li
+      pubblica in tempo). Per il 2D EMMC usa gli stessi rilevamenti YOLO di SINS.</p>
+    <p class="note"><b>Dove SINS è avanti.</b> Contro ogni metodo <b>non</b> addestrato su CODa (CenterPoint con pesi
+      nuScenes, Dynablox, M-detector, LV-DOT) SINS vince in 8–9 finestre su 9, e anche contro DeepFusionMOT, che pure usa il CenterPoint addestrato su CODa: lo stesso CenterPoint senza
+      l'addestramento su CODa scende a 18 di MOTA. SINS è più preciso di EMMC e migliore sullo stato "fermo ma mobile",
+      e funziona senza cambiare comportamento su sensori dove EMMC non può girare (DOALS senza camere, lab con RGB-D,
+      JRDB). Le 3 ripetizioni di SINS sono quasi identiche (MOTA 55,6–55,9).</p>
+    <p class="note"><b>Fuori dal campo della camera</b> (150 uscite dal campo nelle 9 finestre). <b>Identità</b>: dopo
+      un'uscita la persona ha ancora lo stesso numero di traccia nell'86% dei casi, dopo una sosta nell'88%.
+      <b>Persistenza</b>: la traccia resta però pubblicata per poco: dopo 2 s ne resta il 53% degli oggetti fermi e il 28%
+      di quelli in movimento, dopo 5 s il 20% e il 12%. <b>Oggetti fermi già visti, valutati anche fuori campo</b>: con
+      questa regola (vista "pdprev") il MOTA di SINS scende da 55,7 a 44,5 e la F1 di "fermo ma mobile" da 26 a 12: la
+      persistenza fuori campo è il punto da migliorare. Il confronto con gli altri metodi è nella sezione "Per classe e fuori dal campo della camera".</p>
   </section>
   <section>
     <h2>Come funziona oggi</h2>
