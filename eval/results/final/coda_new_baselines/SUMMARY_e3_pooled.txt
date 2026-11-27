@@ -1,0 +1,34 @@
+CODa 2/3/18 (9 windows pooled from the per-window JSONs), frozen coda_eval.py paper-v1, e3 = --ignore-undefined, merged level: MOTA / recall / precision / IDF1 / FP per min / IDSW
+
+== e3, all frames
+  ST          53.8%   89.9%   71.9%   72.7%    1588   166
+  CPZ1       -24.1%   41.6%   39.2%   35.0%    2915   203
+  CPZ10       17.5%   75.8%   57.2%   58.6%    2564   254
+  EM          61.4%   83.1%   80.5%   69.6%     911   250
+  EMMC        65.7%   88.8%   80.6%   72.4%     967   269
+  DFM         22.7%   26.2%   89.1%   38.8%     144    40
+  LVDOTF      -0.1%    0.0%   25.0%    0.0%       6     6
+  LVDOTF2     -0.1%    0.0%   23.3%    0.0%       7     6
+  LVDOTF3     -0.1%    0.0%   26.1%    0.0%       5     5
+
+== e3, testing frames
+  ST          61.0%   90.3%   77.8%   76.0%    1315    85
+  CPZ1       -15.5%   41.2%   43.7%   37.4%    2705    88
+  CPZ10       28.1%   75.8%   63.7%   62.8%    2195   113
+  EM          66.1%   83.8%   86.5%   72.9%     663   116
+  EMMC        70.0%   88.8%   86.4%   75.5%     709   120
+  DFM         24.7%   26.2%   97.3%   39.5%      37    18
+  LVDOTF      -0.2%    0.0%    0.0%    0.0%       8     0
+  LVDOTF2     -0.2%    0.0%    0.0%    0.0%       8     0
+  LVDOTF3     -0.2%    0.0%    0.0%    0.0%       8     0
+
+README: JSONs of the frozen coda_eval.py (jo_sim tag paper-v1, commit 29aac706, archive md5 746b3ccc9f48c2b3d596bd18eeebcf6c; derived/final_inputs/jo_sim_paper_v1/) on this PC's CODa 2/3/18 outputs; GT derived/coda_windows/<w>_gt.csv, odometry <w>_odom, --coda-root the NAS CODa.
+Layout: <view>[/test]/<TAG>_<window>.json; views e3 (--ignore-undefined), e3ib (+ --ignore-box), state (--state-buffer 0.5 --baseline-state debounced), state_raw, state_none; test/ = --frames testing, else --frames all. 9 tags x 9 windows x 5 views x 2 frame sets = 810 JSONs.
+Tags: ST = CODa-trained CenterPoint + SimpleTrack; CPZ1 / CPZ10 = zero-shot CenterPoint 1 / 10 sweeps + SimpleTrack; EM = EagerMOT (pedestrians, one camera: run_eagermot_jo.py); EMMC = EagerMOT multi-class (run_eagermot_coda_mc.py); DFM = DeepFusionMOT; LVDOTF / F2 / F3 = LV-DOT reps 1-3.
+EM / EMMC / DFM inputs: 3D = the CODa-trained CenterPoint detections of this PC (score > 0.3, unimt_coda/coda_2_3_18/<w>_dets.csv); 2D = the YOLO detections of the SINS final run, rep 1 (SF): EM from /yolo_semantic_seg/stereo_camera/detections (persons), EMMC and DFM from /yolo_seg_track/stereo_camera/detections (all classes), camera = the stereo pair's left camera (no ZED), upstream parameters unchanged; the same scripts and priorities as on the tuning windows (exporters adapted only in paths and in a local T_of helper).
+LV-DOT (tags LVDOTF/F2/F3 = reps 1-3, runs in lvdot/coda_v2): the FIRST LV-DOT runs (lvdot/coda_2_3_18) were INVALID: the detector crashed (segfault, uint8 overflow of histSize in UVdetector::extract_U_map with the 1024-row stereo-derived depth) after its first cycle; they are not scored anywhere. The v2 runs use the stereo-derived colour and depth rescaled to 480 rows x 574 columns on the INPUT side (LVDOT_OUT_SCALE=0.46875, intrinsics and image size scaled, no LV-DOT parameter changed); detector alive for the whole window in all 30 bags (dynamic_bboxes per odometry message >= 2.78). Result: LV-DOT outputs very few boxes (5-8 FP per minute) and almost no true positives (recall 0.0%, MOTA -0.1%): a real, measured near-zero, not a pipeline failure (outdoor scenes, depth_max 5 m of the LV-DOT config are earlier hypotheses, not verified here).
+DFM: recall 26% with precision 89% (few tracks output); not investigated, reported as measured.
+The pooled numbers above come from the per-window JSONs (sums of rows), not from the evaluator's own pooling.
+
+
+CORRECTION about LV-DOT (27/11, after the lab's question): the LV-DOT rows (LVDOTF, LVDOTF2, LVDOTF3) are NOT a score. They are a probable PIPELINE FAILURE of my run, not a real 'no output': in every window the detector published only 2-4 empty /onboard_detector/dynamic_bboxes messages, all within the first ~0.1 s of the window (e.g. coda2_w2: 4 messages at 1673914375.59-.67, then nothing for the remaining ~50 s while odometry kept coming, 499 messages), i.e. the node stopped publishing after its first cycles; an empty scene would give empty arrays continuously. The detector log shows only the known YOLO visualization-thread exception (cv_bridge KeyError: 16) and no crash message. Cause not yet found. The same behaviour appeared on 16_w1 (4-5 messages) and my earlier statement there ('not a pipeline failure', 'recall 0 consistent with LV-DOT on CODa') was not justified and is withdrawn. Do NOT read the zeros as LV-DOT's performance: report LV-DOT on the stereo-only windows as 'pipeline stalled, no valid output' unless the cause is found and fixed (investigation in progress).
