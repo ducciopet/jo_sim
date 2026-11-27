@@ -1133,3 +1133,22 @@ Against the user's requirement (every scan <= 100 ms, no drops) only JRDB passes
   (paper-v1 binary), then MF vs NW alternated: CODa dev x3 (MF1 NW1 NW2 MF2 MF3 NW3), lab 6 seqs x3 (same order).
   NAS sins_final/dev/nw/{coda,lab}/<arm>, scores eval/results/dev/nw/. YOLO path timing from the recorded 2D detection
   topics (image stamp -> publish), no harness change. Baseline image (CenterPoint + ST/EMMC/DFM): not queued, no user OK yet.
+
+## 52. Chain RQ result (27/11, 17:20-21:50): reacquire radius 1.0 / speed 1.5 / max 2.5 vs the final profile, CODa dev x3
+
+Both arms on sins 6b3563c (c6-reacquire-tick), MF = coda_vjsye2i2pcar1lccbma, RQ = coda_vjsye2i2pcar1lccbmarq. Reruns
+picked by selected.json (MF 5, RQ 7). Script eval/scripts/analysis/rq_cmp.py; persistence pooled in
+eval/results/dev/rq/persistence_pool_gap0_{MF,RQ}.json.
+
+- Sign test (errors FP+FN+IDSW, rep k vs rep k): e3 all 3/27, e3 testing 4/27, e3ib 4/27 | 4/27, pdprev 6/27 | 5/27.
+  RQ is NOT adopted.
+- Pooled MOTA MF -> RQ: e3 all 58.7 -> 50.1 (-8.6), testing 56.3 -> 46.8 (-9.5), pdprev 47.9 -> 43.2.
+  Vetoes on seq 0 (62.8 -> 48.1) and seq 10 (51.8 -> 38.3) in all and testing. Worst windows: w1, 10_w3, 10_w4, 16_w1.
+- [reacquire] counter: RQ median 46 per run (1416 total), MF 0 (radius 0 = off).
+- Persistence gap 0 (pooled KM, MF -> RQ): still any S(1 s) 0.36 -> 0.34, moving any 0.78 -> 0.86;
+  identity same rate at exit 0.917 -> 0.874, at stop 0.85 -> 0.77. More persistence for moving agents, but identity is worse
+  and errors grow much more.
+- Latency median 102 | 102 ms, p90 median 165 | 153, p90 > 100 on 27/27 for both arms; drops max 2.0 | 1.8%.
+  Foreign CPU max 66 | 63%.
+- Not done yet: persistence --gap 0.5 and exit_loss_causes gap 0.5 need the bags from the NAS (CPU cost). Deferred until
+  chains C7 and NW are finished, so they do not overlap the timed runs.
