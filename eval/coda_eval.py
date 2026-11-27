@@ -137,7 +137,7 @@ def build_gt(gt_csv, odom, a):
     obj = raw[raw['track_id'] != EMPTY_FRAME_ID].copy()
     for c in ('x', 'y', 'z', 'yaw', 'l', 'w'):
         obj[c] = obj[c].astype(float)
-    obj['npts'] = obj['npts'].astype(int)
+    obj['npts'] = obj['npts'].astype(float).astype(int)   # ERRATUM E1 27/11: text column when the GT has empty-frame rows (KITTI)
     ped = obj
     bodies = {int(i): g.sort_values('t_ns')[['t_ns', 'x', 'y', 'z', 'yaw']].to_numpy(float) * [1e-9, 1, 1, 1, 1]
               for i, g in ped.groupby('track_id')}

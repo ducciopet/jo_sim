@@ -1067,3 +1067,28 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - 27/11 update: the laptop has no NAS access (it is at the user's home). Plan: this afternoon the user attaches a USB disk to
   the lab PC; copy final_inputs/kitti (21 GB) + MD5SUMS, verify; on the laptop link /mnt/nas-imperatore/datasets_SINS to
   the disk (run_final.sh unchanged); outputs (~2-3 GB) come back on the disk, copied to NAS sins_final/kitti_laptop + verify.
+
+## 47. Final chain done (27/11 13:22) + erratum E1 + timing diagnosis (read-only)
+- Chain: FINAL ALL DONE 13:22. JRDB x3 and lab x6 committed (e55431ee). Lab: 0-0.17% dropped, no reruns.
+- ERRATUM E1 applied (coda_eval.py build_gt, npts cast via float). Check: SF_0005 (KITTI) and SF_2_w1 (CODa) rescored with
+  E1 give metrics identical to the committed files. The 7 KITTI seqs (0001 0002 0006 0007 0009 0013 0018) rescored from NAS.
+- Timing diagnosis (user requirement via laptop: every scan <= 100 ms, no drops), r1 runs on the lab PC, per scan from the
+  bags (eval/diagnostics/timing_perscan.py, in container) + per-node windows from det.log (timing_summary.py), outputs in
+  eval/results/final/timing_diag/summary.txt. Latency = rec - stamp, median / slowest 10%:
+  | run | det lat | track lat | dets/scan | tracks (tracker) | preproc ms | dbscan lidar ms | fusion wait ms | tracker tick ms |
+  | KITTI 0018 | 150 / 200 | 2475 / 5838 | 371 | ~? (no tick line) | 97 | 58 | 38 | stalls: 18 tick outputs for 339 scans |
+  | KITTI 0006 | 75 / 100 | 100 / 150 | 205 | 339 | 47 | 22 | 9 | 27 (assoc 20, max 39) |
+  | CODa 2_w2 | 98 / 198 | 121 / 200 | 111 | 246 | 26 | 31 (max 66) | 40 (max 71) | 20 |
+  | CODa 3_w1 | 75 / 100 | 97 / 125 | 100 | 206 | 31 | 16 | 39 | 9 |
+  | lab 1945 | 89 / 114 | 91 / 116 | 44 | 69 | 3 | 9 | 39 | 2 |
+  Findings:
+  1. KITTI 0018: the detector keeps up (all 339 scans out, 150 ms); the TRACKER collapses (95% of scans never get tracks,
+     2.5-5.8 s). It never reaches 50 ticks, so its tick-timing line is never printed: stage unknown. 0006 with 205 dets and
+     339 tracks costs 27 ms, so cost grows much faster than linear between ~200 and ~370 detections per scan
+     (association/fallback/occlusion-ray parts are the candidates). Laptop diagnosis: print tick timing every tick on 0018.
+  2. Many dets per scan on KITTI: 45 m crop -> 250-420 LiDAR clusters (CODa 25 m: 115-140). Crop also doubles preprocessing
+     (0018 97 ms vs CODa 26-31 ms; raw 116k pts, voxel budget 30k reached).
+  3. CODa/lab (no drops, p90 > 100 ms): the floor is the fusion wait for the camera leaves, ~39-40 ms in every run (max 71
+     on 2_w2), plus preproc + dbscan; tracker is small (2-20 ms). Lab: preproc 3 + dbscan 9 + wait 39 = ~51 ms of an 89 ms
+     detection latency: ~40 ms is outside the logged stages (YOLO/leaf path, queues, recorder) - YOLO ms is not logged.
+  Lab-PC absolute values; the laptop is ~2x faster on CODa, so judge 100 ms there.
