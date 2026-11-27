@@ -1,0 +1,9 @@
+# Chain NW (27/11, post paper-v1, user: "prepara anche la prova senza attesa camere"): final profile, but the fusion
+# does not wait for the camera clouds (fusion_timeout_sec 0.05 -> 0.0). YOLO leaves already join the next scan when late
+# (fusion_late_leaves_max_age 0.3, unchanged). A camera cloud that is not there yet when the LiDAR scan is ready is not
+# fused for that scan. Purpose: latency gain (the ~40 ms fusion wait) vs accuracy cost. No code change (paper-v1 binary).
+base: coda_vjsye2i2pcar1lccbma
+files:
+  dbscan_detector.yaml:
+    dbscan_detector_node:
+      fusion_timeout_sec: 0.0
