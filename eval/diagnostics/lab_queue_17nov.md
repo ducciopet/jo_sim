@@ -1152,3 +1152,34 @@ eval/results/dev/rq/persistence_pool_gap0_{MF,RQ}.json.
   Foreign CPU max 66 | 63%.
 - Not done yet: persistence --gap 0.5 and exit_loss_causes gap 0.5 need the bags from the NAS (CPU cost). Deferred until
   chains C7 and NW are finished, so they do not overlap the timed runs.
+
+## 53. Chain C7 result (27/11, 21:51-22:51): Hungarian per connected component (sins 220a266, track_assignment_components)
+
+- KITTI 0018 tick (tick_report_every 1). paper-v1 run DBGT (19 tick reports) vs ACT run (components on, 339 tick reports):
+  - assoc median 1339 -> 17 ms, max 4608 -> 32 ms; spawn median 25 -> 7 ms;
+  - live tracks median 1207 -> 904, max 1711 -> 1136;
+  - dropped tracker outputs 94.4% -> 0%; latency median 2475 -> 200 ms, p90 5525 -> 225 ms.
+  - Detections reach the tracker callback already 150-200 ms old, so 0018 stays above 100 ms (cause upstream, not assoc).
+- Identity off vs on (same binary 220a266): CANNOT be shown from live runs.
+  - The tracker input already differs between two runs: KITTI 0006 fused/detections3d is byte-identical on 1/270 msgs,
+    odometry 269/269. Replay non-determinism upstream (camera/fusion timing).
+  - Same profile twice on CODa w1 (OFF orig vs rerun): MOTA 59.2 vs 64.5, which is larger than OFF vs ON
+    (59.2 | 51.8 orig, 64.5 | 66.2 rerun). KITTI 0006 OFF | ON MOTA -7.4 | -15.7, recall 42.8 | 43.1.
+  - A real identity test needs a tracker-only replay of one recorded detections3d stream with both settings
+    (not run; it would be a new step).
+- 7 dense KITTI seqs, AC (1 rep) vs SF finals (3 reps), MOTA | recall | max drops | latency median/p90:
+
+  | seq  | SF (r1)                      | AC                          |
+  |------|------------------------------|-----------------------------|
+  | 0018 | 0.0 / 0.0 / 94.4% / 2150/6050 | -40.7 / 25.6 / 0% / 200/250 |
+  | 0009 | 5.1 / 32.3 / 56.0% / 600/1300 | 0.9 / 36.3 / 0% / 150/175   |
+  | 0008 | -58.0 / 6.1 / 39.5% / 963/1425 | -73.2 / 8.8 / 0% / 125/150  |
+  | 0004 | -10.9 / 11.2 / 29.0% / 275/1475 | -26.6 / 14.5 / 1.6% / 150/475 |
+  | 0007 | 14.0 / 40.9 / 28.6% / 225/1300 | 18.0 / 45.8 / 0% / 125/150  |
+  | 0019 | 14.6 / 57.0 / 30.2% / 275/1350 | 24.9 / 77.2 / 0% / 150/175  |
+  | 0020 | -27.2 / 12.2 / 23.5% / 700/1675 | -30.8 / 9.5 / 19.7% / 625/700 |
+
+  SF r2/r3 are within a few points of r1. Drops vanish on 6/7 (0020 still 19.7%). Recall rises on 6/7. MOTA rises on
+  0007 and 0019; it falls on 0018, 0009, 0008, 0004 and 0020: scans that used to be skipped now produce output, mostly FP.
+  Latency still > 100 ms everywhere (detections already late).
+- sins reinstalled at paper-v1 by the chain (9ea5942); chain NW is running.
