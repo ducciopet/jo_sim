@@ -1039,3 +1039,18 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - Baselines PC told the files exist (2D detections in the SINS replay bags). KITTI 0000-0020 x3 started 22:08.
 - Ablation (FINAL_RUN_SPEC 6): 9 coda_abl_* overrides written and cfgs generated, NOT installed or queued; the automatic
   ablation chain was blocked by the permission system, waiting for the user's decision.
+
+## 45. KITTI final runs done (27/11 03:45): two problems, user decision needed
+- 21 seqs x3 + reruns, profile kitti_tracking (paper-v1), gate quiet on every run (no foreign load).
+- (1) SINS cannot keep up on the lab PC with the KITTI training sequences: 16/21 seqs drop 3-94% of the scans
+  (0018: 94%, p90 ~6 s; 0009: 54%; 0008: 39%; 0001/0004/0007/0019/0020: 19-32%), p90 500-1700 ms vs the 175 ms
+  "quiet" value, which came from the test_0000 smoke run only (sparse). Origs and reruns agree (+-3%): it is not load, it
+  is scene density. select_run marks these "loaded" (both flagged) although the gate was quiet: wording only.
+  Clean: 0006, 0011, 0012, 0016, 0017 (0 dropped); 0000/0002/0015 only p90 flag.
+- (2) Scoring bug (scorer only, SINS outputs are fine): coda_eval.build_gt reads the GT with keep_default_na=False, so in
+  sequences that have empty-frame rows (track_id -1, all fields empty) the npts column stays text and
+  `astype(int)` fails on '908.0000'. coda_eval views missing for 0001, 0002, 0006, 0007, 0009, 0013, 0018 (all reps).
+  Fix proposal (erratum, after the chain, no edits during timed runs): `obj['npts'].astype(float).astype(int)`;
+  rescore those 7 seqs from the NAS bags. TrackEval files (sins_to_kitti) exist for all 21 seqs.
+- TrackEval data handed to the baselines PC: eval/results/final/kitti/trackeval/<TAG>/data, tags SF/SFr2/SFr3 (21 seqs)
+  and SF_rerun/SFr2_rerun/SFr3_rerun (16 rerun seqs); which counts per seq: NAS sins_final/kitti/<seq>_r<k>/selected.json.
