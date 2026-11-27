@@ -1054,3 +1054,13 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
   rescore those 7 seqs from the NAS bags. TrackEval files (sins_to_kitti) exist for all 21 seqs.
 - TrackEval data handed to the baselines PC: eval/results/final/kitti/trackeval/<TAG>/data, tags SF/SFr2/SFr3 (21 seqs)
   and SF_rerun/SFr2_rerun/SFr3_rerun (16 rerun seqs); which counts per seq: NAS sins_final/kitti/<seq>_r<k>/selected.json.
+
+## 46. User decisions on lab_queue 45 (27/11, user in this session: "ok")
+- KITTI: redo the 21 seqs x3 on the user's laptop from the same tag (sins paper-v1 9ea5942, jo_sim 29aac706, profile
+  kitti_tracking md5 38073224...), same run_final.sh flow and gate, inputs NAS final_inputs/kitti (MD5SUMS.txt). Tags
+  SFL/SFLr2/SFLr3 (L = laptop); lab-PC KITTI runs kept on NAS, reported only as the lab-PC drop-scan note. Needs the
+  laptop session (offline since 26/11 17:15) or the user at the laptop.
+- ERRATUM E1 (dated 27/11, scorer only, no SINS code/parameter): eval/coda_eval.py build_gt casts npts with
+  `astype(float).astype(int)` (text column when the GT has empty-frame rows). Applied after the final chain ends (no edits
+  during timed runs); then the 7 KITTI seqs without coda_eval views are rescored from the NAS bags. No effect on any
+  file that scored before (same values for numeric columns): check by rescoring one CODa and one KITTI json and diffing.
