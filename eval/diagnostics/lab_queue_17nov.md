@@ -1108,3 +1108,10 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
   Loop: ~370 detections/scan, of which ~100 per tick are left unmatched and spawn tentative tracks; tracks die by missed
   TICKS (max_missed 7, 21 classified), so the population settles at hundreds-to-thousands of tracks; a slow tick skips scans,
   which makes predictions stale, fewer matches, more spawns. 0006 for comparison: 205 dets, 339 tracks, assoc 20 ms.
+
+## 49. Chain C7 queued (27/11, user in this session: "Si"): per-component assignment (sins c7-assign-components 220a266)
+- eval/scripts/final/chain_c7.sh waits for chain RQ to end (untouched), builds 220a266 (track_assignment_components,
+  default off = paper-v1), then: (1) KITTI 0018 tick timing flag on (ACT); (2) identity flag off vs on: KITTI 0006 and CODa
+  w1 (IDOFF/IDON); (3) flag on (AC) on the 7 seqs with the most lab-PC drops: 0018 0009 0008 0004 0007 0019 0020; then
+  reinstalls paper-v1. Profiles (dev only): kitti_tracking_tick_ac, kitti_tracking_ac, coda_vjsye2i2pcar1lccbmaac.
+  NAS sins_final/dev/c7/, scores eval/results/dev/c7/.
