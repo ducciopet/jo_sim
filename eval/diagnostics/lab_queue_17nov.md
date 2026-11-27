@@ -1099,3 +1099,12 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 - eval/scripts/final/chain_rq.sh (same run_final harness: gate, manifest, requeue): (1) KITTI 0018 with tick timing every
   tick (tag DBGT); (2) MF vs RQ on CODa dev (0 w1-3, 10 w1-5, 16_w1), reps alternated MF1 RQ1 RQ2 MF2 MF3 RQ3; NAS
   sins_final/dev/{kitti_tick,rq/<arm>}, scores eval/results/dev/; then the chain rebuilds paper-v1.
+- 17:20 KITTI 0018 tick debug (DBGT, tick timing every tick; 19 ticks processed out of 339 scans): the ASSOCIATION stage is
+  the stall and the live track count runs away. Per tick (ms): assoc 78 / 28 / 55 / 121 / 201 / 336 / 448 / 730 / 814 /
+  1339 / 1431 / 1914 / 2172 / 2599 / 4119 / 3900 / 4590 / 4297 / 4608 with tracks 360 -> 455 -> 582 -> 682 -> 785 -> 860 ->
+  947 -> 1012 -> 1158 -> 1207 -> 1286 -> 1345 -> 1430 -> 1604 -> 1629 -> 1711 -> 1688 -> 1698 -> 1622; every other stage
+  stays small (prep 1-2, fallback 0-8, matched 0-15, spawn 2-67, publish < 1.5). Assoc grows faster than quadratic in the
+  track count (455 -> 1700 tracks: x3.7 tracks, x160 time), consistent with a dense O(n^3) assignment.
+  Loop: ~370 detections/scan, of which ~100 per tick are left unmatched and spawn tentative tracks; tracks die by missed
+  TICKS (max_missed 7, 21 classified), so the population settles at hundreds-to-thousands of tracks; a slow tick skips scans,
+  which makes predictions stale, fewer matches, more spawns. 0006 for comparison: 205 dets, 339 tracks, assoc 20 ms.
