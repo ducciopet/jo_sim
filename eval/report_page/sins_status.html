@@ -86,7 +86,7 @@ footer { font: 13px var(--f-mono); color: var(--ink-2); }
 
 <div class="wrap">
   <header>
-    <span class="eyebrow">Stato del progetto · 26 novembre 2026 · congelamento il 27/11</span>
+    <span class="eyebrow">Stato del progetto · 27 novembre 2026 · versione congelata paper-v1</span>
     <h1>SINS, punto della situazione</h1>
     <p class="lede">SINS segue persone e veicoli intorno a un robot e dice per ognuno se <span class="d">si muove</span>,
       se è <span class="pd">fermo ma può ripartire</span> o se è <span class="s">statico</span>, con un solo YOLO per
@@ -96,17 +96,79 @@ footer { font: 13px var(--f-mono); color: var(--ink-2); }
 
   <section aria-label="In breve">
     <div class="kpis">
-      <div><span class="num">59,5 · 57,5</span><small><b>SINS contro EMMC su CODa</b> (MOTA, 9 finestre di sviluppo). EMMC usa
-        un rilevatore addestrato su CODa, SINS niente: alla pari, non "migliore".</small></div>
-      <div><span class="num">61,8 · 36,5</span><small><b>Folla di pedoni e bici</b> (CODa seq 0): qui SINS stacca nettamente
-        il migliore degli altri.</small></div>
-      <div><span class="num">95,6</span><small><b>MOTA in laboratorio</b> con il motion capture (6 sequenze, 6 ripetizioni,
-        tutte tra 94 e 96).</small></div>
-      <div><span class="num">5</span><small><b>configurazioni di sensori</b>: LiDAR + RGB-D, + stereo, + RGB semplice, solo
-        LiDAR. Stesso comportamento, cambiano solo i parametri del sensore.</small></div>
+      <div><span class="num">55,7 · 65,7</span><small><b>SINS contro EMMC sui dati mai visti</b> (CODa 2/3/18, MOTA). EMMC,
+        addestrato su CODa, è davanti; SINS è alla pari con CenterPoint + SimpleTrack (53,8).</small></div>
+      <div><span class="num">8–9 su 9</span><small><b>finestre mai viste in cui SINS batte</b> ogni metodo non addestrato su
+        CODa (CenterPoint nuScenes, DeepFusionMOT, LV-DOT).</small></div>
+      <div><span class="num">86–98%</span><small><b>precisione di SINS</b>: quando segnala qualcosa, quasi sempre c'è davvero
+        (CODa e DOALS). Il limite è il recall: trova circa 2 oggetti su 3.</small></div>
+      <div><span class="num">±0,2</span><small><b>variazione tra ripetizioni</b> a macchina scarica: i numeri finali sono
+        stabili.</small></div>
     </div>
   </section>
 
+
+
+  <section>
+    <h2>Il quadro finale, dataset per dataset</h2>
+    <p>Versione congelata <code>paper-v1</code>. MOTA su tutti i fotogrammi (tra parentesi solo test); per DOALS IoU sui
+      punti. SINS: media delle ripetizioni. Formule nella sezione sotto.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Dataset</th><th>Ruolo</th><th class="n">SINS</th><th class="n">EMMC*</th><th class="n">EagerMOT*</th><th class="n">CP+SimpleTrack*</th><th class="n">CP non addestr.</th><th class="n">DeepFusionMOT</th><th class="n">Dynablox</th><th class="n">M-detector</th></tr>
+      <tr><td>CODa 2/3/18</td><td>mai visti</td><td class="n">55,7 (57,8)</td><td class="n">65,7 (70,0)</td><td class="n">61,4 (66,1)</td><td class="n">53,8 (61,0)</td><td class="n">17,5 (28,1)</td><td class="n">22,7 (24,7)</td><td class="n">in calcolo</td><td class="n">in calcolo</td></tr>
+      <tr><td>CODa 0/10/16</td><td>sviluppo (×5)</td><td class="n">57,7 (55,0)</td><td class="n">57,5 (55,9)</td><td class="n">52,1 (50,4)</td><td class="n">52,1 (49,3)</td><td class="n">23,9 (23,0)</td><td class="n">19,2 (19,8)</td><td class="n">−45,5</td><td class="n">−84,0</td></tr>
+      <tr><td>CODa 11/12</td><td>esposti</td><td class="n">44,2 (43,3)</td><td class="n">71,4 (70,7)</td><td class="n">48,1 (48,7)</td><td class="n">58,0 (61,6)</td><td class="n">—</td><td class="n">35,6 (34,7)</td><td class="n">—</td><td class="n">—</td></tr>
+      <tr><td>DOALS (solo LiDAR)</td><td>mai visti</td><td class="n">0,61 · 0,64 con PD</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">0,53</td><td class="n">—</td><td class="n">0,83</td><td class="n">0,69</td></tr>
+      <tr><td>KITTI</td><td>mai visti</td><td class="n" colspan="8">provvisorio: sul PC del lab SINS perde fino al 94% delle scansioni dense; da rifare sul portatile</td></tr>
+      <tr><td>JRDB, laboratorio</td><td>esposti / sviluppo</td><td class="n" colspan="8">run finali in corso</td></tr>
+    </table></div>
+    <p class="note"><b>Lettura onesta.</b> SINS batte con chiarezza tutti i metodi che non sono addestrati sul dataset e quelli
+      basati sulla sola camera RGB-D, ed è molto preciso. Ma i tracker con CenterPoint <b>addestrato su CODa</b> (*) sono
+      davanti sui dati CODa non di sviluppo, nettamente su 11/12. Su DOALS, senza camere, i metodi geometrici pensati per
+      quel caso (Dynablox, M-detector) fanno meglio. Il punto da comunicare è quindi la versatilità senza addestramento,
+      non la superiorità assoluta: e va discusso come migliorare il recall (SINS trova circa 2 oggetti su 3).</p>
+  </section>
+  <section>
+    <h2>Risultati finali sui dati mai visti: CODa sequenze 2, 3 e 18</h2>
+    <p>Versione congelata <code>paper-v1</code> (26/11), 9 finestre mai usate prima, circa 28.000 righe annotate (il doppio di
+      quelle di sviluppo), 3 ripetizioni a macchina scarica. Tutti i fotogrammi; tra parentesi i soli fotogrammi di test
+      ufficiali di CODa.</p>
+    <div class="formulas" style="display:grid;gap:8px;background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:12px 16px;font-size:14px;color:var(--ink-2)">
+      <p><b>MOTA</b> = 1 − (FN + FP + IDSW) / GT: tutti gli errori (oggetti mancati, falsi allarmi, scambi di identità) rispetto
+        agli oggetti veri, su tutti i fotogrammi. 100 = perfetto, può essere negativo.</p>
+      <p><b>Recall</b> = TP / GT: quanti oggetti veri vengono trovati. <b>Precisione</b> = TP / (TP + FP): quante delle cose
+        segnalate esistono davvero. Un oggetto è trovato se il centro previsto è entro 1 m da quello vero.</p>
+      <p><b>IDF1</b> = 2·IDTP / (GT + PRED): quanto a lungo ogni oggetto vero resta sulla stessa traccia (continuità
+        dell'identità).</p>
+      <p><b>HOTA</b> = media su α di √(DetA·AssA): equilibrio tra trovare gli oggetti (<b>DetA</b> = TP/(TP+FN+FP)) e
+        mantenerne l'identità (<b>AssA</b>); soglie α da 0,05 a 0,95, somiglianza 1 − distanza/1 m.</p>
+      <p><b>Confronto per finestra</b>: in quante delle 9 finestre SINS fa meno errori del metodo (ripetizioni mediate) e il p del test esatto dei segni. Con meno di 10 sequenze non diciamo "migliore" o "peggiore" su questo solo insieme: lo faremo mettendo insieme tutti i dati mai visti.</p>
+      <p><b>F1 dello stato</b> = 2·P·R/(P+R) per <span class="d">D</span> (si muove) e <span class="pd">PD</span> (fermo ma
+        mobile), sugli oggetti trovati: dice se il metodo capisce <i>cosa sta facendo</i> l'oggetto.</p>
+    </div>
+    <div class="tablewrap"><table>
+      <tr><th>Metodo</th><th class="n">MOTA (solo test)</th><th class="n">Recall</th><th class="n">Precisione</th><th class="n">IDF1</th><th class="n">HOTA</th><th class="n">F1 D</th><th class="n">F1 PD</th><th>Confronto per finestra</th></tr>
+      <tr class="me"><td>SINS</td><td class="n">55,7 (57,8)</td><td class="n">67,7</td><td class="n">86,5</td><td class="n">65,1</td><td class="n">52,9</td><td class="n">83,3</td><td class="n">24,0</td><td class="w"></td></tr>
+      <tr><td>EMMC</td><td class="n">65,7 (70,0)</td><td class="n">88,8</td><td class="n">80,6</td><td class="n">72,4</td><td class="n">59,5</td><td class="n">96,0</td><td class="n">13,9</td><td class="w">SINS meglio in 3/9 finestre (p segni 0,508)</td></tr>
+      <tr><td>EagerMOT (1 cam)</td><td class="n">61,4 (66,1)</td><td class="n">83,1</td><td class="n">80,5</td><td class="n">69,6</td><td class="n">59,1</td><td class="n">93,2</td><td class="n">14,2</td><td class="w">SINS meglio in 3/9 finestre (p segni 0,508)</td></tr>
+      <tr><td>CenterPoint CODa + SimpleTrack</td><td class="n">53,8 (61,0)</td><td class="n">89,9</td><td class="n">71,9</td><td class="n">72,7</td><td class="n">58,3</td><td class="n">97,2</td><td class="n">27,5</td><td class="w">SINS meglio in 5/9 finestre (p segni 1,0)</td></tr>
+      <tr><td>CenterPoint zero-shot 10 sc.</td><td class="n">17,5 (28,1)</td><td class="n">75,8</td><td class="n">57,2</td><td class="n">58,6</td><td class="n">43,9</td><td class="n">87,0</td><td class="n">14,0</td><td class="w">SINS meglio in 8/9 finestre (p segni 0,039)</td></tr>
+      <tr><td>CenterPoint zero-shot 1 sc.</td><td class="n">-24,1 (-15,5)</td><td class="n">41,6</td><td class="n">39,2</td><td class="n">35,0</td><td class="n">25,6</td><td class="n">55,4</td><td class="n">7,9</td><td class="w">SINS meglio in 9/9 finestre (p segni 0,004)</td></tr>
+      <tr><td>DeepFusionMOT</td><td class="n">22,7 (24,7)</td><td class="n">26,2</td><td class="n">89,1</td><td class="n">38,8</td><td class="n">34,6</td><td class="n">40,6</td><td class="n">17,7</td><td class="w">SINS meglio in 8/9 finestre (p segni 0,039)</td></tr>
+      <tr><td>LV-DOT</td><td class="n">-0,1 (-0,2)</td><td class="n">0,0</td><td class="n">24,8</td><td class="n">0,0</td><td class="n">0,1</td><td class="n">0,1</td><td class="n">—</td><td class="w">SINS meglio in 9/9 finestre (p segni 0,004)</td></tr>
+      <tr><td>Dynablox, M-detector</td><td class="n" colspan="8">in calcolo</td></tr>
+    </table></div>
+    <p class="note"><b>Come leggerla.</b> Sui dati mai visti <b>EMMC ed EagerMOT fanno meglio di SINS</b> nel complesso (circa
+      10 e 6 punti di MOTA, 6 di HOTA; SINS fa meno errori solo in 3 finestre su 9). Usano CenterPoint addestrato su CODa (*:
+      ha visto in addestramento fotogrammi vicinissimi a questi) e, per il 2D, gli stessi rilevamenti YOLO di SINS. Con
+      CenterPoint + SimpleTrack SINS è alla pari. Lo stile è diverso: SINS segnala meno ma sbaglia meno (precisione 86–93),
+      i metodi addestrati trovano di più (recall ~89). Su <span class="pd">fermo ma mobile</span> SINS fa meglio di EMMC ed
+      EagerMOT (F1 24 contro 14). Contro tutti i metodi che non sono addestrati su CODa, SINS vince in 8–9 finestre su 9.
+      Le 3 ripetizioni di SINS sono quasi identiche (MOTA 55,6–55,9).</p>
+    <p class="note"><b>Fuori dal campo della camera</b> (150 uscite dal campo): SINS mantiene la stessa identità all'86% e
+      dopo una sosta all'88%, ma tiene l'oggetto fuori campo per poco (metà dei fermi persa entro 2 s). È un risultato da
+      dichiarare: la persistenza fuori campo funziona meno di quanto atteso.</p>
+  </section>
   <section>
     <h2>Come funziona oggi</h2>
     <p>Sei passaggi per ogni scansione LiDAR (10 Hz). Le voci segnate "nuovo" sono entrate questa settimana, ognuna dopo una
