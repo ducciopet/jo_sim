@@ -1126,3 +1126,10 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
 | JRDB | 18 | 25 (17-42) | 33 (25-50) | 0/18 | max 0.1% |
 | lab | 36 | 90 (85-99) | 112 (104-121) | 36/36 | max 0.2% |
 Against the user's requirement (every scan <= 100 ms, no drops) only JRDB passes on the lab PC.
+
+## 51. Chain NW queued (27/11, user in this session: "confermo", rigorous route)
+- eval/scripts/final/chain_nw.sh waits for chains RQ and C7, checks sins = paper-v1, generates coda_vjsye2i2pcar1lccbmanw
+  and lab_ucar1lccbmanw (final + fusion_timeout_sec 0.05 -> 0.0, cfg diff logged in logs/nw_cfg_diff.txt), installs them
+  (paper-v1 binary), then MF vs NW alternated: CODa dev x3 (MF1 NW1 NW2 MF2 MF3 NW3), lab 6 seqs x3 (same order).
+  NAS sins_final/dev/nw/{coda,lab}/<arm>, scores eval/results/dev/nw/. YOLO path timing from the recorded 2D detection
+  topics (image stamp -> publish), no harness change. Baseline image (CenterPoint + ST/EMMC/DFM): not queued, no user OK yet.
