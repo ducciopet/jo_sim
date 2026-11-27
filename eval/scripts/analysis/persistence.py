@@ -11,6 +11,7 @@ with the debounced state conversion of coda_eval.py):
     agent is no longer matched (any prediction / the same prediction id as before the exit); censored if the agent
     re-enters a FOV, leaves the range or its annotation ends first. Kaplan-Meier survival S(t), separately for agents
     still (PD) and moving (D) at the exit. This isolates the persistence mechanism from the detector's quality.
+    --gap G: persistence ends only after more than G s without a match (short flicker tolerated), same for all methods.
   - STOP events: GT D -> PD. Identity across an event (exit or stop): the id matched in the last 1 s before it versus
     the id of the next match after it: same = success, different = failure, never matched again = censored.
 
@@ -124,17 +125,23 @@ def analyse(run, method, gt_csv, odom_bag, a):
                 continue
             # persistence after the exit
             for mode in ('any', 'same_id'):
-                dur, obs = 0.0, 0
+                dur, obs, last_ok = 0.0, 0, t
                 for x in seq[k:]:
                     m_, inf_, _ = x[1]
                     if inf_:
                         break     # back in a FOV: censored
                     ok = m_ is not None and (mode == 'any' or m_ == pre_id)
-                    if not ok:
+                    if ok:
+                        last_ok = x[0]
+                        dur = x[0] - t
+                    elif a.gap <= 0:
                         obs = 1
                         dur = x[0] - t
                         break
-                    dur = x[0] - t
+                    elif x[0] - last_ok > a.gap:      # lost for longer than the tolerated gap: ends at the last match
+                        obs = 1
+                        dur = last_ok - t
+                        break
                 exits.append(dict(mode=mode, still=st == 'potentially_dynamic', time=float(dur), observed=obs))
     return dict(run=str(run), method=method, gt=str(gt_csv), exits=exits, identity=ident)
 
@@ -163,6 +170,8 @@ def main():
     ap.add_argument('--gt')
     ap.add_argument('--odom')
     ap.add_argument('--range', type=float, default=20.0)
+    ap.add_argument('--gap', type=float, default=0.0,
+                    help='tolerated unmatched gap in s before persistence ends (0 = ends at the first unmatched frame, as paper-v1)')
     ap.add_argument('--out')
     ap.add_argument('--pool', nargs='+')
     ap.add_argument('--label', default='')
