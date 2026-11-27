@@ -1092,3 +1092,10 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
      on 2_w2), plus preproc + dbscan; tracker is small (2-20 ms). Lab: preproc 3 + dbscan 9 + wait 39 = ~51 ms of an 89 ms
      detection latency: ~40 ms is outside the logged stages (YOLO/leaf path, queues, recorder) - YOLO ms is not logged.
   Lab-PC absolute values; the laptop is ~2x faster on CODa, so judge 100 ms there.
+
+## 48. Chain RQ started (27/11 17:14, user in this session: "Confermo"; post paper-v1, the tag is untouched)
+- Build: sins c6-reacquire-tick 6b3563c = c6-reacquire 4e99d91 (track_reacquire_*, default off) + tick_report_every
+  (default 50 = unchanged). Cfgs: coda_vjsye2i2pcar1lccbmarq (RQ = final + reacquire 1.0/1.5/2.5) and kitti_tracking_tick.
+- eval/scripts/final/chain_rq.sh (same run_final harness: gate, manifest, requeue): (1) KITTI 0018 with tick timing every
+  tick (tag DBGT); (2) MF vs RQ on CODa dev (0 w1-3, 10 w1-5, 16_w1), reps alternated MF1 RQ1 RQ2 MF2 MF3 RQ3; NAS
+  sins_final/dev/{kitti_tick,rq/<arm>}, scores eval/results/dev/; then the chain rebuilds paper-v1.
