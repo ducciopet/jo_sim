@@ -1064,3 +1064,6 @@ is the object moving, not a newly revealed background). Re-birth inheritance is 
   `astype(float).astype(int)` (text column when the GT has empty-frame rows). Applied after the final chain ends (no edits
   during timed runs); then the 7 KITTI seqs without coda_eval views are rescored from the NAS bags. No effect on any
   file that scored before (same values for numeric columns): check by rescoring one CODa and one KITTI json and diffing.
+- 27/11 update: the laptop has no NAS access (it is at the user's home). Plan: this afternoon the user attaches a USB disk to
+  the lab PC; copy final_inputs/kitti (21 GB) + MD5SUMS, verify; on the laptop link /mnt/nas-imperatore/datasets_SINS to
+  the disk (run_final.sh unchanged); outputs (~2-3 GB) come back on the disk, copied to NAS sins_final/kitti_laptop + verify.
