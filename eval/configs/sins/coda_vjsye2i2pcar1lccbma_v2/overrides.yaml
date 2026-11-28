@@ -1,0 +1,12 @@
+# paper-v2 candidate (28/11, user "ok" to: paper-v1 + NW + C7, rerun all finals). Frozen paper-v1 profile coda_vjsye2i2pcar1lccbma plus:
+#  - NW: fusion does not wait for camera clouds (chain NW, lab_queue 54-55: latency halved, accuracy unchanged);
+#  - C7: Hungarian per connected component of the candidate graph (chain C7, lab_queue 53: KITTI drops 94% -> 0%).
+# Needs sins >= 220a266 (c7-assign-components; reacquire stays off, tick_report_every 50 = unchanged).
+base: coda_vjsye2i2pcar1lccbma
+files:
+  dbscan_detector.yaml:
+    dbscan_detector_node:
+      fusion_timeout_sec: 0.0
+  tracker.yaml:
+    tracker_node:
+      track_assignment_components: true
