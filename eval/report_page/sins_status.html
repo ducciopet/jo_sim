@@ -231,7 +231,7 @@ footer { font: 13px var(--f-mono); color: var(--ink-2); }
     <h3>Tempo reale: chi sta nei 100 ms del LiDAR a 10 Hz</h3>
     <p class="note">Misure preliminari sul PC esterno (Dell G15, i7-12700H; macchina non del tutto libera, quindi indicative),
       su CODa 2_w2 (affollata) e 18_w1, riproduzione a velocità reale. Tempo dalla scansione LiDAR all'uscita: mediana /
-      90° percentile. Il test ufficiale, con SINS e gli stessi metodi sulla stessa macchina, si fa sul portatile.</p>
+      90° percentile. Il PC esterno ora è spento: le prossime misure dei metodi di confronto si fanno sul PC del laboratorio.</p>
     <div class="tablewrap"><table>
       <tr><th>Metodo</th><th class="n">Latenza (mediana / p90)</th><th class="n">Scansioni elaborate</th><th>Lettura</th></tr>
       <tr><td>M-detector</td><td class="n">5–8 s / 15–21 s</td><td class="n">23–67%</td><td class="w"><b>non in tempo reale</b>: perde fino a 3 scansioni su 4 e accumula secondi di ritardo (per questo su CODa è stato fatto girare a 1/4 di velocità)</td></tr>
@@ -241,9 +241,33 @@ footer { font: 13px var(--f-mono); color: var(--ink-2); }
       <tr><td>CenterPoint + SimpleTrack, EMMC completo</td><td class="n" colspan="2">da misurare</td><td class="w">la GPU del PC esterno va resettata; serve un rilevatore 3D su GPU per ogni scansione</td></tr>
       <tr><td>UniMT (versione originale)</td><td class="n" colspan="2">—</td><td class="w">per scelta degli autori elabora <b>una scansione su due</b> (5 Hz con un LiDAR a 10 Hz)</td></tr>
     </table></div>
-    <p class="note"><b>Onestamente su SINS:</b> anche SINS va ancora verificato. Sul PC del laboratorio, carico, il 90°
-      percentile era 115–125 ms su CODa e laboratorio, e su KITTI perde scansioni nelle scene dense (diagnosi in corso).
-      Il confronto vale solo sulla stessa macchina scarica: è il test ufficiale sul portatile.</p>
+    <h3>SINS, misura ufficiale sul PC del laboratorio (paper-v1)</h3>
+    <p class="note">Dalle run finali (macchina libera, controllata prima di ogni run). Tempo dalla scansione LiDAR ai track
+      pubblicati; i valori hanno passi di circa 25 ms. Mediana e 90° percentile: valore tipico tra le run (minimo–massimo).</p>
+    <div class="tablewrap"><table>
+      <tr><th>Dataset</th><th class="n">Run</th><th class="n">Mediana ms</th><th class="n">90° perc. ms</th><th class="n">Run con p90 &gt; 100</th><th class="n">Scansioni perse</th></tr>
+      <tr><td>JRDB</td><td class="n">18</td><td class="n">25 (17–42)</td><td class="n">33 (25–50)</td><td class="n">0/18</td><td class="n">max 0,1%</td></tr>
+      <tr><td>Laboratorio</td><td class="n">36</td><td class="n">90 (85–99)</td><td class="n">112 (104–121)</td><td class="n">36/36</td><td class="n">max 0,2%</td></tr>
+      <tr><td>CODa 2/3/18</td><td class="n">27</td><td class="n">100 (50–125)</td><td class="n">124 (77–176)</td><td class="n">22/27</td><td class="n">0</td></tr>
+      <tr><td>CODa sviluppo + 11/12</td><td class="n">63</td><td class="n">103 (51–149)</td><td class="n">171 (101–375)</td><td class="n">63/63</td><td class="n">max 2,0%</td></tr>
+      <tr><td>DOALS</td><td class="n">24</td><td class="n">102 (100–149)</td><td class="n">125 (103–151)</td><td class="n">24/24</td><td class="n">0</td></tr>
+      <tr><td>KITTI</td><td class="n">63</td><td class="n">275 (75–2700)</td><td class="n">1250 (100–6075)</td><td class="n">60/63</td><td class="n">mediana 10%, max 94%</td></tr>
+    </table></div>
+    <p class="note"><b>Onestamente:</b> su questo PC solo JRDB sta sempre sotto i 100 ms. CODa, DOALS e laboratorio non
+      perdono scansioni (quasi mai), ma una scansione su dieci supera i 100 ms. Circa 40 ms se ne vanno ad aspettare i dati
+      delle camere; il tracker costa 2–20 ms. <b>KITTI</b> aveva un difetto vero: nelle scene dense l'abbinamento
+      detection–track cresceva col cubo del numero di track (fino a 4,6 s su 0018). La correzione (calcolo a gruppi, stesso
+      risultato) è in prova nel laboratorio.</p>
+    <h3>Prove del 27–28/11 dopo paper-v1 (sviluppo, non ancora nel paper)</h3>
+    <div class="tablewrap"><table>
+      <tr><th>Prova</th><th>Cosa cambia</th><th>Latenza</th><th>Accuratezza</th><th>Esito</th></tr>
+      <tr><td><b>NW</b>: niente attesa camere</td><td>la fusione non aspetta le nuvole delle camere; le classi YOLO in ritardo vanno alla scansione dopo</td><td class="w">CODa mediana 102 → 53 ms, p90 150 → 78 (run p90&gt;100: 27/27 → 10/27). Laboratorio 88 → 53, p90 110 → 64 (18/18 → 0/18)</td><td class="w">CODa MOTA 58,2 → 58,6, fermi-ma-mobili 46,5 → 49,8, nessun veto. Laboratorio ~95 invariato, falsi positivi 14–35 → 4–8. Persistenza dei fermi a 1 s 0,55 → 0,78</td><td><b>da adottare</b> (serve un nuovo tag)</td></tr>
+      <tr><td><b>C7</b>: abbinamento a gruppi</td><td>stesso risultato matematico, calcolo diviso per gruppi indipendenti</td><td class="w">KITTI 0018 abbinamento 1339 → 17 ms, scansioni perse 94% → 0%; perdite sparite su 6 delle 7 sequenze dense</td><td class="w">recall su in 6/7; MOTA giù su 5/7 perché le scansioni prima saltate ora producono uscite, con falsi positivi</td><td><b>da adottare</b>: senza, KITTI non è in tempo reale</td></tr>
+      <tr><td><b>RQ</b>: riaggancio fuori camera</td><td>un track perso fuori camera riprende la detection libera più vicina</td><td class="w">invariata</td><td class="w">MOTA 58,7 → 50,1, migliore solo in 3 confronti su 27, veti su 0 e 10</td><td><b>scartata</b></td></tr>
+    </table></div>
+    <p class="note">Su KITTI resta un ritardo a monte: con C7 le detection arrivano al tracker già vecchie di 150–200 ms
+      (pre-elaborazione e cluster su 45 m di raggio). La camera stereo di CODa ha YOLO in ritardo di oltre 100 ms in una
+      scansione su dieci: con qualsiasi attesa la scansione non può essere puntuale, ed è il motivo per cui NW funziona.</p>
     <p class="note"><b>In arrivo, il confronto più diretto:</b> EMMC e CenterPoint + SimpleTrack <b>con i pesi addestrati su
       CODa</b>, fatti girare così come sono su JRDB, laboratorio, DOALS e KITTI. Lo stesso CenterPoint, portato da nuScenes a
       CODa, scende da "migliore" a 18 di MOTA: ci aspettiamo che succeda lo stesso fuori da CODa, mentre SINS resta stabile.</p>
