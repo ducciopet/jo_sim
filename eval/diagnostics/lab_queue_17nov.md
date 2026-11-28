@@ -1234,3 +1234,17 @@ gap05_{pers_pool.json,exit_pool.txt}. KM S(1 s) / S(5 s) / median, still agents 
   0.83 -> 0.94; at stop 0.79 -> 0.88. Fewer losses (60 -> 53).
 - The two MF arms (same profile, different nights: rq on 6b3563c, nw on paper-v1) differ by ~0.05-0.08 on these
   numbers: that is the replay noise level. The NW gain on still agents (+0.23 S1, +3.5 s median) is well above it.
+
+## 56. Freeze paper-v2 and all finals rerun on v2 (28/11, user "ok" in this session, 13:08 start)
+
+- sins: main fast-forwarded to 220a266, tag paper-v2 (pushed). paper-v1 (9ea5942) untouched.
+- Profiles: the 5 v1 profiles + fusion_timeout_sec 0 + track_assignment_components true (jo_sim 7c6c4941). cfgs generated,
+  diff vs v1 is exactly those two lines. md5s in eval/results/final_v2/PROFILES.md, cfg copy in eval/results/final_v2/cfg/.
+  The v1 cfg md5s were rechecked and are unchanged.
+- Build at paper-v2 (installed tracker_node has the switch). eval/scripts/final/final_chain_v2.sh:
+  - same order, harness, gate, reps (CODa tuning 5, lab 6, rest 3), requeue and QUIET_P90 as v1;
+  - tag S2; outputs NAS derived/sins_final_v2/<ds>, eval/results/final_v2/<ds>;
+  - the chain stops if sins is not exactly at paper-v2.
+- ETA ~17 h (v1 took 16 h 45 min): Sunday 29/11 ~06:00. Then CPU analyses on v2: persistence gap 0/0.5,
+  exit_loss_causes, per_class, latency table per dataset.
+- Not queued: KITTI 25-30 m crop, baseline CenterPoint image (separate OKs).
