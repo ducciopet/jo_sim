@@ -1216,3 +1216,21 @@ per-run fusion/YOLO stats in eval/results/dev/nw/fusion_stats.jsonl.
 - Reading: NW meets the 100 ms rule on lab (0/18 runs over) and on most CODa runs (10/27 p90 over, median 53),
   with accuracy unchanged on CODa and on lab (fewer FP, a few more FN on 1950). Adopting it is a profile change after
   paper-v1, so it needs a dated erratum or a new tag: user decision.
+
+## 55. Persistence and exit-loss causes with --gap 0.5 (28/11, after all chains; deferred from 52), RQ and NW arms
+
+Pooled over the 27 selected CODa dev runs per arm; outputs eval/results/dev/{rq,nw}/<arm>/gap05/ and
+gap05_{pers_pool.json,exit_pool.txt}. KM S(1 s) / S(5 s) / median, still agents (any id | same id), identity same rate:
+
+| arm   | still any S1/S5/med     | still same id S1/med | moving any S5 | id exit | id stop | exit losses (other_track_static) |
+|-------|-------------------------|----------------------|---------------|---------|---------|----------------------------------|
+| rq/MF | 0.60 / 0.33 / 1.4 s     | 0.51 / 1.0 s         | 0.88          | 0.917   | 0.85    | 49 (30)                          |
+| rq/RQ | 0.51 / 0.27 / 1.0 s     | 0.42 / 0.4 s         | 0.88          | 0.874   | 0.77    | 55 (25), detection_no_track 5 -> 11 |
+| nw/MF | 0.55 / 0.20 / 1.2 s     | 0.40 / 0.5 s         | 0.91          | 0.833   | 0.79    | 60 (37)                          |
+| nw/NW | 0.78 / 0.43 / 4.7 s     | 0.69 / 3.5 s         | 0.92          | 0.944   | 0.88    | 53 (30)                          |
+
+- RQ: worse on still agents and identity at gap 0.5 too. It confirms the rejection in 52.
+- NW: still agents persist much longer after leaving the camera FOV (median 1.2 -> 4.7 s). Identity at exit is better:
+  0.83 -> 0.94; at stop 0.79 -> 0.88. Fewer losses (60 -> 53).
+- The two MF arms (same profile, different nights: rq on 6b3563c, nw on paper-v1) differ by ~0.05-0.08 on these
+  numbers: that is the replay noise level. The NW gain on still agents (+0.23 S1, +3.5 s median) is well above it.
