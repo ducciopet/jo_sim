@@ -1,7 +1,8 @@
 import json, sys, numpy as np
 from pathlib import Path
 from math import comb
-N = Path('/mnt/nas-imperatore/datasets_SINS/derived/sins_final/dev/rq'); R = Path('eval/results/dev/rq')
+import os
+N = Path(os.environ.get('NO', '/mnt/nas-imperatore/datasets_SINS/derived/sins_final/dev/rq')); R = Path(os.environ.get('RES', 'eval/results/dev/rq'))
 WS = ['w1','w2','w3','10_w1','10_w2','10_w3','10_w4','10_w5','16_w1']; SEQ = {'w1':'0','w2':'0','w3':'0'}
 ARMS = sys.argv[1:] or ['MF','RQ']
 def sel(arm, w, k):

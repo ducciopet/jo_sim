@@ -1183,3 +1183,36 @@ eval/results/dev/rq/persistence_pool_gap0_{MF,RQ}.json.
   0007 and 0019; it falls on 0018, 0009, 0008, 0004 and 0020: scans that used to be skipped now produce output, mostly FP.
   Latency still > 100 ms everywhere (detections already late).
 - sins reinstalled at paper-v1 by the chain (9ea5942); chain NW is running.
+
+## 54. Chain NW result (27/11 22:51 - 28/11 05:26): no camera wait (dbscan fusion_timeout_sec 0.05 -> 0.0), paper-v1 binary
+
+Both arms on sins 9ea5942 (paper-v1). MF = coda_vjsye2i2pcar1lccbma | lab_ucar1lccbma, NW = ..nw (cfg diff only
+fusion_timeout_sec, logs/nw_cfg_diff.txt). Reruns picked by selected.json (CODa MF 3, NW 2).
+Scripts: eval/scripts/analysis/rq_cmp.py (NO/RES env), eval/diagnostics/nw_fusion_stats.py (in container, read-only);
+per-run fusion/YOLO stats in eval/results/dev/nw/fusion_stats.jsonl.
+
+- Latency (rec - stamp of tracks, from the manifests), MF -> NW:
+  - CODa: median 102 -> 53 ms, p90 median 150 -> 78; runs with p90 > 100: 27/27 -> 10/27. Drops max 2.2 -> 1.7%.
+  - lab: median 88 -> 53 ms, p90 median 110 -> 64; runs with p90 > 100: 18/18 -> 0/18. Drops max 0.2 | 0.2%.
+  - Foreign CPU max 59-61% (CODa), 52-54% (lab).
+- CODa accuracy (sign test 19/27, rep k vs rep k): e3 all 13/27, testing 13/27, pdprev 15/27. Not a significant
+  gain, and no loss either.
+  - Pooled MOTA e3 all 58.2 -> 58.6, testing 55.4 -> 56.6, pdprev 46.5 -> 49.8 (+3.3).
+  - Per seq e3 all 60.2 -> 58.4, 49.8 -> 50.5, 63.7 -> 64.7; testing 58.3 -> 55.2 on seq 0 (within the MF range: no veto).
+- lab (pooled over the 6 seqs, r1/r2/r3), MF -> NW:
+  - MOTA 95.6/95.7/91.9 -> 95.1/94.7/95.2;
+  - recall D 91.9/93.5/93.6 -> 94.4/94.0/94.7;
+  - FP 14/35/35 -> 8/7/4; FN 111/83/193 -> 134/146/133.
+  - Seq 1950: 93.7/94.4/83.8 -> 87.6/85.0/87.2.
+- What NW loses, as share of fused detections, MF -> NW:
+  - with a camera cloud: CODa 1.85 -> 0.33%, lab 18.6 -> 1.1%;
+  - camera-only: CODa 1.07 -> 0.22%, lab 11.2 -> 0.65%;
+  - carrying a YOLO class: unchanged (CODa 1.66 | 1.61%, lab 0.94 | 0.99%), because late YOLO leaves join the next scan.
+- Fusion wait: fused-detection latency CODa 92 -> 52 ms median, lab 85 -> 51, so the camera wait costs ~40 ms per scan.
+- YOLO path (image stamp -> recorded 2D detections), median / p90:
+  - CODa front 41/96 ms, stereo 55/254 (NW same);
+  - lab front 63/77 ms.
+  The stereo camera is often > 100 ms late: with any wait, the scan cannot be on time.
+- Reading: NW meets the 100 ms rule on lab (0/18 runs over) and on most CODa runs (10/27 p90 over, median 53),
+  with accuracy unchanged on CODa and on lab (fewer FP, a few more FN on 1950). Adopting it is a profile change after
+  paper-v1, so it needs a dated erratum or a new tag: user decision.
